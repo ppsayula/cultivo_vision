@@ -1,9 +1,9 @@
 // BerryVision AI - Sync Service
 // Sincronización inteligente: Full (WiFi/4G), Light (2G/3G), Offline
 
-import { v4 as uuidv4 } from 'uuid';
 import * as Crypto from 'expo-crypto';
 import * as ImageManipulator from 'expo-image-manipulator';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Analysis, SyncQueueItem, LightSyncPayload, SyncStatus } from '../types';
 import { APP_CONFIG } from '../constants/config';
 import {
@@ -34,7 +34,7 @@ async function generateImageHash(uri: string): Promise<string> {
     );
     return `sha256:${digest.substring(0, 16)}`;
   } catch {
-    return `sha256:${uuidv4().replace(/-/g, '').substring(0, 16)}`;
+    return `sha256:${Crypto.randomUUID().replace(/-/g, '').substring(0, 16)}`;
   }
 }
 
@@ -131,7 +131,7 @@ async function syncFull(analysis: Analysis): Promise<void> {
 
     // Agregar a cola para reintentar
     await addToSyncQueue({
-      id: uuidv4(),
+      id: Crypto.randomUUID(),
       analysis_id: analysis.id,
       type: 'full',
       priority: getPriorityFromHealth(analysis.analysis?.health_status),
@@ -187,7 +187,7 @@ async function syncLight(analysis: Analysis): Promise<void> {
     // Agregar imagen a cola para subir después con WiFi
     if (analysis.has_local_image) {
       await addToSyncQueue({
-        id: uuidv4(),
+        id: Crypto.randomUUID(),
         analysis_id: analysis.id,
         type: 'image_only',
         priority: 1, // Baja prioridad
@@ -199,7 +199,7 @@ async function syncLight(analysis: Analysis): Promise<void> {
     analysis.sync_status = 'failed';
 
     await addToSyncQueue({
-      id: uuidv4(),
+      id: Crypto.randomUUID(),
       analysis_id: analysis.id,
       type: 'light',
       priority: getPriorityFromHealth(analysis.analysis?.health_status),

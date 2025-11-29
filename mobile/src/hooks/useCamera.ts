@@ -81,11 +81,10 @@ export function useCamera(): UseCameraResult {
     }
   };
 
-  // Verificar permisos
+  // Verificar permisos - null significa que todavía está cargando
   const hasPermission =
-    cameraPermission?.granted &&
-    mediaPermission &&
-    locationPermission;
+    cameraPermission === null ? null :
+    cameraPermission?.granted === true ? true : false;
 
   // Solicitar todos los permisos
   const requestPermission = async () => {

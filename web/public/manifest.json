@@ -1,0 +1,25 @@
+{
+  "name": "BerryVision AI - Dashboard",
+  "short_name": "BerryVision",
+  "description": "Sistema de monitoreo inteligente de cultivos de berries con IA",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#111827",
+  "theme_color": "#22C55E",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "/icons/icon-192x192.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/icons/icon-512x512.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ],
+  "categories": ["agriculture", "business", "productivity"]
+}

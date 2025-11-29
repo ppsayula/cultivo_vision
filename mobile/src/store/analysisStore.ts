@@ -1,7 +1,7 @@
 // BerryVision AI - Analysis Store (Zustand)
 
 import { create } from 'zustand';
-import { v4 as uuidv4 } from 'uuid';
+import * as Crypto from 'expo-crypto';
 import { Analysis, CropType, Location, ConnectionMode, DashboardStats } from '../types';
 import {
   saveAnalysisLocally,
@@ -85,7 +85,7 @@ export const useAnalysisStore = create<AnalysisState>((set, get) => ({
     set({ isAnalyzing: true, error: null });
 
     try {
-      const id = uuidv4();
+      const id = Crypto.randomUUID();
 
       // Guardar imagen localmente
       const localImageUri = await saveImageLocally(imageUri, id);

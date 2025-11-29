@@ -1,7 +1,7 @@
 // BerryVision AI - GPT-4 Vision Service
 // Análisis de imágenes de cultivos con IA
 
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { AnalysisResult } from '../types';
 import { OPENAI_API_KEY, GPT4_VISION_PROMPT, APP_CONFIG } from '../constants/config';
 

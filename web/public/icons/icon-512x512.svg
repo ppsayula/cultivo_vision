@@ -1,0 +1,11 @@
+<svg width="512" height="512" viewBox="0 0 512 512" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="512" height="512" rx="85" fill="#111827"/>
+  <circle cx="256" cy="213" r="93" fill="#22C55E"/>
+  <circle cx="200" cy="186" r="21" fill="#166534"/>
+  <circle cx="293" cy="200" r="16" fill="#166534"/>
+  <circle cx="256" cy="253" r="13" fill="#166534"/>
+  <path d="M256 120 L256 67" stroke="#22C55E" stroke-width="11" stroke-linecap="round"/>
+  <path d="M227 80 L256 67 L285 80" stroke="#22C55E" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <text x="256" y="400" text-anchor="middle" fill="#22C55E" font-family="Arial" font-size="48" font-weight="bold">BerryVision</text>
+  <text x="256" y="453" text-anchor="middle" fill="#9CA3AF" font-family="Arial" font-size="32">AI</text>
+</svg>

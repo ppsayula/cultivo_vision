@@ -1,11 +1,12 @@
 // BerryVision AI - Configuration
+// IMPORTANT: Copy .env.example to .env and configure your keys there
 
-// Supabase configuration (USER MUST FILL)
-export const SUPABASE_URL = 'YOUR_SUPABASE_URL';
-export const SUPABASE_ANON_KEY = 'YOUR_SUPABASE_ANON_KEY';
+// Supabase configuration - Use environment variables or fallback to placeholder
+export const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL || 'YOUR_SUPABASE_URL';
+export const SUPABASE_ANON_KEY = process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'YOUR_SUPABASE_ANON_KEY';
 
-// OpenAI configuration (USER MUST FILL)
-export const OPENAI_API_KEY = 'YOUR_OPENAI_API_KEY';
+// OpenAI configuration - Use environment variables or fallback to placeholder
+export const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_API_KEY || 'YOUR_OPENAI_API_KEY';
 
 // App configuration
 export const APP_CONFIG = {

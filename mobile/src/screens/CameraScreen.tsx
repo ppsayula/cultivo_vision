@@ -79,17 +79,20 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
 
   // Confirmar y analizar
   const handleConfirm = async () => {
-    if (!capturedUri || !location) {
-      Alert.alert('Error', 'Datos incompletos');
+    if (!capturedUri) {
+      Alert.alert('Error', 'No se capturó la foto');
       return;
     }
 
     setShowOptions(false);
 
+    // Usar ubicación real o por defecto
+    const finalLocation = location || { latitude: 0, longitude: 0 };
+
     try {
       const analysis = await createAnalysis(
         capturedUri,
-        location,
+        finalLocation,
         cropType,
         sector || undefined,
         notes || undefined
@@ -98,7 +101,8 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
       // Navegar al resultado
       navigation.navigate('Result', { analysisId: analysis.id });
     } catch (error) {
-      Alert.alert('Error', 'No se pudo crear el análisis');
+      console.error('Error creando análisis:', error);
+      Alert.alert('Error', `No se pudo crear el análisis: ${(error as Error).message}`);
     } finally {
       setCapturedUri(null);
       setSector('');

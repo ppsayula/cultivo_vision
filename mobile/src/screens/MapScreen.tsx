@@ -1,17 +1,15 @@
-// BerryVision AI - Map Screen
+// BerryVision AI - Map Screen (Temporary - No Maps)
 
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   TouchableOpacity,
-  Modal,
-  ScrollView,
+  FlatList,
   Image,
   ActivityIndicator,
 } from 'react-native';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { useAnalysisStore } from '../store/analysisStore';
 import { HEALTH_STATUS_COLORS } from '../constants/config';
 import { Analysis } from '../types';
@@ -23,9 +21,7 @@ interface MapScreenProps {
 }
 
 export function MapScreen({ navigation }: MapScreenProps) {
-  const mapRef = useRef<MapView>(null);
   const { analyses, loadAnalyses, isLoading } = useAnalysisStore();
-  const [selectedAnalysis, setSelectedAnalysis] = useState<Analysis | null>(null);
   const [filter, setFilter] = useState<'all' | 'healthy' | 'alert' | 'critical'>('all');
 
   useEffect(() => {
@@ -38,90 +34,73 @@ export function MapScreen({ navigation }: MapScreenProps) {
     return a.analysis?.health_status === filter;
   });
 
-  // Calcular región inicial basada en los análisis
-  const getInitialRegion = (): Region => {
-    if (filteredAnalyses.length === 0) {
-      return {
-        latitude: 28.6353,  // Chihuahua, México (ejemplo)
-        longitude: -106.0889,
-        latitudeDelta: 0.1,
-        longitudeDelta: 0.1,
-      };
-    }
-
-    const lats = filteredAnalyses.map((a) => a.location.latitude);
-    const lngs = filteredAnalyses.map((a) => a.location.longitude);
-
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
-
-    const centerLat = (minLat + maxLat) / 2;
-    const centerLng = (minLng + maxLng) / 2;
-    const latDelta = Math.max(0.01, (maxLat - minLat) * 1.5);
-    const lngDelta = Math.max(0.01, (maxLng - minLng) * 1.5);
-
-    return {
-      latitude: centerLat,
-      longitude: centerLng,
-      latitudeDelta: latDelta,
-      longitudeDelta: lngDelta,
-    };
-  };
-
-  // Obtener color del marcador
-  const getMarkerColor = (analysis: Analysis): string => {
+  // Obtener color según estado
+  const getStatusColor = (analysis: Analysis): string => {
     if (!analysis.analysis) return '#6B7280';
     return HEALTH_STATUS_COLORS[analysis.analysis.health_status];
   };
 
-  // Centrar en todos los marcadores
-  const fitToMarkers = () => {
-    if (mapRef.current && filteredAnalyses.length > 0) {
-      const coordinates = filteredAnalyses.map((a) => ({
-        latitude: a.location.latitude,
-        longitude: a.location.longitude,
-      }));
-      mapRef.current.fitToCoordinates(coordinates, {
-        edgePadding: { top: 100, right: 50, bottom: 200, left: 50 },
-        animated: true,
-      });
-    }
-  };
+  const renderItem = ({ item }: { item: Analysis }) => (
+    <TouchableOpacity
+      style={styles.card}
+      onPress={() => navigation.navigate('Result', { analysisId: item.id })}
+    >
+      {/* Imagen */}
+      {item.local_image_uri && (
+        <Image
+          source={{ uri: item.local_image_uri }}
+          style={styles.cardImage}
+          resizeMode="cover"
+        />
+      )}
+
+      <View style={styles.cardContent}>
+        {/* Badge de estado */}
+        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item) }]}>
+          <Text style={styles.statusText}>
+            {item.analysis?.health_status === 'healthy'
+              ? '✅ Sano'
+              : item.analysis?.health_status === 'alert'
+              ? '⚠️ Alerta'
+              : item.analysis?.health_status === 'critical'
+              ? '🚨 Crítico'
+              : '⏳ Pendiente'}
+          </Text>
+        </View>
+
+        {/* Info */}
+        <Text style={styles.cardCrop}>
+          {item.crop_type === 'blueberry' ? '🫐 Arándano' : '🍇 Frambuesa'}
+          {item.sector && ` · ${item.sector}`}
+        </Text>
+
+        <Text style={styles.cardDate}>
+          {format(new Date(item.timestamp), "d MMM, HH:mm", { locale: es })}
+        </Text>
+
+        <Text style={styles.cardLocation}>
+          📍 {item.location.latitude.toFixed(4)}, {item.location.longitude.toFixed(4)}
+        </Text>
+
+        {/* Diagnóstico */}
+        {item.analysis?.disease?.name && (
+          <Text style={styles.cardDisease}>
+            🦠 {item.analysis.disease.name}
+          </Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
 
   return (
     <View style={styles.container}>
-      {/* Mapa */}
-      <MapView
-        ref={mapRef}
-        style={styles.map}
-        initialRegion={getInitialRegion()}
-        showsUserLocation
-        showsMyLocationButton={false}
-      >
-        {filteredAnalyses.map((analysis) => (
-          <Marker
-            key={analysis.id}
-            coordinate={{
-              latitude: analysis.location.latitude,
-              longitude: analysis.location.longitude,
-            }}
-            onPress={() => setSelectedAnalysis(analysis)}
-          >
-            <View
-              style={[
-                styles.marker,
-                { backgroundColor: getMarkerColor(analysis) },
-              ]}
-            >
-              <Text style={styles.markerEmoji}>
-                {analysis.crop_type === 'blueberry' ? '🫐' : '🍇'}
-              </Text>
-            </View>
-          </Marker>
-        ))}
-      </MapView>
+      {/* Header */}
+      <View style={styles.header}>
+        <Text style={styles.headerTitle}>🗺️ Análisis Geolocalizados</Text>
+        <Text style={styles.headerSubtitle}>
+          {filteredAnalyses.length} registros con ubicación
+        </Text>
+      </View>
 
       {/* Filtros */}
       <View style={styles.filterContainer}>
@@ -143,136 +122,45 @@ export function MapScreen({ navigation }: MapScreenProps) {
               {f === 'all'
                 ? 'Todos'
                 : f === 'healthy'
-                ? '✅ Sanos'
+                ? '✅'
                 : f === 'alert'
-                ? '⚠️ Alerta'
-                : '🚨 Crítico'}
+                ? '⚠️'
+                : '🚨'}
             </Text>
           </TouchableOpacity>
         ))}
       </View>
 
-      {/* Contador */}
-      <View style={styles.countBadge}>
-        <Text style={styles.countText}>
-          {filteredAnalyses.length} análisis
+      {/* Lista de análisis */}
+      {isLoading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#22C55E" />
+          <Text style={styles.loadingText}>Cargando análisis...</Text>
+        </View>
+      ) : filteredAnalyses.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyEmoji}>🗺️</Text>
+          <Text style={styles.emptyText}>No hay análisis geolocalizados</Text>
+          <Text style={styles.emptySubtext}>
+            Los análisis aparecerán aquí con su ubicación GPS
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={filteredAnalyses}
+          renderItem={renderItem}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContainer}
+          showsVerticalScrollIndicator={false}
+        />
+      )}
+
+      {/* Nota sobre el mapa */}
+      <View style={styles.noteContainer}>
+        <Text style={styles.noteText}>
+          💡 El mapa interactivo estará disponible pronto
         </Text>
       </View>
-
-      {/* Botón centrar */}
-      <TouchableOpacity style={styles.centerButton} onPress={fitToMarkers}>
-        <Text style={styles.centerButtonText}>📍</Text>
-      </TouchableOpacity>
-
-      {/* Modal de detalle */}
-      <Modal
-        visible={selectedAnalysis !== null}
-        animationType="slide"
-        transparent
-        onRequestClose={() => setSelectedAnalysis(null)}
-      >
-        <View style={styles.modalOverlay}>
-          <TouchableOpacity
-            style={styles.modalBackdrop}
-            onPress={() => setSelectedAnalysis(null)}
-          />
-          <View style={styles.modalContent}>
-            {selectedAnalysis && (
-              <>
-                {/* Imagen */}
-                {selectedAnalysis.local_image_uri && (
-                  <Image
-                    source={{ uri: selectedAnalysis.local_image_uri }}
-                    style={styles.modalImage}
-                    resizeMode="cover"
-                  />
-                )}
-
-                {/* Estado */}
-                <View
-                  style={[
-                    styles.modalBadge,
-                    { backgroundColor: getMarkerColor(selectedAnalysis) },
-                  ]}
-                >
-                  <Text style={styles.modalBadgeText}>
-                    {selectedAnalysis.analysis?.health_status === 'healthy'
-                      ? '✅ Saludable'
-                      : selectedAnalysis.analysis?.health_status === 'alert'
-                      ? '⚠️ Alerta'
-                      : selectedAnalysis.analysis?.health_status === 'critical'
-                      ? '🚨 Crítico'
-                      : '⏳ Pendiente'}
-                  </Text>
-                </View>
-
-                {/* Info */}
-                <View style={styles.modalInfo}>
-                  <Text style={styles.modalCrop}>
-                    {selectedAnalysis.crop_type === 'blueberry'
-                      ? '🫐 Arándano'
-                      : '🍇 Frambuesa'}
-                    {selectedAnalysis.sector && ` · ${selectedAnalysis.sector}`}
-                  </Text>
-                  <Text style={styles.modalDate}>
-                    {format(
-                      new Date(selectedAnalysis.timestamp),
-                      "d 'de' MMMM, HH:mm",
-                      { locale: es }
-                    )}
-                  </Text>
-                  <Text style={styles.modalLocation}>
-                    📍 {selectedAnalysis.location.latitude.toFixed(5)},{' '}
-                    {selectedAnalysis.location.longitude.toFixed(5)}
-                  </Text>
-
-                  {/* Diagnóstico */}
-                  {selectedAnalysis.analysis?.disease?.name && (
-                    <Text style={styles.modalDisease}>
-                      🦠 {selectedAnalysis.analysis.disease.name} (
-                      {selectedAnalysis.analysis.disease.confidence}%)
-                    </Text>
-                  )}
-                  {selectedAnalysis.analysis?.pest?.name && (
-                    <Text style={styles.modalPest}>
-                      🐛 {selectedAnalysis.analysis.pest.name} (
-                      {selectedAnalysis.analysis.pest.confidence}%)
-                    </Text>
-                  )}
-                </View>
-
-                {/* Botones */}
-                <View style={styles.modalButtons}>
-                  <TouchableOpacity
-                    style={styles.modalCloseButton}
-                    onPress={() => setSelectedAnalysis(null)}
-                  >
-                    <Text style={styles.modalCloseText}>Cerrar</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity
-                    style={styles.modalDetailButton}
-                    onPress={() => {
-                      setSelectedAnalysis(null);
-                      navigation.navigate('Result', {
-                        analysisId: selectedAnalysis.id,
-                      });
-                    }}
-                  >
-                    <Text style={styles.modalDetailText}>Ver Detalle</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
-            )}
-          </View>
-        </View>
-      </Modal>
-
-      {/* Loading */}
-      {isLoading && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color="#22C55E" />
-        </View>
-      )}
     </View>
   );
 }
@@ -282,41 +170,36 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#111827',
   },
-  map: {
-    flex: 1,
+  header: {
+    paddingHorizontal: 16,
+    paddingTop: 60,
+    paddingBottom: 16,
+    backgroundColor: '#1F2937',
   },
-  marker: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 3,
-    borderColor: '#fff',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
+  headerTitle: {
+    color: '#fff',
+    fontSize: 24,
+    fontWeight: 'bold',
   },
-  markerEmoji: {
-    fontSize: 18,
+  headerSubtitle: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginTop: 4,
   },
   filterContainer: {
-    position: 'absolute',
-    top: 60,
-    left: 16,
-    right: 16,
     flexDirection: 'row',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    borderRadius: 12,
-    padding: 4,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#1F2937',
+    borderBottomWidth: 1,
+    borderBottomColor: '#374151',
   },
   filterButton: {
     flex: 1,
     paddingVertical: 8,
-    paddingHorizontal: 8,
+    marginHorizontal: 4,
     borderRadius: 8,
+    backgroundColor: '#374151',
     alignItems: 'center',
   },
   filterButtonActive: {
@@ -324,135 +207,102 @@ const styles = StyleSheet.create({
   },
   filterText: {
     color: '#9CA3AF',
-    fontSize: 12,
-    fontWeight: '500',
+    fontSize: 16,
   },
   filterTextActive: {
     color: '#fff',
   },
-  countBadge: {
-    position: 'absolute',
-    bottom: 100,
-    alignSelf: 'center',
-    backgroundColor: 'rgba(0,0,0,0.8)',
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-  },
-  countText: {
-    color: '#fff',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  centerButton: {
-    position: 'absolute',
-    bottom: 100,
-    right: 16,
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: '#fff',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    elevation: 4,
-  },
-  centerButtonText: {
-    fontSize: 20,
-  },
-  modalOverlay: {
-    flex: 1,
-    justifyContent: 'flex-end',
-  },
-  modalBackdrop: {
-    flex: 1,
-  },
-  modalContent: {
-    backgroundColor: '#1F2937',
-    borderTopLeftRadius: 24,
-    borderTopRightRadius: 24,
-    overflow: 'hidden',
-  },
-  modalImage: {
-    width: '100%',
-    height: 200,
-  },
-  modalBadge: {
-    paddingVertical: 12,
-    alignItems: 'center',
-  },
-  modalBadgeText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  modalInfo: {
+  listContainer: {
     padding: 16,
   },
-  modalCrop: {
+  card: {
+    backgroundColor: '#1F2937',
+    borderRadius: 16,
+    marginBottom: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#374151',
+  },
+  cardImage: {
+    width: '100%',
+    height: 150,
+  },
+  cardContent: {
+    padding: 16,
+  },
+  statusBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginBottom: 12,
+  },
+  statusText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  cardCrop: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 4,
+  },
+  cardDate: {
+    color: '#9CA3AF',
+    fontSize: 14,
+    marginBottom: 4,
+  },
+  cardLocation: {
+    color: '#6B7280',
+    fontSize: 12,
+    marginBottom: 8,
+  },
+  cardDisease: {
+    color: '#FCA5A5',
+    fontSize: 14,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    color: '#9CA3AF',
+    fontSize: 16,
+    marginTop: 16,
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 32,
+  },
+  emptyEmoji: {
+    fontSize: 64,
+    marginBottom: 16,
+  },
+  emptyText: {
     color: '#fff',
     fontSize: 18,
     fontWeight: '600',
-    marginBottom: 4,
+    textAlign: 'center',
+    marginBottom: 8,
   },
-  modalDate: {
-    color: '#9CA3AF',
-    fontSize: 14,
-    marginBottom: 4,
-  },
-  modalLocation: {
+  emptySubtext: {
     color: '#6B7280',
-    fontSize: 12,
-    marginBottom: 12,
-  },
-  modalDisease: {
-    color: '#FCA5A5',
     fontSize: 14,
-    marginBottom: 4,
+    textAlign: 'center',
   },
-  modalPest: {
-    color: '#FCD34D',
-    fontSize: 14,
-  },
-  modalButtons: {
-    flexDirection: 'row',
+  noteContainer: {
     padding: 16,
-    paddingTop: 8,
+    backgroundColor: '#1F2937',
+    borderTopWidth: 1,
+    borderTopColor: '#374151',
   },
-  modalCloseButton: {
-    flex: 1,
-    paddingVertical: 14,
-    marginRight: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: '#374151',
-    alignItems: 'center',
-  },
-  modalCloseText: {
+  noteText: {
     color: '#9CA3AF',
-    fontSize: 16,
-    fontWeight: '500',
-  },
-  modalDetailButton: {
-    flex: 1,
-    backgroundColor: '#22C55E',
-    paddingVertical: 14,
-    marginLeft: 8,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  modalDetailText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+    fontSize: 12,
+    textAlign: 'center',
   },
 });
