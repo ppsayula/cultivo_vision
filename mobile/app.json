@@ -34,7 +34,9 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.READ_MEDIA_IMAGES",
         "android.permission.READ_MEDIA_VIDEO",
-        "android.permission.RECORD_AUDIO"
+        "android.permission.RECORD_AUDIO",
+        "android.permission.READ_MEDIA_VISUAL_USER_SELECTED",
+        "android.permission.READ_MEDIA_AUDIO"
       ]
     },
     "web": {
@@ -60,6 +62,11 @@
           "savePhotosPermission": "Permitir que BerryVision guarde fotos en tu galería"
         }
       ]
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "341adac6-9fc5-4e35-a6f1-99587e7f99e7"
+      }
+    }
   }
 }
