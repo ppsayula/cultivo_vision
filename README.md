@@ -178,6 +178,7 @@ Para que el sistema funcione completamente, necesitas:
 | [02-user-stories.md](docs/02-user-stories.md) | 15 user stories con criterios de aceptación |
 | [03-arquitectura.md](docs/03-arquitectura.md) | BD, APIs, flujos, seguridad, costos |
 | [04-ecosistema-centro-control.md](docs/04-ecosistema-centro-control.md) | Dashboard, alertas, reportes, integraciones |
+| [05-sesion-resumen.md](docs/05-sesion-resumen.md) | Estado actual, próximos pasos, checklist ingeniero |
 
 ## Costos Estimados (MVP)
 
