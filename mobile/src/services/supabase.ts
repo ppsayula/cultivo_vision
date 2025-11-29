@@ -109,39 +109,58 @@ export async function uploadImage(
 // Funciones de base de datos para análisis
 export async function saveAnalysisToServer(analysis: any) {
   if (!isConfigured) {
-    throw new Error('Supabase no está configurado');
+    console.log('Supabase no configurado - guardando solo localmente');
+    return null;
   }
 
-  const { data, error } = await supabase
-    .from('analyses')
-    .upsert({
-      id: analysis.id,
-      timestamp: analysis.timestamp,
-      latitude: analysis.location.latitude,
-      longitude: analysis.location.longitude,
-      crop_type: analysis.crop_type,
-      sector: analysis.sector,
-      notes: analysis.notes,
-      image_url: analysis.remote_image_url,
-      image_hash: analysis.image_hash,
-      health_status: analysis.analysis?.health_status,
-      disease_name: analysis.analysis?.disease?.name,
-      disease_confidence: analysis.analysis?.disease?.confidence,
-      pest_name: analysis.analysis?.pest?.name,
-      pest_confidence: analysis.analysis?.pest?.confidence,
-      phenology_bbch: analysis.analysis?.phenology_bbch,
-      fruit_count: analysis.analysis?.fruit_count,
-      maturity_green: analysis.analysis?.maturity?.green,
-      maturity_ripe: analysis.analysis?.maturity?.ripe,
-      maturity_overripe: analysis.analysis?.maturity?.overripe,
-      recommendation: analysis.analysis?.recommendation,
-      user_id: (await getCurrentUser())?.id,
-    })
-    .select()
-    .single();
+  try {
+    // Intentar obtener usuario actual (puede ser null si no hay sesión)
+    let userId = null;
+    try {
+      const user = await getCurrentUser();
+      userId = user?.id || null;
+    } catch {
+      // Sin usuario autenticado - continuar sin user_id
+      console.log('Sin usuario autenticado - guardando sin user_id');
+    }
 
-  if (error) throw error;
-  return data;
+    const { data, error } = await supabase
+      .from('analyses')
+      .upsert({
+        id: analysis.id,
+        timestamp: analysis.timestamp,
+        latitude: analysis.location?.latitude || 0,
+        longitude: analysis.location?.longitude || 0,
+        crop_type: analysis.crop_type,
+        sector: analysis.sector || null,
+        notes: analysis.notes || null,
+        image_url: analysis.remote_image_url || null,
+        image_hash: analysis.image_hash || null,
+        health_status: analysis.analysis?.health_status || null,
+        disease_name: analysis.analysis?.disease?.name || null,
+        disease_confidence: analysis.analysis?.disease?.confidence || null,
+        pest_name: analysis.analysis?.pest?.name || null,
+        pest_confidence: analysis.analysis?.pest?.confidence || null,
+        phenology_bbch: analysis.analysis?.phenology_bbch || null,
+        fruit_count: analysis.analysis?.fruit_count || null,
+        maturity_green: analysis.analysis?.maturity?.green || null,
+        maturity_ripe: analysis.analysis?.maturity?.ripe || null,
+        maturity_overripe: analysis.analysis?.maturity?.overripe || null,
+        recommendation: analysis.analysis?.recommendation || null,
+        user_id: userId,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Error guardando en Supabase:', error);
+      throw error;
+    }
+    return data;
+  } catch (error) {
+    console.error('Error en saveAnalysisToServer:', error);
+    throw error;
+  }
 }
 
 export async function getAnalysesFromServer(

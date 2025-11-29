@@ -97,6 +97,7 @@ export async function processAnalysis(analysis: Analysis): Promise<Analysis> {
 // Sincronización Full (WiFi/4G) - Imagen + JSON
 async function syncFull(analysis: Analysis): Promise<void> {
   if (!isSupabaseConfigured()) {
+    console.log('Supabase no configurado - sync pendiente');
     analysis.sync_status = 'pending';
     return;
   }
@@ -106,10 +107,15 @@ async function syncFull(analysis: Analysis): Promise<void> {
 
     // Comprimir y subir imagen
     if (analysis.local_image_uri && analysis.has_local_image) {
-      const compressedUri = await compressImage(analysis.local_image_uri);
-      const imagePath = `analyses/${analysis.id}/${Date.now()}.jpg`;
-      const imageUrl = await uploadImage(imagePath, compressedUri);
-      analysis.remote_image_url = imageUrl;
+      try {
+        const compressedUri = await compressImage(analysis.local_image_uri);
+        const imagePath = `analyses/${analysis.id}/${Date.now()}.jpg`;
+        const imageUrl = await uploadImage(imagePath, compressedUri);
+        analysis.remote_image_url = imageUrl;
+      } catch (uploadError) {
+        console.warn('Error subiendo imagen, continuando sin imagen:', uploadError);
+        // Continuar sin imagen - no es crítico
+      }
     }
 
     // Generar hash si no existe
@@ -118,15 +124,20 @@ async function syncFull(analysis: Analysis): Promise<void> {
     }
 
     // Guardar en servidor
-    await saveAnalysisToServer(analysis);
+    const result = await saveAnalysisToServer(analysis);
 
-    analysis.sync_status = 'synced';
-    analysis.synced_at = new Date().toISOString();
-
-    // Remover de cola si estaba
-    await removeFromSyncQueue(analysis.id);
+    if (result) {
+      analysis.sync_status = 'synced';
+      analysis.synced_at = new Date().toISOString();
+      // Remover de cola si estaba
+      await removeFromSyncQueue(analysis.id);
+    } else {
+      // Si retorna null, Supabase no está configurado correctamente
+      analysis.sync_status = 'pending';
+    }
   } catch (error) {
-    console.error('Error en sync full:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('Error en sync full:', errorMessage);
     analysis.sync_status = 'failed';
 
     // Agregar a cola para reintentar
@@ -137,7 +148,7 @@ async function syncFull(analysis: Analysis): Promise<void> {
       priority: getPriorityFromHealth(analysis.analysis?.health_status),
       attempts: 1,
       last_attempt: new Date().toISOString(),
-      error: (error as Error).message,
+      error: errorMessage,
     });
   }
 }
