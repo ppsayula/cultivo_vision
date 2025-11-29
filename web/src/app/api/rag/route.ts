@@ -4,6 +4,7 @@ import {
   generateRAGResponse,
   searchKnowledge,
   enhanceAnalysisWithKnowledge,
+  analyzeImageWithRAG,
 } from '@/lib/rag';
 
 export async function POST(request: NextRequest) {
@@ -57,9 +58,27 @@ export async function POST(request: NextRequest) {
         return NextResponse.json(enhanced);
       }
 
+      case 'analyze-image': {
+        // Analyze image with GPT-4 Vision + RAG
+        const { image, cropType, additionalContext } = params;
+        if (!image) {
+          return NextResponse.json(
+            { error: 'image (base64) is required' },
+            { status: 400 }
+          );
+        }
+
+        const result = await analyzeImageWithRAG(
+          image,
+          cropType || 'blueberry',
+          additionalContext
+        );
+        return NextResponse.json(result);
+      }
+
       default:
         return NextResponse.json(
-          { error: 'Invalid action. Use: query, search, or enhance' },
+          { error: 'Invalid action. Use: query, search, enhance, or analyze-image' },
           { status: 400 }
         );
     }

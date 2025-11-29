@@ -253,6 +253,194 @@ export async function enhanceAnalysisWithKnowledge(
   };
 }
 
+// Analyze image with GPT-4 Vision and enhance with RAG
+export async function analyzeImageWithRAG(
+  imageBase64: string,
+  cropType: 'blueberry' | 'raspberry' | 'other',
+  additionalContext?: string
+): Promise<{
+  analysis: {
+    health_status: 'healthy' | 'alert' | 'critical';
+    disease: { name: string; confidence: number } | null;
+    pest: { name: string; confidence: number } | null;
+    phenology_bbch: number;
+    fruit_count: number;
+    maturity: { green: number; ripe: number; overripe: number };
+    recommendation: string;
+  };
+  ragEnhancement: {
+    detailedInfo: string;
+    treatments: string[];
+    sources: KnowledgeDocument[];
+  };
+  combinedResponse: string;
+}> {
+  try {
+    // Step 1: Analyze image with GPT-4 Vision
+    const visionPrompt = `Eres un experto agrónomo y entomólogo especializado en cultivos de berries (arándanos, frambuesas). Analiza esta imagen de campo para detectar:
+
+1. SALUD: ¿La planta/fruto se ve sana o hay síntomas visibles?
+2. ENFERMEDAD: Si hay síntomas, identifica entre: botrytis, anthracnose, mummy_berry, powdery_mildew, nutritional
+3. PLAGAS: Si hay presencia, identifica entre: drosophila_swd, aphids, thrips, spider_mites, raspberry_fruitworm, japanese_beetle
+4. FENOLOGÍA: Estima la etapa BBCH (0-99)
+5. FRUTOS: Cuenta frutos visibles y clasifica por madurez
+6. ACCIÓN: Recomienda siguiente paso concreto
+
+${additionalContext ? `Contexto adicional del usuario: ${additionalContext}` : ''}
+
+Responde en JSON:
+{
+  "health_status": "healthy" | "alert" | "critical",
+  "disease": { "name": "nombre" | null, "confidence": 0-100 } | null,
+  "pest": { "name": "nombre" | null, "confidence": 0-100 } | null,
+  "phenology_bbch": 0-99,
+  "fruit_count": número,
+  "maturity": { "green": número, "ripe": número, "overripe": número },
+  "recommendation": "texto"
+}`;
+
+    const visionResponse = await openai.chat.completions.create({
+      model: 'gpt-4o',
+      messages: [
+        {
+          role: 'user',
+          content: [
+            { type: 'text', text: visionPrompt },
+            {
+              type: 'image_url',
+              image_url: {
+                url: imageBase64.startsWith('data:')
+                  ? imageBase64
+                  : `data:image/jpeg;base64,${imageBase64}`,
+              },
+            },
+          ],
+        },
+      ],
+      max_tokens: 1000,
+    });
+
+    const visionContent = visionResponse.choices[0]?.message?.content || '{}';
+
+    // Parse the JSON from the response
+    let analysis;
+    try {
+      const jsonMatch = visionContent.match(/\{[\s\S]*\}/);
+      analysis = jsonMatch ? JSON.parse(jsonMatch[0]) : null;
+    } catch {
+      analysis = {
+        health_status: 'alert',
+        disease: null,
+        pest: null,
+        phenology_bbch: 50,
+        fruit_count: 0,
+        maturity: { green: 0, ripe: 0, overripe: 0 },
+        recommendation: visionContent,
+      };
+    }
+
+    // Step 2: Enhance with RAG based on the diagnosis
+    const context: DiagnosisContext = {
+      cropType,
+      healthStatus: analysis.health_status,
+      diseaseName: analysis.disease?.name,
+      pestName: analysis.pest?.name,
+      confidence: analysis.disease?.confidence || analysis.pest?.confidence,
+    };
+
+    // Build specific RAG query
+    let ragQuery = '';
+    if (analysis.disease?.name) {
+      ragQuery = `Tratamiento y manejo de ${analysis.disease.name} en ${cropType === 'blueberry' ? 'arándano' : 'frambuesa'}. Incluye productos, dosis y programa de aplicación.`;
+    } else if (analysis.pest?.name) {
+      ragQuery = `Control de ${analysis.pest.name} en ${cropType === 'blueberry' ? 'arándano' : 'frambuesa'}. Incluye productos, trampas y medidas preventivas.`;
+    } else if (analysis.health_status === 'alert') {
+      ragQuery = `Causas de estrés y problemas comunes en ${cropType === 'blueberry' ? 'arándano' : 'frambuesa'}. Diagnóstico diferencial y tratamiento.`;
+    } else {
+      ragQuery = `Mejores prácticas de manejo para ${cropType === 'blueberry' ? 'arándano' : 'frambuesa'} en etapa BBCH ${analysis.phenology_bbch}.`;
+    }
+
+    // Get knowledge documents
+    const documents = await getKnowledgeForDiagnosis(context);
+    const semanticDocs = await searchKnowledge(ragQuery, { matchCount: 3, cropType });
+
+    const allDocs = [...documents, ...semanticDocs].filter(
+      (doc, index, self) => index === self.findIndex((d) => d.id === doc.id)
+    );
+
+    // Generate combined response
+    const contextText = allDocs
+      .map((doc) => `## ${doc.title}\n${doc.content}`)
+      .join('\n\n---\n\n');
+
+    const combinedPrompt = `Basándote en el análisis de imagen y la base de conocimiento, genera una respuesta completa para el agricultor.
+
+ANÁLISIS DE IMAGEN:
+- Estado de salud: ${analysis.health_status}
+- Enfermedad detectada: ${analysis.disease?.name || 'Ninguna'} (${analysis.disease?.confidence || 0}% confianza)
+- Plaga detectada: ${analysis.pest?.name || 'Ninguna'} (${analysis.pest?.confidence || 0}% confianza)
+- Etapa fenológica: BBCH ${analysis.phenology_bbch}
+- Conteo de frutos: ${analysis.fruit_count}
+- Recomendación inicial: ${analysis.recommendation}
+
+BASE DE CONOCIMIENTO:
+${contextText}
+
+Genera una respuesta en español que:
+1. Confirme o amplíe el diagnóstico
+2. Explique las causas probables
+3. Proporcione tratamiento específico con productos y dosis
+4. Incluya medidas preventivas
+5. Sugiera monitoreo de seguimiento`;
+
+    const combinedResponse = await openai.chat.completions.create({
+      model: 'gpt-4-turbo-preview',
+      messages: [
+        { role: 'system', content: 'Eres un agrónomo experto en berries. Responde de forma práctica y concisa.' },
+        { role: 'user', content: combinedPrompt },
+      ],
+      temperature: 0.3,
+      max_tokens: 1500,
+    });
+
+    const finalResponse = combinedResponse.choices[0]?.message?.content || analysis.recommendation;
+
+    // Extract treatments
+    const treatmentRegex = /(?:productos?|tratamiento|aplicar|usar|dosis)[:\s]+([^\n.]+)/gi;
+    const treatments: string[] = [];
+    let match;
+    while ((match = treatmentRegex.exec(finalResponse)) !== null) {
+      treatments.push(match[1].trim());
+    }
+
+    // Log query for analytics
+    try {
+      await supabase.from('rag_queries').insert({
+        query_text: `[IMAGE ANALYSIS] ${ragQuery}`,
+        retrieved_doc_ids: allDocs.map((d) => d.id),
+        context_used: `Vision: ${JSON.stringify(analysis)}`,
+        response_generated: finalResponse,
+        total_tokens_used: (visionResponse.usage?.total_tokens || 0) + (combinedResponse.usage?.total_tokens || 0),
+      });
+    } catch (e) {
+      // Ignore logging errors
+    }
+
+    return {
+      analysis,
+      ragEnhancement: {
+        detailedInfo: allDocs.map((d) => d.summary || d.content.substring(0, 200)).join('\n'),
+        treatments: treatments.slice(0, 5),
+        sources: allDocs,
+      },
+      combinedResponse: finalResponse,
+    };
+  } catch (error) {
+    console.error('Error in analyzeImageWithRAG:', error);
+    throw error;
+  }
+}
+
 // Add document to knowledge base (admin function)
 export async function addKnowledgeDocument(
   document: {

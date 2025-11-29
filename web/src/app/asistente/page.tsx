@@ -1,8 +1,9 @@
-// BerryVision AI - Asistente de Conocimiento
+// BerryVision AI - Asistente de Conocimiento con Análisis de Imágenes
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   ArrowLeft,
   Bot,
@@ -15,12 +16,26 @@ import {
   Sparkles,
   ChevronDown,
   ExternalLink,
+  Camera,
+  ImageIcon,
+  X,
+  AlertTriangle,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 
 interface Message {
   id: string;
   role: 'user' | 'assistant';
   content: string;
+  imageUrl?: string;
+  analysis?: {
+    health_status: 'healthy' | 'alert' | 'critical';
+    disease?: { name: string; confidence: number } | null;
+    pest?: { name: string; confidence: number } | null;
+    phenology_bbch?: number;
+    fruit_count?: number;
+  };
   sources?: {
     id: string;
     title: string;
@@ -52,12 +67,39 @@ const SUGGESTED_QUESTIONS = [
   },
 ];
 
+const HEALTH_STATUS_CONFIG = {
+  healthy: {
+    label: 'Saludable',
+    color: 'text-green-400',
+    bgColor: 'bg-green-500/20',
+    borderColor: 'border-green-500/30',
+    icon: CheckCircle,
+  },
+  alert: {
+    label: 'Alerta',
+    color: 'text-yellow-400',
+    bgColor: 'bg-yellow-500/20',
+    borderColor: 'border-yellow-500/30',
+    icon: AlertTriangle,
+  },
+  critical: {
+    label: 'Crítico',
+    color: 'text-red-400',
+    bgColor: 'bg-red-500/20',
+    borderColor: 'border-red-500/30',
+    icon: AlertCircle,
+  },
+};
+
 export default function AsistentePage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedCrop, setSelectedCrop] = useState<'blueberry' | 'raspberry'>('blueberry');
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -67,49 +109,115 @@ export default function AsistentePage() {
     scrollToBottom();
   }, [messages]);
 
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Check file size (max 10MB)
+    if (file.size > 10 * 1024 * 1024) {
+      alert('La imagen es muy grande. Máximo 10MB.');
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const base64 = reader.result as string;
+      setSelectedImage(base64);
+      setImagePreview(base64);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if ((!input.trim() && !selectedImage) || isLoading) return;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: 'user',
-      content: input.trim(),
+      content: input.trim() || (selectedImage ? 'Analiza esta imagen' : ''),
+      imageUrl: imagePreview || undefined,
       timestamp: new Date(),
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const currentInput = input;
+    const currentImage = selectedImage;
     setInput('');
+    clearImage();
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/rag', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          action: 'query',
-          question: userMessage.content,
-          context: {
+      let response;
+      let data;
+
+      if (currentImage) {
+        // Image analysis with RAG
+        response = await fetch('/api/rag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'analyze-image',
+            image: currentImage,
             cropType: selectedCrop,
-          },
-        }),
-      });
+            additionalContext: currentInput || undefined,
+          }),
+        });
 
-      const data = await response.json();
+        data = await response.json();
 
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: data.answer || 'No pude procesar tu consulta.',
-        sources: data.sources?.map((s: any) => ({
-          id: s.id,
-          title: s.title,
-          category: s.category,
-        })),
-        timestamp: new Date(),
-      };
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.combinedResponse || data.analysis?.recommendation || 'No pude analizar la imagen.',
+          analysis: data.analysis,
+          sources: data.ragEnhancement?.sources?.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            category: s.category,
+          })),
+          timestamp: new Date(),
+        };
 
-      setMessages((prev) => [...prev, assistantMessage]);
+        setMessages((prev) => [...prev, assistantMessage]);
+      } else {
+        // Text query with RAG
+        response = await fetch('/api/rag', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'query',
+            question: currentInput,
+            context: {
+              cropType: selectedCrop,
+            },
+          }),
+        });
+
+        data = await response.json();
+
+        const assistantMessage: Message = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          content: data.answer || 'No pude procesar tu consulta.',
+          sources: data.sources?.map((s: any) => ({
+            id: s.id,
+            title: s.title,
+            category: s.category,
+          })),
+          timestamp: new Date(),
+        };
+
+        setMessages((prev) => [...prev, assistantMessage]);
+      }
     } catch (error) {
       console.error('Error:', error);
       const errorMessage: Message = {
@@ -243,6 +351,65 @@ export default function AsistentePage() {
                         </span>
                       </div>
                     )}
+
+                    {/* User image */}
+                    {message.imageUrl && (
+                      <div className="mb-3">
+                        <img
+                          src={message.imageUrl}
+                          alt="Imagen enviada"
+                          className="rounded-lg max-h-48 object-cover"
+                        />
+                      </div>
+                    )}
+
+                    {/* Analysis badge */}
+                    {message.analysis && (
+                      <div className="mb-3 space-y-2">
+                        {/* Health status */}
+                        {(() => {
+                          const status = HEALTH_STATUS_CONFIG[message.analysis.health_status];
+                          const StatusIcon = status.icon;
+                          return (
+                            <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg ${status.bgColor} ${status.borderColor} border`}>
+                              <StatusIcon className={`w-4 h-4 ${status.color}`} />
+                              <span className={`text-sm font-medium ${status.color}`}>
+                                {status.label}
+                              </span>
+                            </div>
+                          );
+                        })()}
+
+                        {/* Detection badges */}
+                        <div className="flex flex-wrap gap-2">
+                          {message.analysis.disease?.name && (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-red-500/20 border border-red-500/30 rounded-lg">
+                              <Bug className="w-3 h-3 text-red-400" />
+                              <span className="text-xs text-red-400">
+                                {message.analysis.disease.name} ({message.analysis.disease.confidence}%)
+                              </span>
+                            </div>
+                          )}
+                          {message.analysis.pest?.name && (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-orange-500/20 border border-orange-500/30 rounded-lg">
+                              <Bug className="w-3 h-3 text-orange-400" />
+                              <span className="text-xs text-orange-400">
+                                {message.analysis.pest.name} ({message.analysis.pest.confidence}%)
+                              </span>
+                            </div>
+                          )}
+                          {message.analysis.phenology_bbch !== undefined && (
+                            <div className="inline-flex items-center gap-1.5 px-2 py-1 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+                              <Leaf className="w-3 h-3 text-blue-400" />
+                              <span className="text-xs text-blue-400">
+                                BBCH {message.analysis.phenology_bbch}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     <div className="text-white whitespace-pre-wrap text-sm leading-relaxed">
                       {message.content}
                     </div>
@@ -297,18 +464,56 @@ export default function AsistentePage() {
       {/* Input Area */}
       <div className="sticky bottom-0 bg-[#0a0a0f]/80 backdrop-blur-xl border-t border-white/5">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+          {/* Image Preview */}
+          {imagePreview && (
+            <div className="mb-3 relative inline-block">
+              <img
+                src={imagePreview}
+                alt="Vista previa"
+                className="h-20 rounded-lg object-cover border border-white/20"
+              />
+              <button
+                type="button"
+                onClick={clearImage}
+                className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors"
+              >
+                <X className="w-3 h-3 text-white" />
+              </button>
+            </div>
+          )}
+
           <form onSubmit={handleSubmit} className="flex gap-3">
+            {/* Hidden file input */}
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageSelect}
+              accept="image/*"
+              className="hidden"
+            />
+
+            {/* Image upload button */}
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isLoading}
+              className="px-4 py-3 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl transition-colors disabled:opacity-50"
+              title="Subir imagen para análisis"
+            >
+              <Camera className="w-5 h-5 text-gray-400" />
+            </button>
+
             <input
               type="text"
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="Pregunta sobre enfermedades, plagas, nutrición..."
+              placeholder={selectedImage ? "Agrega contexto (opcional)..." : "Pregunta o sube una imagen..."}
               className="flex-1 px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500/50"
               disabled={isLoading}
             />
             <button
               type="submit"
-              disabled={!input.trim() || isLoading}
+              disabled={(!input.trim() && !selectedImage) || isLoading}
               className="px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-emerald-500/50 disabled:cursor-not-allowed rounded-xl transition-colors"
             >
               {isLoading ? (
@@ -319,8 +524,7 @@ export default function AsistentePage() {
             </button>
           </form>
           <p className="text-center text-gray-600 text-xs mt-3">
-            Las respuestas se basan en la base de conocimiento de BerryVision.
-            Siempre consulte con un agrónomo certificado para decisiones críticas.
+            📷 Sube una foto de tu cultivo para análisis visual con IA + base de conocimiento.
           </p>
         </div>
       </div>
