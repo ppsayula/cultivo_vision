@@ -8,7 +8,6 @@ const withSerwist = withSerwistInit({
 });
 
 const nextConfig: NextConfig = {
-  output: "standalone",
   // Empty turbopack config to satisfy Next.js 16 requirement
   turbopack: {},
 };
