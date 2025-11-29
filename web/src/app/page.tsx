@@ -34,7 +34,8 @@ import {
   Clock,
   MapPin,
   Scan,
-  Sparkles
+  Sparkles,
+  Bot
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -506,12 +507,13 @@ export default function Home() {
           <nav className="space-y-2">
             {[
               { icon: BarChart3, label: 'Dashboard', href: '/', active: true },
-              { icon: Scan, label: 'Análisis', href: '/analyses' },
-              { icon: Map, label: 'Mapa de Calor', href: '/map' },
-              { icon: Bell, label: 'Alertas', href: '/alerts', badge: stats.pendingAlerts },
-              { icon: FileText, label: 'Reportes', href: '/reports' },
-              { icon: Target, label: 'Fincas', href: '/farms' },
-              { icon: Settings, label: 'Configuración', href: '/settings' }
+              { icon: Scan, label: 'Análisis', href: '/analisis' },
+              { icon: Map, label: 'Mapa de Calor', href: '/mapa' },
+              { icon: Bell, label: 'Alertas', href: '/alertas', badge: stats.pendingAlerts },
+              { icon: Bot, label: 'Asistente IA', href: '/asistente' },
+              { icon: FileText, label: 'Reportes', href: '/reportes' },
+              { icon: Target, label: 'Fincas', href: '/fincas' },
+              { icon: Settings, label: 'Configuración', href: '/configuracion' }
             ].map((item) => (
               <Link
                 key={item.label}
@@ -708,7 +710,7 @@ export default function Home() {
                   title="Ver Análisis"
                   description="Explora el historial completo de análisis de cultivos"
                   icon={Camera}
-                  href="/analyses"
+                  href="/analisis"
                   gradient="bg-gradient-to-br from-blue-600/90 to-indigo-700/90"
                   iconBg="bg-blue-600"
                   delay={400}
@@ -717,27 +719,27 @@ export default function Home() {
                   title="Mapa de Calor"
                   description="Visualiza zonas problemáticas georreferenciadas"
                   icon={Map}
-                  href="/map"
+                  href="/mapa"
                   gradient="bg-gradient-to-br from-purple-600/90 to-pink-700/90"
                   iconBg="bg-purple-600"
                   delay={500}
                 />
                 <QuickAction
-                  title="Generar Reporte"
-                  description="Crea reportes personalizados PDF/Excel"
-                  icon={FileText}
-                  href="/reports"
-                  gradient="bg-gradient-to-br from-green-600/90 to-emerald-700/90"
-                  iconBg="bg-green-600"
+                  title="Asistente IA"
+                  description="Consulta la base de conocimiento agrícola"
+                  icon={Bot}
+                  href="/asistente"
+                  gradient="bg-gradient-to-br from-cyan-600/90 to-teal-700/90"
+                  iconBg="bg-cyan-600"
                   delay={600}
                 />
                 <QuickAction
-                  title="Nuevo Análisis"
-                  description="Analiza una imagen de cultivo con IA"
-                  icon={Zap}
-                  href="/analyze"
-                  gradient="bg-gradient-to-br from-orange-600/90 to-red-700/90"
-                  iconBg="bg-orange-600"
+                  title="Generar Reporte"
+                  description="Crea reportes personalizados PDF/Excel"
+                  icon={FileText}
+                  href="/reportes"
+                  gradient="bg-gradient-to-br from-green-600/90 to-emerald-700/90"
+                  iconBg="bg-green-600"
                   delay={700}
                 />
               </div>
@@ -747,7 +749,7 @@ export default function Home() {
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-white">Alertas Recientes</h3>
-                <Link href="/alerts" className="text-green-400 text-sm hover:underline flex items-center gap-1">
+                <Link href="/alertas" className="text-green-400 text-sm hover:underline flex items-center gap-1">
                   Ver todas <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
