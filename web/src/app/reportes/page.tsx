@@ -17,7 +17,7 @@ import {
   Eye,
   Trash2,
   FileSpreadsheet,
-  FilePdf
+  File
 } from 'lucide-react';
 
 // Mock reports data
