@@ -308,23 +308,77 @@ function WeatherWidget() {
   );
 }
 
+interface StatsData {
+  totalAnalyses: number;
+  healthyCount: number;
+  alertCount: number;
+  criticalCount: number;
+  pendingCount: number;
+}
+
+interface WeeklyData {
+  date: string;
+  analyses: number;
+  alerts: number;
+}
+
+interface AlertData {
+  id: string;
+  type: string;
+  title: string;
+  message: string;
+  severity: string;
+  created_at: string;
+}
+
 export default function Home() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState<StatsData>({
+    totalAnalyses: 0,
+    healthyCount: 0,
+    alertCount: 0,
+    criticalCount: 0,
+    pendingCount: 0
+  });
+  const [weeklyTrend, setWeeklyTrend] = useState<WeeklyData[]>([]);
+  const [diseaseCounts, setDiseaseCounts] = useState<Record<string, number>>({});
+  const [recentAlerts, setRecentAlerts] = useState<AlertData[]>([]);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Demo data
-  const stats = {
-    totalAnalyses: 247,
-    healthyCount: 189,
-    alertCount: 45,
-    criticalCount: 13,
-    pendingAlerts: 8
-  };
+  // Fetch real stats from API
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const response = await fetch('/api/stats');
+        const data = await response.json();
+
+        if (data.success) {
+          setStats({
+            totalAnalyses: data.stats.totalAnalyses,
+            healthyCount: data.stats.healthyCount,
+            alertCount: data.stats.alertCount,
+            criticalCount: data.stats.criticalCount,
+            pendingCount: data.stats.pendingCount
+          });
+          setWeeklyTrend(data.weeklyTrend || []);
+          setDiseaseCounts(data.diseaseCounts || {});
+          setRecentAlerts(data.recentAlerts || []);
+        }
+      } catch (error) {
+        console.error('Error fetching stats:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
 
   // Chart data - Doughnut
   const doughnutData = {
@@ -357,13 +411,13 @@ export default function Home() {
     }
   };
 
-  // Chart data - Line (Weekly Trend)
+  // Chart data - Line (Weekly Trend) - Dynamic from API
   const lineData = {
-    labels: ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
+    labels: weeklyTrend.length > 0 ? weeklyTrend.map(d => d.date) : ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'],
     datasets: [
       {
         label: 'Análisis',
-        data: [32, 45, 38, 52, 48, 35, 42],
+        data: weeklyTrend.length > 0 ? weeklyTrend.map(d => d.analyses) : [0, 0, 0, 0, 0, 0, 0],
         fill: true,
         backgroundColor: 'rgba(34, 197, 94, 0.1)',
         borderColor: 'rgba(34, 197, 94, 1)',
@@ -377,7 +431,7 @@ export default function Home() {
       },
       {
         label: 'Alertas',
-        data: [5, 8, 6, 12, 9, 4, 7],
+        data: weeklyTrend.length > 0 ? weeklyTrend.map(d => d.alerts) : [0, 0, 0, 0, 0, 0, 0],
         fill: true,
         backgroundColor: 'rgba(245, 158, 11, 0.1)',
         borderColor: 'rgba(245, 158, 11, 1)',
@@ -426,19 +480,43 @@ export default function Home() {
     }
   };
 
-  // Bar chart - Disease distribution
+  // Bar chart - Disease distribution - Dynamic from API
+  const diseaseLabels = Object.keys(diseaseCounts).length > 0
+    ? Object.keys(diseaseCounts).map(d => {
+        const names: Record<string, string> = {
+          'botrytis': 'Botrytis',
+          'anthracnose': 'Antracnosis',
+          'powdery_mildew': 'Oídio',
+          'mummy_berry': 'Momificación',
+          'nutritional': 'Nutricional',
+          'drosophila_swd': 'SWD',
+          'aphids': 'Áfidos',
+          'thrips': 'Trips',
+          'spider_mites': 'Ácaros',
+          'unknown': 'Otros'
+        };
+        return names[d] || d;
+      })
+    : ['Sin datos'];
+
+  const diseaseValues = Object.keys(diseaseCounts).length > 0
+    ? Object.values(diseaseCounts)
+    : [0];
+
   const barData = {
-    labels: ['Botrytis', 'Antracnosis', 'Oídio', 'SWD', 'Áfidos', 'Otros'],
+    labels: diseaseLabels,
     datasets: [{
       label: 'Detecciones',
-      data: [18, 12, 8, 15, 6, 4],
+      data: diseaseValues,
       backgroundColor: [
         'rgba(139, 92, 246, 0.8)',
         'rgba(236, 72, 153, 0.8)',
         'rgba(14, 165, 233, 0.8)',
         'rgba(249, 115, 22, 0.8)',
         'rgba(34, 197, 94, 0.8)',
-        'rgba(107, 114, 128, 0.8)'
+        'rgba(107, 114, 128, 0.8)',
+        'rgba(220, 38, 38, 0.8)',
+        'rgba(6, 182, 212, 0.8)'
       ],
       borderRadius: 8,
       borderSkipped: false
@@ -508,7 +586,7 @@ export default function Home() {
             {[
               { icon: BarChart3, label: 'Dashboard', href: '/', active: true },
               { icon: Scan, label: 'Análisis', href: '/analisis' },
-              { icon: Clock, label: 'Pendientes', href: '/pendientes', badge: stats.pendingAlerts > 0 ? stats.pendingAlerts : undefined },
+              { icon: Clock, label: 'Pendientes', href: '/pendientes', badge: stats.pendingCount > 0 ? stats.pendingCount : undefined },
               { icon: Map, label: 'Mapa de Calor', href: '/mapa' },
               { icon: Bell, label: 'Alertas', href: '/alertas' },
               { icon: Bot, label: 'Asistente IA', href: '/asistente' },
@@ -591,9 +669,9 @@ export default function Home() {
               <div className="flex items-center gap-3">
                 <button className="relative p-2 text-gray-400 hover:text-white transition-colors bg-gray-800/50 rounded-xl">
                   <Bell className="w-5 h-5" />
-                  {stats.pendingAlerts > 0 && (
+                  {stats.pendingCount > 0 && (
                     <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
-                      {stats.pendingAlerts}
+                      {stats.pendingCount}
                     </span>
                   )}
                 </button>
