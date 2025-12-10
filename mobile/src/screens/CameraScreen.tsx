@@ -1,6 +1,6 @@
-// BerryVision AI - Camera Screen
+// BerryVision AI - Camera Screen (Offline-First)
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -10,6 +10,8 @@ import {
   Alert,
   Modal,
   TextInput,
+  Animated,
+  Vibration,
 } from 'react-native';
 import { CameraView } from 'expo-camera';
 import { useCamera } from '../hooks/useCamera';
@@ -34,13 +36,52 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
   } = useCamera();
 
   const { isConnected, syncMode } = useNetwork();
-  const { createAnalysis, isAnalyzing } = useAnalysisStore();
+  const {
+    saveOnlyLocal,
+    createAnalysis,
+    isAnalyzing,
+    isSaving,
+    lastSaveSuccess,
+    clearSaveStatus,
+    stats,
+  } = useAnalysisStore();
 
   const [showOptions, setShowOptions] = useState(false);
   const [cropType, setCropType] = useState<CropType>('blueberry');
   const [sector, setSector] = useState('');
   const [notes, setNotes] = useState('');
   const [capturedUri, setCapturedUri] = useState<string | null>(null);
+  const [showSuccessToast, setShowSuccessToast] = useState(false);
+  const [savedCount, setSavedCount] = useState(0);
+
+  // Animación para el toast de éxito
+  const fadeAnim = useState(new Animated.Value(0))[0];
+
+  // Mostrar toast de éxito cuando se guarda
+  useEffect(() => {
+    if (lastSaveSuccess) {
+      setSavedCount(prev => prev + 1);
+      setShowSuccessToast(true);
+      Vibration.vibrate(100); // Feedback háptico
+
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+        Animated.delay(1500),
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 300,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setShowSuccessToast(false);
+        clearSaveStatus();
+      });
+    }
+  }, [lastSaveSuccess]);
 
   // Pantalla de permisos
   if (hasPermission === null) {
@@ -77,8 +118,8 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
     }
   };
 
-  // Confirmar y analizar
-  const handleConfirm = async () => {
+  // NUEVO: Solo guardar sin analizar (modo campo)
+  const handleSaveOnly = async () => {
     if (!capturedUri) {
       Alert.alert('Error', 'No se capturó la foto');
       return;
@@ -86,7 +127,47 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
 
     setShowOptions(false);
 
-    // Usar ubicación real o por defecto
+    const finalLocation = location || { latitude: 0, longitude: 0 };
+
+    try {
+      await saveOnlyLocal(
+        capturedUri,
+        finalLocation,
+        cropType,
+        sector || undefined,
+        notes || undefined
+      );
+      // El toast se muestra automáticamente por el useEffect
+    } catch (error) {
+      Alert.alert('Error', `No se pudo guardar: ${(error as Error).message}`);
+    } finally {
+      setCapturedUri(null);
+      setSector('');
+      setNotes('');
+    }
+  };
+
+  // Guardar Y analizar (requiere conexión)
+  const handleSaveAndAnalyze = async () => {
+    if (!capturedUri) {
+      Alert.alert('Error', 'No se capturó la foto');
+      return;
+    }
+
+    if (!isConnected) {
+      Alert.alert(
+        'Sin conexión',
+        '¿Deseas guardar la foto para analizar después cuando tengas internet?',
+        [
+          { text: 'Cancelar', style: 'cancel' },
+          { text: 'Guardar', onPress: handleSaveOnly },
+        ]
+      );
+      return;
+    }
+
+    setShowOptions(false);
+
     const finalLocation = location || { latitude: 0, longitude: 0 };
 
     try {
@@ -98,11 +179,10 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
         notes || undefined
       );
 
-      // Navegar al resultado
       navigation.navigate('Result', { analysisId: analysis.id });
     } catch (error) {
       console.error('Error creando análisis:', error);
-      Alert.alert('Error', `No se pudo crear el análisis: ${(error as Error).message}`);
+      Alert.alert('Error', `No se pudo analizar: ${(error as Error).message}`);
     } finally {
       setCapturedUri(null);
       setSector('');
@@ -117,6 +197,8 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
     setSector('');
     setNotes('');
   };
+
+  const pendingCount = stats.pending_sync || 0;
 
   return (
     <View style={styles.container}>
@@ -145,11 +227,25 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
           </View>
 
           {location && (
-            <Text style={styles.locationText}>
-              📍 {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
-            </Text>
+            <View style={styles.locationBadge}>
+              <Text style={styles.locationText}>
+                📍 {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+              </Text>
+            </View>
           )}
         </View>
+
+        {/* Banner de pendientes */}
+        {pendingCount > 0 && (
+          <TouchableOpacity
+            style={styles.pendingBanner}
+            onPress={() => navigation.navigate('History')}
+          >
+            <Text style={styles.pendingText}>
+              📷 {pendingCount} foto{pendingCount > 1 ? 's' : ''} pendiente{pendingCount > 1 ? 's' : ''} de analizar
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Controles inferiores */}
         <View style={styles.bottomOverlay}>
@@ -188,33 +284,38 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
             <TouchableOpacity
               style={[
                 styles.captureButton,
-                (isCapturing || isAnalyzing) && styles.captureButtonDisabled,
+                (isCapturing || isAnalyzing || isSaving) && styles.captureButtonDisabled,
               ]}
               onPress={handleCapture}
-              disabled={isCapturing || isAnalyzing}
+              disabled={isCapturing || isAnalyzing || isSaving}
             >
-              {isCapturing || isAnalyzing ? (
-                <ActivityIndicator color="#fff" size="large" />
+              {isCapturing || isSaving ? (
+                <ActivityIndicator color="#22C55E" size="large" />
               ) : (
                 <View style={styles.captureInner} />
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.galleryButton}
-              onPress={() => navigation.navigate('History')}
-            >
-              <Text style={styles.galleryText}>📋</Text>
-            </TouchableOpacity>
+            {/* Contador de fotos guardadas en sesión */}
+            <View style={styles.counterBadge}>
+              <Text style={styles.counterText}>{savedCount}</Text>
+            </View>
           </View>
         </View>
+
+        {/* Toast de éxito */}
+        {showSuccessToast && (
+          <Animated.View style={[styles.successToast, { opacity: fadeAnim }]}>
+            <Text style={styles.successToastText}>✅ Foto guardada</Text>
+          </Animated.View>
+        )}
       </CameraView>
 
       {/* Modal de opciones */}
       <Modal visible={showOptions} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Información Adicional</Text>
+            <Text style={styles.modalTitle}>📷 Foto Capturada</Text>
 
             <Text style={styles.label}>Sector (opcional)</Text>
             <TextInput
@@ -232,30 +333,59 @@ export function CameraScreen({ navigation }: CameraScreenProps) {
               value={notes}
               onChangeText={setNotes}
               multiline
-              numberOfLines={3}
+              numberOfLines={2}
               placeholderTextColor="#9CA3AF"
             />
 
+            {/* Botones de acción */}
             <View style={styles.modalButtons}>
+              {/* Botón principal: GUARDAR (siempre funciona) */}
               <TouchableOpacity
-                style={styles.cancelButton}
-                onPress={handleCancel}
+                style={styles.saveOnlyButton}
+                onPress={handleSaveOnly}
+                disabled={isSaving}
               >
-                <Text style={styles.cancelButtonText}>Cancelar</Text>
+                {isSaving ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Text style={styles.saveOnlyButtonText}>💾 GUARDAR</Text>
+                    <Text style={styles.saveOnlySubtext}>Sin analizar</Text>
+                  </>
+                )}
               </TouchableOpacity>
 
+              {/* Botón secundario: Analizar (requiere conexión) */}
               <TouchableOpacity
-                style={styles.confirmButton}
-                onPress={handleConfirm}
-                disabled={isAnalyzing}
+                style={[
+                  styles.analyzeButton,
+                  !isConnected && styles.analyzeButtonDisabled,
+                ]}
+                onPress={handleSaveAndAnalyze}
+                disabled={isAnalyzing || !isConnected}
               >
                 {isAnalyzing ? (
                   <ActivityIndicator color="#fff" />
                 ) : (
-                  <Text style={styles.confirmButtonText}>Analizar</Text>
+                  <>
+                    <Text style={styles.analyzeButtonText}>
+                      {isConnected ? '🔬 ANALIZAR' : '📵 Sin conexión'}
+                    </Text>
+                    <Text style={styles.analyzeSubtext}>
+                      {isConnected ? 'Con IA ahora' : 'Guarda para después'}
+                    </Text>
+                  </>
                 )}
               </TouchableOpacity>
             </View>
+
+            {/* Cancelar */}
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={handleCancel}
+            >
+              <Text style={styles.cancelButtonText}>Cancelar</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -326,13 +456,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: '500',
   },
-  locationText: {
-    color: '#fff',
-    fontSize: 12,
+  locationBadge: {
     backgroundColor: 'rgba(0,0,0,0.6)',
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 20,
+  },
+  locationText: {
+    color: '#fff',
+    fontSize: 12,
+  },
+  pendingBanner: {
+    position: 'absolute',
+    top: 110,
+    left: 20,
+    right: 20,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  pendingText: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '500',
   },
   bottomOverlay: {
     position: 'absolute',
@@ -394,16 +542,34 @@ const styles = StyleSheet.create({
   flipText: {
     fontSize: 24,
   },
-  galleryButton: {
+  counterBadge: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    backgroundColor: 'rgba(0,0,0,0.6)',
+    backgroundColor: 'rgba(34, 197, 94, 0.8)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  galleryText: {
-    fontSize: 24,
+  counterText: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: 'bold',
+  },
+  successToast: {
+    position: 'absolute',
+    top: '45%',
+    left: '25%',
+    right: '25%',
+    backgroundColor: 'rgba(34, 197, 94, 0.95)',
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  successToastText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
   },
   modalOverlay: {
     flex: 1,
@@ -417,7 +583,7 @@ const styles = StyleSheet.create({
     padding: 24,
   },
   modalTitle: {
-    fontSize: 20,
+    fontSize: 22,
     fontWeight: 'bold',
     color: '#fff',
     marginBottom: 20,
@@ -437,17 +603,54 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   textArea: {
-    height: 80,
+    height: 60,
     textAlignVertical: 'top',
   },
   modalButtons: {
     flexDirection: 'row',
     marginTop: 8,
+    gap: 12,
+  },
+  saveOnlyButton: {
+    flex: 1,
+    backgroundColor: '#22C55E',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  saveOnlyButtonText: {
+    color: '#fff',
+    fontSize: 18,
+    fontWeight: 'bold',
+  },
+  saveOnlySubtext: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  analyzeButton: {
+    flex: 1,
+    backgroundColor: '#3B82F6',
+    paddingVertical: 16,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  analyzeButtonDisabled: {
+    backgroundColor: '#4B5563',
+  },
+  analyzeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  analyzeSubtext: {
+    color: 'rgba(255,255,255,0.7)',
+    fontSize: 11,
+    marginTop: 2,
   },
   cancelButton: {
-    flex: 1,
-    paddingVertical: 16,
-    marginRight: 8,
+    marginTop: 12,
+    paddingVertical: 14,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: '#6B7280',
@@ -455,19 +658,6 @@ const styles = StyleSheet.create({
   },
   cancelButtonText: {
     color: '#9CA3AF',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  confirmButton: {
-    flex: 1,
-    backgroundColor: '#22C55E',
-    paddingVertical: 16,
-    marginLeft: 8,
-    borderRadius: 12,
-    alignItems: 'center',
-  },
-  confirmButtonText: {
-    color: '#fff',
     fontSize: 16,
     fontWeight: '600',
   },

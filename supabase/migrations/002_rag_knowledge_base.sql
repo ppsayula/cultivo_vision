@@ -560,3 +560,263 @@ RENDIMIENTOS ESPERADOS:
   ARRAY['cosecha', 'calidad', 'postcosecha', 'frio', 'contenedores'],
   ARRAY['blueberry', 'raspberry']::crop_type[]
 );
+
+-- FENOLOGÍA FRAMBUESA
+INSERT INTO public.knowledge_documents (source_id, title, content, category, tags, crop_types)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'Estados Fenológicos de la Frambuesa (Escala BBCH)',
+  'Escala BBCH modificada para frambuesa (Rubus idaeus).
+
+ESTADO 0 - DORMANCIA (00-09):
+- 00: Yema de invierno cerrada
+- 01: Yemas empezando a hincharse
+- 07: Inicio brotación, puntas verdes visibles
+- 09: Hojas emergiendo de yemas
+
+ESTADO 1 - DESARROLLO DE BROTES (10-19):
+- 11: Primera hoja desplegada
+- 13: 3 hojas desplegadas
+- 15: 5 hojas desplegadas
+- 19: Más de 9 hojas desplegadas
+
+ESTADO 3 - ELONGACIÓN DE CAÑAS (30-39):
+- 31: Inicio elongación cañas
+- 35: 50% longitud final cañas
+- 39: Cañas alcanzando altura máxima
+
+ESTADO 5 - DESARROLLO FLORAL (50-59):
+- 51: Inflorescencias visibles
+- 55: Primeros botones florales visibles
+- 59: Primeras flores abiertas
+
+ESTADO 6 - FLORACIÓN (60-69):
+- 61: 10% flores abiertas
+- 65: 50% flores abiertas (plena floración)
+- 69: Fin de floración
+
+ESTADO 7 - DESARROLLO DEL FRUTO (70-79):
+- 71: Receptáculo desarrollándose
+- 73: Drupeolas verdes visibles
+- 75: Fruto tamaño medio
+- 79: Fruto tamaño final
+
+ESTADO 8 - MADURACIÓN (80-89):
+- 81: Inicio de coloración
+- 85: 50% frutos coloreados
+- 89: Frutos maduros para cosecha
+
+APLICACIONES FITOSANITARIAS:
+- 51-55: Prevención Botrytis
+- 61-65: Cuidado polinizadores
+- 71-79: Monitoreo Drosophila intensivo
+- 81-89: Respetar carencias',
+  'phenology',
+  ARRAY['fenologia', 'bbch', 'floracion', 'maduracion', 'frambuesa'],
+  ARRAY['raspberry']::crop_type[]
+);
+
+-- RASPBERRY FRUITWORM
+INSERT INTO public.knowledge_documents (source_id, title, content, category, tags, crop_types)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'Gusano de la Frambuesa (Byturus tomentosus)',
+  'Byturus tomentosus es una plaga específica de frambuesa que causa daño significativo al fruto.
+
+IDENTIFICACIÓN:
+- Adulto: Escarabajo pequeño (4mm), color marrón claro pubescente
+- Larva: Blanco-amarillenta, 8mm, cabeza marrón
+- Daño: Larvas dentro del fruto, galerías en drupeolas
+
+CICLO DE VIDA:
+- Adultos emergen en primavera (abril-mayo)
+- Oviposición en flores y frutos jóvenes
+- Larvas se alimentan 5-6 semanas dentro del fruto
+- Pupación en suelo
+- Una generación por año
+
+SÍNTOMAS Y DAÑO:
+- Flores dañadas con pétalos mordidos
+- Frutos deformados con drupeolas secas
+- Larvas visibles al abrir fruto maduro
+- Rechazo comercial del fruto
+
+MONITOREO:
+- Trampas blancas pegajosas (1/ha)
+- Inspección visual de flores
+- Umbral: 1 adulto/trampa/día = iniciar control
+- Época crítica: floración a cuaje
+
+MANEJO INTEGRADO:
+1. Cultural: Labores de suelo post-cosecha
+2. Biológico: Nematodos entomopatógenos en suelo
+3. Químico: Aplicaciones en floración
+
+PRODUCTOS RECOMENDADOS:
+- Spinosad (Success®): 20-30 mL/100L
+- Lambda-cihalotrina: 15-20 mL/100L
+- Thiacloprid (solo donde esté permitido)
+
+MOMENTO DE APLICACIÓN:
+- Primera aplicación: inicio floración
+- Segunda: plena floración
+- Evitar aplicaciones durante visita de abejas',
+  'pest',
+  ARRAY['byturus', 'gusano_frambuesa', 'fruitworm', 'plaga', 'insecticida'],
+  ARRAY['raspberry']::crop_type[]
+);
+
+-- ROYA DE LA FRAMBUESA
+INSERT INTO public.knowledge_documents (source_id, title, content, category, tags, crop_types)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'Roya de la Frambuesa (Phragmidium rubi-idaei)',
+  'La roya es una enfermedad fúngica común en frambuesas que afecta principalmente las hojas.
+
+SÍNTOMAS:
+- Pústulas naranjas en envés de hojas (uredosporas)
+- Manchas amarillas en haz de hojas
+- Pústulas negras en otoño (teliosporas)
+- Defoliación prematura en infecciones severas
+- Debilitamiento de cañas
+
+CONDICIONES FAVORABLES:
+- Temperaturas 15-20°C
+- Humedad relativa alta (>80%)
+- Lluvias frecuentes
+- Plantaciones densas con mala ventilación
+
+CICLO DE LA ENFERMEDAD:
+- Teliosporas sobreviven en hojas caídas
+- Infección primaria en primavera
+- Múltiples ciclos de uredosporas en verano
+- Formación de teliosporas en otoño
+
+MANEJO INTEGRADO:
+1. Resistencia: Usar variedades tolerantes
+2. Cultural: Eliminar hojas caídas, mejorar ventilación
+3. Químico: Fungicidas preventivos
+
+PRODUCTOS RECOMENDADOS:
+- Myclobutanil: 30-40 mL/100L
+- Azoxystrobin: 75-100 mL/100L
+- Tebuconazole: 50-75 mL/100L
+- Productos a base de azufre (preventivo)
+
+PROGRAMA DE APLICACIÓN:
+- Primera: brotación (preventivo)
+- Segunda: pre-floración
+- Tercera: post-floración
+- Rotar grupos químicos',
+  'disease',
+  ARRAY['roya', 'phragmidium', 'rust', 'fungicida', 'frambuesa'],
+  ARRAY['raspberry']::crop_type[]
+);
+
+-- PODREDUMBRE DE RAÍZ
+INSERT INTO public.knowledge_documents (source_id, title, content, category, tags, crop_types)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'Podredumbre de Raíz en Berries (Phytophthora)',
+  'Phytophthora spp. causa pudrición de raíces y cuello en berries, especialmente en suelos mal drenados.
+
+SÍNTOMAS:
+- Marchitez de plantas sin causa aparente
+- Clorosis generalizada
+- Raíces marrones y blandas
+- Necrosis en cuello de planta
+- Muerte súbita en temporada de lluvias
+
+ESPECIES COMUNES:
+- P. cinnamomi: Principal en arándano
+- P. fragariae var. rubi: Específica de frambuesa
+- P. cactorum: Afecta ambos cultivos
+
+CONDICIONES FAVORABLES:
+- Suelos mal drenados
+- Riego excesivo
+- pH alto en arándano
+- Temperaturas del suelo 15-25°C
+
+DIAGNÓSTICO:
+- Corte longitudinal de raíz/cuello
+- Coloración marrón-rojiza en tejido
+- Olor característico
+- Confirmación en laboratorio
+
+MANEJO INTEGRADO:
+1. Prevención: Drenaje, camellones elevados
+2. Material vegetal: Plantas certificadas
+3. Químico: Fungicidas específicos
+
+PRODUCTOS RECOMENDADOS:
+- Fosetyl-Al (Aliette®): 250-300 g/100L drench
+- Metalaxyl: 200-250 g/100L drench
+- Ácido fosforoso: aplicación foliar y drench
+- Trichoderma: preventivo biológico
+
+MANEJO DE RIEGO:
+- Evitar encharcamientos
+- Sensores de humedad
+- Riego por goteo preferible
+- No regar de noche',
+  'disease',
+  ARRAY['phytophthora', 'pudricion', 'raiz', 'drenaje', 'fungicida'],
+  ARRAY['blueberry', 'raspberry']::crop_type[]
+);
+
+-- ÁCAROS
+INSERT INTO public.knowledge_documents (source_id, title, content, category, tags, crop_types)
+VALUES (
+  'a0000000-0000-0000-0000-000000000001',
+  'Ácaros en Berries (Tetranychus urticae)',
+  'La araña roja es una plaga común que afecta el follaje de berries en condiciones de calor y sequedad.
+
+IDENTIFICACIÓN:
+- Adulto: Ácaro pequeño (0.5mm), color variable (verde a rojo)
+- Huevos: Esféricos, transparentes a amarillos
+- Telarañas finas en envés de hojas
+
+SÍNTOMAS:
+- Punteado clorótico en hojas
+- Bronceado del follaje
+- Telarañas visibles en infestaciones altas
+- Defoliación en casos severos
+- Reducción de fotosíntesis
+
+CONDICIONES FAVORABLES:
+- Temperaturas >25°C
+- Humedad relativa baja (<50%)
+- Estrés hídrico de plantas
+- Uso excesivo de piretroides
+
+CICLO DE VIDA:
+- Huevo a adulto: 7-14 días
+- Múltiples generaciones por temporada
+- Población explota rápidamente
+
+MONITOREO:
+- Revisar envés de hojas con lupa
+- Umbral: 3-5 ácaros/hoja
+- Mayor incidencia en bordes de parcela
+
+MANEJO INTEGRADO:
+1. Cultural: Riego adecuado, control de polvo
+2. Biológico: Phytoseiulus persimilis, Neoseiulus californicus
+3. Químico: Acaricidas específicos
+
+PRODUCTOS RECOMENDADOS:
+- Abamectina: 30-50 mL/100L
+- Spiromesifen (Oberon®): 40-60 mL/100L
+- Bifenazate: 40-60 g/100L
+- Aceite mineral (verano): 1-2%
+
+IMPORTANTE:
+- Rotar grupos químicos (resistencia rápida)
+- No mezclar con fungicidas azufrados
+- Aplicar en horas frescas
+- Mojar bien envés de hojas',
+  'pest',
+  ARRAY['acaros', 'araña_roja', 'tetranychus', 'acaricida', 'plaga'],
+  ARRAY['blueberry', 'raspberry']::crop_type[]
+);
