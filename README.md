@@ -2,6 +2,10 @@
 
 Sistema integral de monitoreo y análisis de cultivos de berries (arándano y frambuesa) con IA.
 
+## Demo en Vivo
+
+🌐 **Dashboard Web**: https://cultivovision-production.up.railway.app
+
 ## Qué es
 
 Un **ecosistema completo** que incluye:
@@ -30,6 +34,11 @@ Un **ecosistema completo** que incluye:
 - Gestión de alertas
 - Generación de reportes
 - Configuración de fincas y sectores
+- **Módulo de Crecimiento** - Registro y seguimiento de plantas por lote
+- **Módulo de Laboratorio** - Análisis de suelo, foliar, agua y calidad de fruta
+- **Gestión de Usuarios** - Alta de ingenieros con preferencias de notificación
+- **Notificaciones Automáticas** - Recordatorios diarios a usuarios inactivos (Lun-Vie)
+- **Reporte Diario para Admin** - Resumen consolidado de actividad
 
 ### Sistema de Alertas
 - Notificaciones push (críticas inmediatas)
@@ -58,32 +67,42 @@ Un **ecosistema completo** que incluye:
 ## Estructura del Proyecto
 
 ```
-bucle-agenticol/
+cultivo_vision/
 ├── README.md
 ├── docs/
-│   ├── 01-definicion-concepto.md   # Kickoff y problema de negocio
-│   ├── 02-user-stories.md          # 15 user stories priorizadas
-│   ├── 03-arquitectura.md          # Arquitectura técnica detallada
-│   └── 04-ecosistema-centro-control.md # Dashboard, alertas, reportes
-├── mobile/                          # App React Native / Expo
-│   ├── App.tsx                      # Entrada principal
-│   ├── src/
-│   │   ├── components/              # Componentes reutilizables
-│   │   ├── screens/                 # Pantallas (Camera, Result, History, Map)
-│   │   ├── services/                # Servicios (Supabase, Vision, Sync, Storage)
-│   │   ├── store/                   # Estado global (Zustand)
-│   │   ├── hooks/                   # Custom hooks
-│   │   ├── types/                   # TypeScript types
-│   │   └── constants/               # Configuración
-│   └── package.json
-├── web/                             # Dashboard Next.js
-│   ├── src/
-│   │   ├── app/                     # App Router pages
-│   │   └── lib/                     # Utilidades y Supabase client
-│   └── package.json
-└── supabase/
-    └── migrations/                  # Migraciones SQL
-        └── 001_initial_schema.sql   # Schema inicial con PostGIS
+│   ├── 01-definicion-concepto.md      # Kickoff y problema de negocio
+│   ├── 02-user-stories.md             # 15 user stories priorizadas
+│   ├── 03-arquitectura.md             # Arquitectura técnica detallada
+│   ├── 04-ecosistema-centro-control.md # Dashboard, alertas, reportes
+│   └── DATABASE_MAP.md                # Mapa visual de las 35+ tablas
+├── mobile/                             # App React Native / Expo
+│   ├── App.tsx
+│   └── src/
+│       ├── components/
+│       ├── screens/
+│       ├── services/
+│       └── ...
+├── web/                                # Dashboard Next.js
+│   └── src/app/
+│       ├── page.tsx                    # Inicio con KPIs
+│       ├── analisis/                   # Análisis con IA
+│       ├── crecimiento/                # Registro de crecimiento
+│       ├── laboratorio/                # Análisis de laboratorio
+│       ├── configuracion/              # Gestión de usuarios y notificaciones
+│       ├── ayuda/                      # Instructivo del sistema
+│       └── api/
+│           ├── analyze/                # API de análisis con GPT-4 Vision
+│           ├── growth/                 # API de crecimiento
+│           ├── lab/                    # API de laboratorio
+│           ├── users/                  # API de usuarios
+│           └── notifications/          # API de notificaciones
+└── supabase/migrations/
+    ├── 001_initial_schema.sql          # Schema inicial
+    ├── 002_insects_diseases.sql        # Detección de plagas
+    ├── 003_growth_tracking.sql         # Seguimiento de crecimiento
+    ├── 004_lab_analyses.sql            # Análisis de laboratorio
+    ├── 005_complete_berry_schema.sql   # Esquema completo (35 tablas)
+    └── 006_users_notifications.sql     # Usuarios y notificaciones
 ```
 
 ## Inicio Rápido
@@ -152,8 +171,16 @@ npm run dev
 - [x] Servicios (Supabase, GPT-4 Vision, Sync inteligente)
 - [x] Dashboard web MVP
 - [x] Schema de base de datos con PostGIS
+- [x] Esquema completo de BD (35+ tablas, 60+ variedades)
+- [x] Módulo de Crecimiento (registro de plantas por lote)
+- [x] Módulo de Laboratorio (análisis suelo, foliar, agua, fruta)
+- [x] Sistema de Usuarios (alta de ingenieros)
+- [x] Notificaciones automáticas por inactividad
+- [x] Reporte diario para administrador
+- [x] Deploy en Railway
 - [ ] Sistema de alertas push
 - [ ] Reportes automáticos PDF
+- [ ] Integración real de envío de emails/WhatsApp
 
 ## Tareas Pendientes del Usuario
 
