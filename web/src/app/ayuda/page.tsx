@@ -29,7 +29,17 @@ import {
   Play,
   Image as ImageIcon,
   MapPin,
-  Zap
+  Zap,
+  Sprout,
+  Beaker,
+  Database,
+  Users,
+  Building2,
+  TreePine,
+  FlaskConical,
+  BarChart3,
+  Bell,
+  Calendar
 } from 'lucide-react';
 
 interface Section {
@@ -41,6 +51,9 @@ interface Section {
 
 const sections: Section[] = [
   { id: 'inicio', title: 'Primeros Pasos', icon: Play, color: 'text-green-400' },
+  { id: 'estructura', title: 'Estructura de Datos', icon: Database, color: 'text-indigo-400' },
+  { id: 'crecimiento', title: 'Seguimiento de Crecimiento', icon: Sprout, color: 'text-lime-400' },
+  { id: 'laboratorio', title: 'Análisis de Laboratorio', icon: Beaker, color: 'text-amber-400' },
   { id: 'fotos', title: 'Capturar Fotos en Campo', icon: Camera, color: 'text-blue-400' },
   { id: 'analisis', title: 'Analizar con IA', icon: Scan, color: 'text-purple-400' },
   { id: 'plagas', title: 'Enfermedades y Plagas', icon: Bug, color: 'text-red-400' },
@@ -79,6 +92,16 @@ export default function AyudaPage() {
       id: 'faq5',
       question: '¿Cómo agrego información a la base de conocimiento?',
       answer: 'Ve a "Conocimiento" en el menú lateral. Ahí puedes agregar nuevos documentos sobre enfermedades, tratamientos, fenología, etc. Esta información se usa para mejorar las recomendaciones del sistema.'
+    },
+    {
+      id: 'faq6',
+      question: '¿Cómo registro un nuevo lote de plantación?',
+      answer: 'Ve a "Crecimiento" → "Nuevo Lote". Selecciona el rancho, sector, variedad y fecha de plantación. El sistema generará automáticamente un código único (ej: LOT-BLU-2024-001) y vinculará todos los registros futuros a ese lote.'
+    },
+    {
+      id: 'faq7',
+      question: '¿Cómo cargo un análisis de laboratorio?',
+      answer: 'Ve a "Laboratorio" → "Nuevo Análisis". Selecciona el tipo (suelo, foliar, agua, etc.), el lote al que corresponde, y llena los parámetros. La IA interpretará automáticamente los resultados comparando con los rangos óptimos para tu variedad.'
     }
   ];
 
@@ -147,8 +170,8 @@ export default function AyudaPage() {
                     <div>
                       <h2 className="text-2xl font-bold text-white mb-2">Bienvenido a BerryVision AI</h2>
                       <p className="text-gray-400">
-                        Sistema de monitoreo inteligente de cultivos de berries. Utiliza inteligencia artificial
-                        para detectar enfermedades, plagas y optimizar tus cosechas.
+                        Sistema integral de monitoreo y gestión de cultivos de berries.
+                        Trazabilidad completa desde plantación hasta cosecha con inteligencia artificial.
                       </p>
                     </div>
                   </div>
@@ -157,56 +180,406 @@ export default function AyudaPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-blue-500/20 rounded-lg">
-                        <Smartphone className="w-5 h-5 text-blue-400" />
+                      <div className="p-2 bg-indigo-500/20 rounded-lg">
+                        <Building2 className="w-5 h-5 text-indigo-400" />
                       </div>
-                      <h3 className="text-white font-semibold">1. Captura en Campo</h3>
+                      <h3 className="text-white font-semibold">1. Configura tu Rancho</h3>
                     </div>
                     <p className="text-gray-400 text-sm">
-                      Usa tu celular para tomar fotos de tus plantas en el campo.
-                      La app funciona sin internet.
+                      Define ranchos, sectores y bloques. Registra tus lotes de plantación con variedad específica.
                     </p>
                   </div>
 
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                     <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-purple-500/20 rounded-lg">
-                        <Zap className="w-5 h-5 text-purple-400" />
+                      <div className="p-2 bg-lime-500/20 rounded-lg">
+                        <Sprout className="w-5 h-5 text-lime-400" />
                       </div>
-                      <h3 className="text-white font-semibold">2. Procesa con IA</h3>
+                      <h3 className="text-white font-semibold">2. Registra Crecimiento</h3>
                     </div>
                     <p className="text-gray-400 text-sm">
-                      Ve a "Pendientes" y procesa las fotos con GPT-4 Vision para
-                      obtener diagnósticos automáticos.
+                      Sube fotos y mediciones de tus plantas. La IA analiza el estado de salud automáticamente.
+                    </p>
+                  </div>
+
+                  <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                    <div className="flex items-center gap-3 mb-4">
+                      <div className="p-2 bg-amber-500/20 rounded-lg">
+                        <Beaker className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">3. Carga Análisis de Lab</h3>
+                    </div>
+                    <p className="text-gray-400 text-sm">
+                      Sube análisis de suelo, foliar, agua. El sistema compara con rangos óptimos por variedad.
                     </p>
                   </div>
 
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="p-2 bg-cyan-500/20 rounded-lg">
-                        <Bot className="w-5 h-5 text-cyan-400" />
+                        <BarChart3 className="w-5 h-5 text-cyan-400" />
                       </div>
-                      <h3 className="text-white font-semibold">3. Consulta al Asistente</h3>
+                      <h3 className="text-white font-semibold">4. Monitorea y Actúa</h3>
                     </div>
                     <p className="text-gray-400 text-sm">
-                      Pregunta cualquier duda sobre tratamientos, fenología o
-                      manejo de cultivos al asistente IA.
-                    </p>
-                  </div>
-
-                  <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <div className="flex items-center gap-3 mb-4">
-                      <div className="p-2 bg-orange-500/20 rounded-lg">
-                        <FileText className="w-5 h-5 text-orange-400" />
-                      </div>
-                      <h3 className="text-white font-semibold">4. Genera Reportes</h3>
-                    </div>
-                    <p className="text-gray-400 text-sm">
-                      Crea reportes diarios, semanales o mensuales con todos
-                      los análisis y alertas detectadas.
+                      Recibe alertas, consulta al asistente IA y genera reportes profesionales.
                     </p>
                   </div>
                 </div>
+
+                {/* Variedades disponibles */}
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <TreePine className="w-5 h-5 text-green-400" />
+                    Variedades Soportadas
+                  </h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 className="text-blue-400 font-medium mb-2">Arándano (30 variedades)</h4>
+                      <p className="text-gray-400 text-sm mb-2">Bajo frío: Biloxi, Jewel, Emerald, Star, Snowchaser</p>
+                      <p className="text-gray-400 text-sm mb-2">Medio frío: Legacy, Bluecrop, Duke, Draper, Liberty</p>
+                      <p className="text-gray-400 text-sm">Premium: Sekoya, Rocío, Atlas, Titan, Top Shelf</p>
+                    </div>
+                    <div>
+                      <h4 className="text-pink-400 font-medium mb-2">Frambuesa (30 variedades)</h4>
+                      <p className="text-gray-400 text-sm mb-2">Primocane: Heritage, Polka, Maravilla, Himbo Top</p>
+                      <p className="text-gray-400 text-sm mb-2">Floricane: Tulameen, Meeker, Glen Ample</p>
+                      <p className="text-gray-400 text-sm">Premium: Kwanza, Kweli, Imara, Mapema</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Estructura de Datos */}
+            {activeSection === 'estructura' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-indigo-500/10 to-violet-500/10 rounded-2xl border border-indigo-500/20 p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <Database className="w-7 h-7 text-indigo-400" />
+                    Estructura de Datos
+                  </h2>
+                  <p className="text-gray-400">
+                    El sistema usa una estructura jerárquica donde el LOTE es la unidad central de trazabilidad.
+                  </p>
+                </div>
+
+                {/* Jerarquía */}
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-6">Jerarquía Organizacional</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-purple-400" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-white font-medium">Organización</p>
+                        <p className="text-gray-400 text-sm">Empresa matriz que agrupa todos los ranchos</p>
+                      </div>
+                    </div>
+                    <div className="ml-6 border-l-2 border-white/10 pl-10 space-y-4">
+                      <div className="flex items-center gap-4">
+                        <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center">
+                          <MapPin className="w-5 h-5 text-blue-400" />
+                        </div>
+                        <div className="flex-1">
+                          <p className="text-white font-medium">Rancho</p>
+                          <p className="text-gray-400 text-sm">Finca física con ubicación GPS, clima, certificaciones</p>
+                        </div>
+                      </div>
+                      <div className="ml-6 border-l-2 border-white/10 pl-10 space-y-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center">
+                            <Map className="w-4 h-4 text-green-400" />
+                          </div>
+                          <div className="flex-1">
+                            <p className="text-white font-medium">Sector</p>
+                            <p className="text-gray-400 text-sm">División por tipo de riego, orientación, suelo</p>
+                          </div>
+                        </div>
+                        <div className="ml-6 border-l-2 border-white/10 pl-10 space-y-4">
+                          <div className="flex items-center gap-4">
+                            <div className="w-8 h-8 bg-yellow-500/20 rounded-lg flex items-center justify-center">
+                              <TreePine className="w-4 h-4 text-yellow-400" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="text-white font-medium">Bloque</p>
+                              <p className="text-gray-400 text-sm">Cuadro con filas y plantas por fila</p>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Lote como unidad central */}
+                <div className="bg-gradient-to-br from-emerald-500/10 to-cyan-500/10 rounded-xl p-6 border border-emerald-500/20">
+                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
+                    <Sprout className="w-5 h-5 text-emerald-400" />
+                    LOTE DE PLANTACIÓN - Unidad Central
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Cada lote tiene un código único automático: <span className="text-emerald-400 font-mono">LOT-BLU-2024-001</span>
+                  </p>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <Sprout className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-400">Crecimiento</p>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <Beaker className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-400">Análisis Lab</p>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <Camera className="w-5 h-5 text-blue-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-400">Fotos</p>
+                    </div>
+                    <div className="bg-white/5 p-3 rounded-lg text-center">
+                      <BarChart3 className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                      <p className="text-xs text-gray-400">Cosechas</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tablas principales */}
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4">Tablas Principales (35 tablas)</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <h4 className="text-indigo-400 font-medium mb-2">Estructura</h4>
+                      <ul className="space-y-1 text-gray-400">
+                        <li>• organizations, ranches, sectors, blocks</li>
+                        <li>• crop_types, varieties (60+ variedades)</li>
+                        <li>• planting_lots (lotes de plantación)</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-green-400 font-medium mb-2">Seguimiento</h4>
+                      <ul className="space-y-1 text-gray-400">
+                        <li>• growth_records_v2 (registros crecimiento)</li>
+                        <li>• harvest_records (cosechas)</li>
+                        <li>• photos (fotos con análisis IA)</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-amber-400 font-medium mb-2">Laboratorio</h4>
+                      <ul className="space-y-1 text-gray-400">
+                        <li>• soil_analyses, foliar_analyses</li>
+                        <li>• water_analyses, fruit_quality_analyses</li>
+                        <li>• pest_disease_analyses</li>
+                      </ul>
+                    </div>
+                    <div>
+                      <h4 className="text-cyan-400 font-medium mb-2">Manejo</h4>
+                      <ul className="space-y-1 text-gray-400">
+                        <li>• pruning_records, irrigation_records</li>
+                        <li>• fertilization_records</li>
+                        <li>• phytosanitary_records</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Seguimiento de Crecimiento */}
+            {activeSection === 'crecimiento' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-lime-500/10 to-green-500/10 rounded-2xl border border-lime-500/20 p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <Sprout className="w-7 h-7 text-lime-400" />
+                    Seguimiento de Crecimiento
+                  </h2>
+                  <p className="text-gray-400">
+                    Registra el desarrollo de tus plantas con fotos, mediciones y análisis IA automático.
+                  </p>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4">Flujo de Trabajo</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-lime-500/20 text-lime-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">1</span>
+                      <div>
+                        <p className="text-white font-medium">Crear Lote de Plantación</p>
+                        <p className="text-gray-400 text-sm">Define rancho, sector, variedad y fecha. Código automático generado.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-lime-500/20 text-lime-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">2</span>
+                      <div>
+                        <p className="text-white font-medium">Registrar Crecimiento</p>
+                        <p className="text-gray-400 text-sm">Sube foto + mediciones: altura, brotes, flores, frutos.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-lime-500/20 text-lime-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">3</span>
+                      <div>
+                        <p className="text-white font-medium">Análisis IA Automático</p>
+                        <p className="text-gray-400 text-sm">GPT-4 Vision evalúa salud, detecta problemas, genera alertas.</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-lime-500/20 text-lime-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">4</span>
+                      <div>
+                        <p className="text-white font-medium">Correlación Ambiental</p>
+                        <p className="text-gray-400 text-sm">El sistema relaciona con temperatura, humedad, riegos.</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4">Datos que se Registran</h3>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                    <div className="text-center p-3 bg-white/5 rounded-lg">
+                      <p className="text-2xl mb-1">📏</p>
+                      <p className="text-gray-300 text-sm">Altura (cm)</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/5 rounded-lg">
+                      <p className="text-2xl mb-1">🌿</p>
+                      <p className="text-gray-300 text-sm">Brotes nuevos</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/5 rounded-lg">
+                      <p className="text-2xl mb-1">🌸</p>
+                      <p className="text-gray-300 text-sm">Flores</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/5 rounded-lg">
+                      <p className="text-2xl mb-1">🫐</p>
+                      <p className="text-gray-300 text-sm">Frutos</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/5 rounded-lg">
+                      <p className="text-2xl mb-1">💚</p>
+                      <p className="text-gray-300 text-sm">Score Salud</p>
+                    </div>
+                    <div className="text-center p-3 bg-white/5 rounded-lg">
+                      <p className="text-2xl mb-1">📸</p>
+                      <p className="text-gray-300 text-sm">Fotos</p>
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href="/crecimiento"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-lime-500 hover:bg-lime-600 rounded-xl text-black font-medium transition-colors"
+                >
+                  <Sprout className="w-5 h-5" />
+                  Ir a Crecimiento
+                </Link>
+              </div>
+            )}
+
+            {/* Análisis de Laboratorio */}
+            {activeSection === 'laboratorio' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-amber-500/10 to-orange-500/10 rounded-2xl border border-amber-500/20 p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <Beaker className="w-7 h-7 text-amber-400" />
+                    Análisis de Laboratorio
+                  </h2>
+                  <p className="text-gray-400">
+                    Carga análisis de suelo, foliares, agua y más. La IA interpreta resultados y genera recomendaciones.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-amber-500/20 rounded-lg">
+                        <FlaskConical className="w-5 h-5 text-amber-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">Análisis de Suelo</h3>
+                    </div>
+                    <ul className="text-gray-400 text-sm space-y-1">
+                      <li>• pH, CE, materia orgánica</li>
+                      <li>• N, P, K, Ca, Mg, S</li>
+                      <li>• Micronutrientes (Fe, Zn, Mn, Cu, B)</li>
+                      <li>• Textura y CIC</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-green-500/20 rounded-lg">
+                        <Leaf className="w-5 h-5 text-green-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">Análisis Foliar</h3>
+                    </div>
+                    <ul className="text-gray-400 text-sm space-y-1">
+                      <li>• % N, P, K, Ca, Mg, S</li>
+                      <li>• ppm Fe, Zn, Mn, Cu, B</li>
+                      <li>• Por variedad y etapa fenológica</li>
+                      <li>• Detección de deficiencias</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-blue-500/20 rounded-lg">
+                        <Droplets className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">Análisis de Agua</h3>
+                    </div>
+                    <ul className="text-gray-400 text-sm space-y-1">
+                      <li>• pH, CE, SDT, dureza</li>
+                      <li>• Cationes y aniones</li>
+                      <li>• SAR, clasificación</li>
+                      <li>• Apto para riego</li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-purple-500/20 rounded-lg">
+                        <Sparkles className="w-5 h-5 text-purple-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">Calidad de Fruta</h3>
+                    </div>
+                    <ul className="text-gray-400 text-sm space-y-1">
+                      <li>• Brix, pH, acidez</li>
+                      <li>• Firmeza, calibre, peso</li>
+                      <li>• % defectos</li>
+                      <li>• Grado export/doméstico</li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-cyan-500/10 to-blue-500/10 rounded-xl p-6 border border-cyan-500/20">
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Bot className="w-5 h-5 text-cyan-400" />
+                    Interpretación IA
+                  </h3>
+                  <p className="text-gray-400 text-sm mb-3">
+                    Al cargar un análisis, la IA automáticamente:
+                  </p>
+                  <ul className="space-y-2 text-gray-400 text-sm">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Compara contra rangos óptimos de tu variedad
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Identifica deficiencias y excesos
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Correlaciona con registros de crecimiento
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle className="w-4 h-4 text-green-400" />
+                      Genera recomendaciones de fertilización
+                    </li>
+                  </ul>
+                </div>
+
+                <Link
+                  href="/laboratorio"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-amber-500 hover:bg-amber-600 rounded-xl text-black font-medium transition-colors"
+                >
+                  <Beaker className="w-5 h-5" />
+                  Ir a Laboratorio
+                </Link>
               </div>
             )}
 
@@ -250,8 +623,8 @@ export default function AyudaPage() {
                     <div className="flex items-start gap-3">
                       <CheckCircle className="w-5 h-5 text-green-400 flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="text-white font-medium">Agrega notas</p>
-                        <p className="text-gray-400 text-sm">Describe lo que observas: olor, textura, extensión del daño.</p>
+                        <p className="text-white font-medium">Vincula al lote correcto</p>
+                        <p className="text-gray-400 text-sm">Asegúrate de seleccionar el lote de plantación al subir la foto.</p>
                       </div>
                     </div>
                   </div>
@@ -265,23 +638,19 @@ export default function AyudaPage() {
                   <ol className="space-y-3 text-gray-400">
                     <li className="flex items-start gap-3">
                       <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">1</span>
-                      <span>Abre la app y selecciona el tipo de cultivo (arándano o frambuesa)</span>
+                      <span>Selecciona el <strong className="text-white">lote de plantación</strong> donde estás</span>
                     </li>
                     <li className="flex items-start gap-3">
                       <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">2</span>
-                      <span>Indica el sector o lote donde estás trabajando</span>
-                    </li>
-                    <li className="flex items-start gap-3">
-                      <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">3</span>
                       <span>Toma la foto usando el botón de cámara</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">4</span>
-                      <span>Agrega notas opcionales sobre lo que observas</span>
+                      <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">3</span>
+                      <span>Agrega mediciones (altura, brotes, etc.)</span>
                     </li>
                     <li className="flex items-start gap-3">
-                      <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">5</span>
-                      <span>La foto se guardará localmente y se sincronizará cuando tengas internet</span>
+                      <span className="bg-blue-500/20 text-blue-400 w-6 h-6 rounded-full flex items-center justify-center text-sm font-medium flex-shrink-0">4</span>
+                      <span>Guarda - la IA analizará automáticamente</span>
                     </li>
                   </ol>
                 </div>
@@ -299,39 +668,6 @@ export default function AyudaPage() {
                   <p className="text-gray-400">
                     El sistema utiliza GPT-4 Vision para analizar tus fotos y detectar problemas automáticamente.
                   </p>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <h3 className="text-white font-semibold mb-4">Proceso de Análisis:</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <div className="p-2 bg-yellow-500/20 rounded-lg">
-                        <Clock className="w-5 h-5 text-yellow-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">1. Ir a Pendientes</p>
-                        <p className="text-gray-400 text-sm">Las fotos sincronizadas aparecen en la sección "Pendientes" del menú.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <div className="p-2 bg-purple-500/20 rounded-lg">
-                        <Zap className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">2. Procesar con IA</p>
-                        <p className="text-gray-400 text-sm">Haz clic en "Procesar Todos" o analiza fotos individualmente.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
-                      <div className="p-2 bg-green-500/20 rounded-lg">
-                        <CheckCircle className="w-5 h-5 text-green-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">3. Revisar Resultados</p>
-                        <p className="text-gray-400 text-sm">Ve el diagnóstico, estado de salud y recomendaciones de tratamiento.</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <div className="bg-white/5 rounded-xl p-6 border border-white/10">
@@ -355,11 +691,11 @@ export default function AyudaPage() {
                     </div>
                     <div className="flex items-center gap-3">
                       <ImageIcon className="w-5 h-5 text-purple-400" />
-                      <span className="text-gray-300">Conteo de frutos</span>
+                      <span className="text-gray-300">Score de salud (0-100)</span>
                     </div>
                     <div className="flex items-center gap-3">
                       <Sparkles className="w-5 h-5 text-yellow-400" />
-                      <span className="text-gray-300">Madurez de cosecha</span>
+                      <span className="text-gray-300">Recomendaciones específicas</span>
                     </div>
                   </div>
                 </div>
@@ -446,21 +782,6 @@ export default function AyudaPage() {
                     </ul>
                   </div>
                 </div>
-
-                <div className="bg-white/5 rounded-xl p-5 border border-white/10">
-                  <h3 className="text-white font-semibold mb-4 flex items-center gap-2">
-                    <Droplets className="w-5 h-5 text-blue-400" />
-                    Deficiencias Nutricionales
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm text-gray-400">
-                    <span>Nitrógeno (N)</span>
-                    <span>Hierro (Fe) - Clorosis</span>
-                    <span>Magnesio (Mg)</span>
-                    <span>Calcio (Ca)</span>
-                    <span>Boro (B)</span>
-                    <span>Potasio (K)</span>
-                  </div>
-                </div>
               </div>
             )}
 
@@ -481,16 +802,13 @@ export default function AyudaPage() {
                   <h3 className="text-white font-semibold mb-4">Ejemplos de preguntas:</h3>
                   <div className="space-y-3">
                     <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                      <p className="text-cyan-400 text-sm">"¿Cuál es el mejor momento para cosechar arándanos?"</p>
+                      <p className="text-cyan-400 text-sm">&quot;¿Cuál es el mejor momento para cosechar arándanos?&quot;</p>
                     </div>
                     <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                      <p className="text-cyan-400 text-sm">"¿Cómo controlo la Botrytis en mis frambuesas?"</p>
+                      <p className="text-cyan-400 text-sm">&quot;¿Cómo controlo la Botrytis en mis frambuesas?&quot;</p>
                     </div>
                     <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                      <p className="text-cyan-400 text-sm">"¿Qué productos usar contra Drosophila suzukii?"</p>
-                    </div>
-                    <div className="p-3 bg-cyan-500/10 rounded-lg border border-cyan-500/20">
-                      <p className="text-cyan-400 text-sm">"¿Cuáles son los estados fenológicos del arándano?"</p>
+                      <p className="text-cyan-400 text-sm">&quot;Mi análisis foliar muestra bajo nitrógeno, ¿qué hago?&quot;</p>
                     </div>
                   </div>
                 </div>
@@ -514,32 +832,8 @@ export default function AyudaPage() {
                     Base de Conocimiento
                   </h2>
                   <p className="text-gray-400">
-                    Agrega información técnica sobre cultivos, tratamientos y buenas prácticas. Esta información alimenta al asistente IA.
+                    Agrega información técnica sobre cultivos, tratamientos y buenas prácticas.
                   </p>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <h3 className="text-white font-semibold mb-4">Categorías de conocimiento:</h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                    <div className="p-3 bg-red-500/10 rounded-lg text-center">
-                      <p className="text-red-400 text-sm font-medium">Enfermedades</p>
-                    </div>
-                    <div className="p-3 bg-orange-500/10 rounded-lg text-center">
-                      <p className="text-orange-400 text-sm font-medium">Plagas</p>
-                    </div>
-                    <div className="p-3 bg-green-500/10 rounded-lg text-center">
-                      <p className="text-green-400 text-sm font-medium">Fenología</p>
-                    </div>
-                    <div className="p-3 bg-blue-500/10 rounded-lg text-center">
-                      <p className="text-blue-400 text-sm font-medium">Nutrición</p>
-                    </div>
-                    <div className="p-3 bg-purple-500/10 rounded-lg text-center">
-                      <p className="text-purple-400 text-sm font-medium">Tratamientos</p>
-                    </div>
-                    <div className="p-3 bg-cyan-500/10 rounded-lg text-center">
-                      <p className="text-cyan-400 text-sm font-medium">Cosecha</p>
-                    </div>
-                  </div>
                 </div>
 
                 <Link
@@ -561,50 +855,8 @@ export default function AyudaPage() {
                     Generar Reportes
                   </h2>
                   <p className="text-gray-400">
-                    Crea reportes profesionales de tus análisis para llevar control y cumplir con auditorías.
+                    Crea reportes profesionales para control y auditorías.
                   </p>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <h3 className="text-white font-semibold mb-4">Tipos de reportes:</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-blue-500/20 rounded-lg">
-                        <Clock className="w-5 h-5 text-blue-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Operativo Diario</p>
-                        <p className="text-gray-400 text-sm">Resumen de análisis del día para encargados de campo.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-purple-500/20 rounded-lg">
-                        <FileText className="w-5 h-5 text-purple-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Gerencial Semanal</p>
-                        <p className="text-gray-400 text-sm">Tendencias y comparativas para agrónomos y gerentes.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-emerald-500/20 rounded-lg">
-                        <FileText className="w-5 h-5 text-emerald-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Ejecutivo Mensual</p>
-                        <p className="text-gray-400 text-sm">KPIs consolidados para dirección e inversionistas.</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-amber-500/20 rounded-lg">
-                        <FileText className="w-5 h-5 text-amber-400" />
-                      </div>
-                      <div>
-                        <p className="text-white font-medium">Auditoría</p>
-                        <p className="text-gray-400 text-sm">Trazabilidad completa para certificaciones.</p>
-                      </div>
-                    </div>
-                  </div>
                 </div>
 
                 <Link
@@ -626,30 +878,8 @@ export default function AyudaPage() {
                     Mapa de Calor
                   </h2>
                   <p className="text-gray-400">
-                    Visualiza la ubicación de problemas detectados en tu finca con un mapa interactivo.
+                    Visualiza la ubicación de problemas detectados en tu finca.
                   </p>
-                </div>
-
-                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                  <h3 className="text-white font-semibold mb-4">Funcionalidades del mapa:</h3>
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-5 h-5 text-red-400" />
-                      <span className="text-gray-300">Ver ubicación exacta de cada análisis</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <AlertTriangle className="w-5 h-5 text-yellow-400" />
-                      <span className="text-gray-300">Identificar zonas con más alertas</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Map className="w-5 h-5 text-green-400" />
-                      <span className="text-gray-300">Filtrar por tipo de problema</span>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Clock className="w-5 h-5 text-blue-400" />
-                      <span className="text-gray-300">Ver historial por fecha</span>
-                    </div>
-                  </div>
                 </div>
 
                 <Link
