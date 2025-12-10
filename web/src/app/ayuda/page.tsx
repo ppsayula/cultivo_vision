@@ -57,6 +57,8 @@ const sections: Section[] = [
   { id: 'fotos', title: 'Capturar Fotos en Campo', icon: Camera, color: 'text-blue-400' },
   { id: 'analisis', title: 'Analizar con IA', icon: Scan, color: 'text-purple-400' },
   { id: 'plagas', title: 'Enfermedades y Plagas', icon: Bug, color: 'text-red-400' },
+  { id: 'usuarios', title: 'Gestión de Usuarios', icon: Users, color: 'text-violet-400' },
+  { id: 'notificaciones', title: 'Notificaciones', icon: Bell, color: 'text-pink-400' },
   { id: 'asistente', title: 'Asistente IA', icon: Bot, color: 'text-cyan-400' },
   { id: 'conocimiento', title: 'Base de Conocimiento', icon: BookOpen, color: 'text-yellow-400' },
   { id: 'reportes', title: 'Generar Reportes', icon: FileText, color: 'text-orange-400' },
@@ -102,6 +104,21 @@ export default function AyudaPage() {
       id: 'faq7',
       question: '¿Cómo cargo un análisis de laboratorio?',
       answer: 'Ve a "Laboratorio" → "Nuevo Análisis". Selecciona el tipo (suelo, foliar, agua, etc.), el lote al que corresponde, y llena los parámetros. La IA interpretará automáticamente los resultados comparando con los rangos óptimos para tu variedad.'
+    },
+    {
+      id: 'faq8',
+      question: '¿Cómo doy de alta a un ingeniero?',
+      answer: 'Ve a "Configuración" → pestaña "Usuarios" → "Nuevo Usuario". Ingresa nombre, email, teléfono y selecciona el rol (Ingeniero de Campo, Supervisor o Admin). Activa las preferencias de notificación (Email/WhatsApp) para que reciba recordatorios.'
+    },
+    {
+      id: 'faq9',
+      question: '¿Cómo funcionan los recordatorios automáticos?',
+      answer: 'De Lunes a Viernes a las 6 PM, el sistema detecta qué usuarios NO han subido información ese día y les envía un recordatorio por Email o WhatsApp según sus preferencias. Puedes enviar recordatorios manualmente desde Configuración → Notificaciones.'
+    },
+    {
+      id: 'faq10',
+      question: '¿Cómo recibo el reporte diario como admin?',
+      answer: 'El reporte se genera automáticamente a las 8 PM y se envía al email configurado. Incluye: usuarios activos/inactivos, total de fotos subidas, registros de crecimiento, análisis de laboratorio y alertas generadas. También puedes verlo y enviarlo manualmente desde Configuración → Reportes.'
     }
   ];
 
@@ -782,6 +799,206 @@ export default function AyudaPage() {
                     </ul>
                   </div>
                 </div>
+              </div>
+            )}
+
+            {/* Gestión de Usuarios */}
+            {activeSection === 'usuarios' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-violet-500/10 to-purple-500/10 rounded-2xl border border-violet-500/20 p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <Users className="w-7 h-7 text-violet-400" />
+                    Gestión de Usuarios
+                  </h2>
+                  <p className="text-gray-400">
+                    Registra ingenieros y personal de campo. Configura sus preferencias de notificación y monitorea su actividad diaria.
+                  </p>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4">Tipos de Usuario</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-purple-500/10 rounded-xl border border-purple-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-purple-400 rounded-full"></div>
+                        <span className="text-purple-400 font-medium">Administrador</span>
+                      </div>
+                      <p className="text-gray-400 text-sm">Acceso total al sistema. Recibe reportes diarios consolidados.</p>
+                    </div>
+                    <div className="p-4 bg-blue-500/10 rounded-xl border border-blue-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
+                        <span className="text-blue-400 font-medium">Supervisor</span>
+                      </div>
+                      <p className="text-gray-400 text-sm">Supervisa a ingenieros. Ve actividad de su equipo.</p>
+                    </div>
+                    <div className="p-4 bg-green-500/10 rounded-xl border border-green-500/20">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-3 h-3 bg-green-400 rounded-full"></div>
+                        <span className="text-green-400 font-medium">Ingeniero de Campo</span>
+                      </div>
+                      <p className="text-gray-400 text-sm">Sube fotos, registros y análisis. Recibe recordatorios.</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4">Cómo agregar un usuario</h3>
+                  <div className="space-y-4">
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-violet-500/20 text-violet-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">1</span>
+                      <div>
+                        <p className="text-white font-medium">Ve a Configuración → Usuarios</p>
+                        <p className="text-gray-400 text-sm">En el menú lateral, haz clic en &quot;Configuración&quot;</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-violet-500/20 text-violet-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">2</span>
+                      <div>
+                        <p className="text-white font-medium">Clic en &quot;Nuevo Usuario&quot;</p>
+                        <p className="text-gray-400 text-sm">Llena nombre, email, teléfono y rol</p>
+                      </div>
+                    </div>
+                    <div className="flex items-start gap-4 p-4 bg-white/5 rounded-xl">
+                      <span className="bg-violet-500/20 text-violet-400 w-8 h-8 rounded-full flex items-center justify-center font-medium">3</span>
+                      <div>
+                        <p className="text-white font-medium">Configura notificaciones</p>
+                        <p className="text-gray-400 text-sm">Activa Email y/o WhatsApp para recordatorios</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href="/configuracion"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-violet-500 hover:bg-violet-600 rounded-xl text-white font-medium transition-colors"
+                >
+                  <Users className="w-5 h-5" />
+                  Ir a Configuración
+                </Link>
+              </div>
+            )}
+
+            {/* Notificaciones */}
+            {activeSection === 'notificaciones' && (
+              <div className="space-y-6">
+                <div className="bg-gradient-to-br from-pink-500/10 to-rose-500/10 rounded-2xl border border-pink-500/20 p-6">
+                  <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-3">
+                    <Bell className="w-7 h-7 text-pink-400" />
+                    Sistema de Notificaciones
+                  </h2>
+                  <p className="text-gray-400">
+                    Recordatorios automáticos para usuarios inactivos y reportes diarios para el administrador.
+                  </p>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-orange-500/20 rounded-lg">
+                        <Bell className="w-5 h-5 text-orange-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">Recordatorios Diarios</h3>
+                    </div>
+                    <ul className="text-gray-400 text-sm space-y-2">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Lunes a Viernes a las 6:00 PM
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Solo a usuarios que NO subieron info hoy
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Por Email o WhatsApp según preferencia
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div className="bg-white/5 rounded-xl p-5 border border-white/10">
+                    <div className="flex items-center gap-3 mb-3">
+                      <div className="p-2 bg-blue-500/20 rounded-lg">
+                        <FileText className="w-5 h-5 text-blue-400" />
+                      </div>
+                      <h3 className="text-white font-semibold">Reporte Diario Admin</h3>
+                    </div>
+                    <ul className="text-gray-400 text-sm space-y-2">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Se genera a las 8:00 PM automático
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Resumen: activos, inactivos, registros
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-400" />
+                        Total fotos, análisis y alertas del día
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+
+                <div className="bg-gradient-to-br from-orange-500/10 to-amber-500/10 rounded-xl p-6 border border-orange-500/20">
+                  <h3 className="text-white font-semibold mb-3 flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-orange-400" />
+                    ¿Cómo funciona?
+                  </h3>
+                  <div className="space-y-3 text-gray-400 text-sm">
+                    <p>El sistema registra automáticamente cada vez que un usuario sube:</p>
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mt-3">
+                      <div className="p-2 bg-white/5 rounded-lg text-center">
+                        <Camera className="w-5 h-5 text-blue-400 mx-auto mb-1" />
+                        <span className="text-xs">Fotos</span>
+                      </div>
+                      <div className="p-2 bg-white/5 rounded-lg text-center">
+                        <Sprout className="w-5 h-5 text-green-400 mx-auto mb-1" />
+                        <span className="text-xs">Crecimiento</span>
+                      </div>
+                      <div className="p-2 bg-white/5 rounded-lg text-center">
+                        <Beaker className="w-5 h-5 text-amber-400 mx-auto mb-1" />
+                        <span className="text-xs">Análisis Lab</span>
+                      </div>
+                      <div className="p-2 bg-white/5 rounded-lg text-center">
+                        <Scan className="w-5 h-5 text-purple-400 mx-auto mb-1" />
+                        <span className="text-xs">Análisis IA</span>
+                      </div>
+                    </div>
+                    <p className="mt-3">
+                      Si al final del día (6 PM) un usuario no ha subido nada, recibe un recordatorio amigable.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="bg-white/5 rounded-xl p-6 border border-white/10">
+                  <h3 className="text-white font-semibold mb-4">Envío Manual</h3>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Desde Configuración → Notificaciones puedes:
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <div className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg text-sm">
+                      Ver usuarios inactivos hoy
+                    </div>
+                    <div className="px-4 py-2 bg-orange-500/20 text-orange-400 rounded-lg text-sm">
+                      Enviar recordatorios manualmente
+                    </div>
+                    <div className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm">
+                      Ver reporte del día
+                    </div>
+                    <div className="px-4 py-2 bg-blue-500/20 text-blue-400 rounded-lg text-sm">
+                      Enviar reporte a admin
+                    </div>
+                  </div>
+                </div>
+
+                <Link
+                  href="/configuracion"
+                  className="flex items-center justify-center gap-2 px-6 py-3 bg-pink-500 hover:bg-pink-600 rounded-xl text-white font-medium transition-colors"
+                >
+                  <Bell className="w-5 h-5" />
+                  Ir a Notificaciones
+                </Link>
               </div>
             )}
 
