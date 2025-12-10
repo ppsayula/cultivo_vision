@@ -508,9 +508,11 @@ export default function Home() {
             {[
               { icon: BarChart3, label: 'Dashboard', href: '/', active: true },
               { icon: Scan, label: 'Análisis', href: '/analisis' },
+              { icon: Clock, label: 'Pendientes', href: '/pendientes', badge: stats.pendingAlerts > 0 ? stats.pendingAlerts : undefined },
               { icon: Map, label: 'Mapa de Calor', href: '/mapa' },
-              { icon: Bell, label: 'Alertas', href: '/alertas', badge: stats.pendingAlerts },
+              { icon: Bell, label: 'Alertas', href: '/alertas' },
               { icon: Bot, label: 'Asistente IA', href: '/asistente' },
+              { icon: Sparkles, label: 'Conocimiento', href: '/admin/conocimiento' },
               { icon: FileText, label: 'Reportes', href: '/reportes' },
               { icon: Target, label: 'Fincas', href: '/fincas' },
               { icon: Settings, label: 'Configuración', href: '/configuracion' }
@@ -710,21 +712,21 @@ export default function Home() {
               <h3 className="text-lg font-semibold text-white mb-4">Acciones Rápidas</h3>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <QuickAction
+                  title="Procesar Pendientes"
+                  description="Analiza las fotos capturadas en campo con IA"
+                  icon={Zap}
+                  href="/pendientes"
+                  gradient="bg-gradient-to-br from-yellow-600/90 to-orange-700/90"
+                  iconBg="bg-yellow-600"
+                  delay={400}
+                />
+                <QuickAction
                   title="Ver Análisis"
-                  description="Explora el historial completo de análisis de cultivos"
+                  description="Explora el historial completo de análisis"
                   icon={Camera}
                   href="/analisis"
                   gradient="bg-gradient-to-br from-blue-600/90 to-indigo-700/90"
                   iconBg="bg-blue-600"
-                  delay={400}
-                />
-                <QuickAction
-                  title="Mapa de Calor"
-                  description="Visualiza zonas problemáticas georreferenciadas"
-                  icon={Map}
-                  href="/mapa"
-                  gradient="bg-gradient-to-br from-purple-600/90 to-pink-700/90"
-                  iconBg="bg-purple-600"
                   delay={500}
                 />
                 <QuickAction
@@ -737,10 +739,10 @@ export default function Home() {
                   delay={600}
                 />
                 <QuickAction
-                  title="Generar Reporte"
-                  description="Crea reportes personalizados PDF/Excel"
-                  icon={FileText}
-                  href="/reportes"
+                  title="Conocimiento"
+                  description="Gestiona información de cultivos y tratamientos"
+                  icon={Sparkles}
+                  href="/admin/conocimiento"
                   gradient="bg-gradient-to-br from-green-600/90 to-emerald-700/90"
                   iconBg="bg-green-600"
                   delay={700}
