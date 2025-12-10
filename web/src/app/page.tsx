@@ -36,7 +36,8 @@ import {
   Scan,
   Sparkles,
   Bot,
-  HelpCircle
+  HelpCircle,
+  Sprout
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -587,6 +588,7 @@ export default function Home() {
             {[
               { icon: BarChart3, label: 'Dashboard', href: '/', active: true },
               { icon: Scan, label: 'Análisis', href: '/analisis' },
+              { icon: Sprout, label: 'Crecimiento', href: '/crecimiento' },
               { icon: Clock, label: 'Pendientes', href: '/pendientes', badge: stats.pendingCount > 0 ? stats.pendingCount : undefined },
               { icon: Map, label: 'Mapa de Calor', href: '/mapa' },
               { icon: Bell, label: 'Alertas', href: '/alertas' },
