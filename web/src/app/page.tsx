@@ -35,7 +35,8 @@ import {
   MapPin,
   Scan,
   Sparkles,
-  Bot
+  Bot,
+  HelpCircle
 } from 'lucide-react';
 import {
   Chart as ChartJS,
@@ -593,7 +594,8 @@ export default function Home() {
               { icon: Sparkles, label: 'Conocimiento', href: '/admin/conocimiento' },
               { icon: FileText, label: 'Reportes', href: '/reportes' },
               { icon: Target, label: 'Fincas', href: '/fincas' },
-              { icon: Settings, label: 'Configuración', href: '/configuracion' }
+              { icon: Settings, label: 'Configuración', href: '/configuracion' },
+              { icon: HelpCircle, label: 'Ayuda', href: '/ayuda' }
             ].map((item) => (
               <Link
                 key={item.label}
@@ -667,6 +669,13 @@ export default function Home() {
               </div>
 
               <div className="flex items-center gap-3">
+                <Link
+                  href="/ayuda"
+                  className="p-2 text-gray-400 hover:text-white transition-colors bg-gray-800/50 rounded-xl"
+                  title="Ver instructivo"
+                >
+                  <HelpCircle className="w-5 h-5" />
+                </Link>
                 <button className="relative p-2 text-gray-400 hover:text-white transition-colors bg-gray-800/50 rounded-xl">
                   <Bell className="w-5 h-5" />
                   {stats.pendingCount > 0 && (
@@ -761,7 +770,7 @@ export default function Home() {
                 <Doughnut data={doughnutData} options={doughnutOptions} />
                 <div className="absolute inset-0 flex items-center justify-center">
                   <div className="text-center">
-                    <p className="text-3xl font-bold text-white">{Math.round((stats.healthyCount / stats.totalAnalyses) * 100)}%</p>
+                    <p className="text-3xl font-bold text-white">{stats.totalAnalyses > 0 ? Math.round((stats.healthyCount / stats.totalAnalyses) * 100) : 0}%</p>
                     <p className="text-gray-500 text-xs">Salud General</p>
                   </div>
                 </div>
