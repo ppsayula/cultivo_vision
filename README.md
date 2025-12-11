@@ -4,13 +4,16 @@ Sistema integral de monitoreo y análisis de cultivos de berries (arándano y fr
 
 ## Demo en Vivo
 
-🌐 **Dashboard Web**: https://cultivovision-production.up.railway.app
+🌐 **BerryVision Field**: https://cultivovision-production.up.railway.app
+🔬 **BerryVision Lab**: _Próximamente en producción_
 
 ## Qué es
 
 Un **ecosistema completo** que incluye:
 - **App Móvil** para captura en campo
-- **Dashboard Web** (Centro de Control) para gestión y análisis
+- **BerryVision Field** (Dashboard para técnicos de campo)
+- **BerryVision Lab** (Centro de gestión, entrenamiento AI y recetas)
+- **Sistema de Entrenamiento AI** para mejorar precisión del modelo
 - **Sistema de Alertas** multicanal (Push, Email, Dashboard)
 - **Reportes Automáticos** (Operativo, Gerencial, Ejecutivo, Auditoría)
 
@@ -27,7 +30,7 @@ Un **ecosistema completo** que incluye:
   - 2G/3G: Solo JSON (~2KB)
   - Offline: Cache local, sync posterior
 
-### Dashboard Web (Centro de Control)
+### BerryVision Field (Dashboard de Campo)
 - Mapa interactivo con análisis geolocalizados
 - Mapa de calor de zonas problemáticas
 - KPIs en tiempo real
@@ -39,6 +42,20 @@ Un **ecosistema completo** que incluye:
 - **Gestión de Usuarios** - Alta de ingenieros con preferencias de notificación
 - **Notificaciones Automáticas** - Recordatorios diarios a usuarios inactivos (Lun-Vie)
 - **Reporte Diario para Admin** - Resumen consolidado de actividad
+
+### BerryVision Lab (Centro de Gestión)
+- **Análisis Manual** - Sube y analiza fotos individuales con GPT-4o
+- **Entrenar AI** - Etiqueta imágenes para crear dataset de entrenamiento
+- **Dataset** - Visualiza y exporta dataset en formato JSONL para fine-tuning
+- **Recetas de Control** - Tratamientos detallados para enfermedades y plagas:
+  - Control de Áfidos en Arándanos
+  - Control de Mildiu en Arándanos
+  - Control de Botrytis (Moho Gris)
+  - Control de Trips en Frambuesa
+  - Control de Araña Roja
+- **Base de Conocimiento** - Gestión de información agrícola para RAG
+- **Laboratorio** - Análisis detallado y comparaciones avanzadas
+- **Asistente IA** - Chat con experto agrícola basado en IA
 
 ### Sistema de Alertas
 - Notificaciones push (críticas inmediatas)
@@ -69,6 +86,11 @@ Un **ecosistema completo** que incluye:
 ```
 cultivo_vision/
 ├── README.md
+├── APPS_LISTAS.md                     # ⭐ Estado de apps separadas
+├── ENTRENAMIENTO_SETUP.md             # Guía de entrenamiento AI
+├── README_SEPARACION.md               # Guía de separación de apps
+├── SEPARACION_APPS.md                 # Documentación técnica
+├── supabase_training_schema.sql       # Schema para entrenamiento AI
 ├── docs/
 │   ├── 01-definicion-concepto.md      # Kickoff y problema de negocio
 │   ├── 02-user-stories.md             # 15 user stories priorizadas
@@ -82,20 +104,38 @@ cultivo_vision/
 │       ├── screens/
 │       ├── services/
 │       └── ...
-├── web/                                # Dashboard Next.js
+├── web/                                # ⭐ BerryVision Field (Puerto 3000)
 │   └── src/app/
-│       ├── page.tsx                    # Inicio con KPIs
+│       ├── page.tsx                    # Dashboard con KPIs
 │       ├── analisis/                   # Análisis con IA
 │       ├── crecimiento/                # Registro de crecimiento
 │       ├── laboratorio/                # Análisis de laboratorio
 │       ├── configuracion/              # Gestión de usuarios y notificaciones
+│       ├── upload/                     # Análisis de imágenes
+│       ├── entrenar/                   # Etiquetar imágenes
+│       ├── dataset/                    # Ver dataset
 │       ├── ayuda/                      # Instructivo del sistema
 │       └── api/
 │           ├── analyze/                # API de análisis con GPT-4 Vision
+│           ├── rag/                    # API RAG con GPT-4o
+│           ├── training/               # API de entrenamiento
+│           ├── upload-image/           # API subir imágenes
+│           ├── export-dataset/         # API exportar dataset JSONL
 │           ├── growth/                 # API de crecimiento
 │           ├── lab/                    # API de laboratorio
 │           ├── users/                  # API de usuarios
 │           └── notifications/          # API de notificaciones
+├── berryvision-lab/                    # ⭐ BerryVision Lab (Puerto 3001)
+│   └── src/app/
+│       ├── page.tsx                    # Dashboard de Lab
+│       ├── upload/                     # Análisis manual
+│       ├── entrenar/                   # Entrenar AI
+│       ├── dataset/                    # Gestión de dataset
+│       ├── recetas/                    # ⭐ Recetas de control
+│       ├── conocimiento/               # Base de conocimiento
+│       ├── laboratorio/                # Análisis detallado
+│       ├── asistente/                  # Chat con IA
+│       └── api/                        # APIs compartidas
 └── supabase/migrations/
     ├── 001_initial_schema.sql          # Schema inicial
     ├── 002_insects_diseases.sql        # Detección de plagas
@@ -140,7 +180,7 @@ cp .env.example .env
 npx expo start
 ```
 
-### 3. Configurar Dashboard Web
+### 3. Configurar BerryVision Field (Dashboard de Campo)
 
 ```bash
 cd web
@@ -152,10 +192,28 @@ cp .env.example .env.local
 # Editar .env.local con tus credenciales
 # NEXT_PUBLIC_SUPABASE_URL=...
 # NEXT_PUBLIC_SUPABASE_ANON_KEY=...
+# OPENAI_API_KEY=...
 
 # Iniciar dashboard
 npm run dev
+# Acceder a http://localhost:3000
 ```
+
+### 4. Configurar BerryVision Lab (Centro de Gestión)
+
+```bash
+cd berryvision-lab
+npm install
+
+# El .env.local ya está copiado de web/
+# Si no, copia las mismas credenciales
+
+# Iniciar Lab
+npm run dev
+# Acceder a http://localhost:3001
+```
+
+**Nota**: Puedes correr ambas aplicaciones simultáneamente en diferentes terminales.
 
 ## Estado del Proyecto
 
@@ -177,10 +235,17 @@ npm run dev
 - [x] Sistema de Usuarios (alta de ingenieros)
 - [x] Notificaciones automáticas por inactividad
 - [x] Reporte diario para administrador
-- [x] Deploy en Railway
+- [x] **Separación de aplicaciones (Field + Lab)**
+- [x] **Sistema de Entrenamiento AI** (entrenar, dataset, export JSONL)
+- [x] **Recetas de Control** (5 tratamientos implementados)
+- [x] **Análisis con GPT-4o** (RAG + Vision)
+- [x] Deploy en Railway (Field)
+- [ ] Deploy en Railway/Vercel (Lab)
 - [ ] Sistema de alertas push
 - [ ] Reportes automáticos PDF
 - [ ] Integración real de envío de emails/WhatsApp
+- [ ] Base de Conocimiento (gestión)
+- [ ] Asistente IA (chat)
 
 ## Tareas Pendientes del Usuario
 

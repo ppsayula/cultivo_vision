@@ -10,7 +10,11 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  Alert,
+  Share,
 } from 'react-native';
+import * as MediaLibrary from 'expo-media-library';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useAnalysisStore } from '../store/analysisStore';
 import { useNetwork } from '../hooks/useNetwork';
 import { HEALTH_STATUS_COLORS } from '../constants/config';
@@ -43,6 +47,60 @@ export function HistoryScreen({ navigation }: HistoryScreenProps) {
     if (isConnected) {
       await syncPending();
     }
+  };
+
+  const handleExportPhoto = async (analysis: Analysis) => {
+    if (!analysis.local_image_uri) {
+      Alert.alert('Error', 'No hay imagen para exportar');
+      return;
+    }
+
+    Alert.alert(
+      'Exportar Foto',
+      '¿Qué deseas hacer con esta foto?',
+      [
+        {
+          text: 'Cancelar',
+          style: 'cancel',
+        },
+        {
+          text: 'Compartir',
+          onPress: async () => {
+            try {
+              await Share.share({
+                url: analysis.local_image_uri!,
+                message: `Análisis de cultivo - ${format(new Date(analysis.timestamp), 'd MMM yyyy', { locale: es })}`,
+              });
+            } catch (error) {
+              console.error('Error sharing:', error);
+              Alert.alert('Error', 'No se pudo compartir la foto');
+            }
+          },
+        },
+        {
+          text: 'Guardar en Galería',
+          onPress: async () => {
+            try {
+              // Request permission
+              const { status } = await MediaLibrary.requestPermissionsAsync();
+              if (status !== 'granted') {
+                Alert.alert('Permiso Denegado', 'Se necesita permiso para guardar en la galería');
+                return;
+              }
+
+              // Copy to gallery
+              const asset = await MediaLibrary.createAssetAsync(analysis.local_image_uri!);
+              await MediaLibrary.createAlbumAsync('BerryVision', asset, false);
+
+              Alert.alert('Éxito', 'Foto guardada en la galería en la carpeta BerryVision');
+            } catch (error) {
+              console.error('Error saving to gallery:', error);
+              Alert.alert('Error', 'No se pudo guardar en la galería');
+            }
+          },
+        },
+      ]
+    );
   };
 
   const renderItem = ({ item }: { item: Analysis }) => {
@@ -84,9 +142,7 @@ export function HistoryScreen({ navigation }: HistoryScreenProps) {
       <TouchableOpacity
         style={styles.card}
         onPress={() => navigation.navigate('Result', { analysisId: item.id })}
-        onLongPress={() => {
-          // TODO: Agregar menú contextual para eliminar
-        }}
+        onLongPress={() => handleExportPhoto(item)}
       >
         {/* Thumbnail */}
         {item.local_image_uri ? (
