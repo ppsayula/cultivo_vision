@@ -1,4 +1,4 @@
-// Cultivo Vision - Dashboard Principal Simplificado
+// Cultivo Vision - Dashboard Principal con Multi-Tenancy
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -26,6 +26,7 @@ import {
   Droplets
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
+import { useTenant } from '@/contexts/TenantContext';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -51,6 +52,7 @@ interface RegistroReciente {
 }
 
 export default function Home() {
+  const { tenant, tenantId, isLoading: tenantLoading } = useTenant();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [loading, setLoading] = useState(true);
@@ -69,8 +71,10 @@ export default function Home() {
   }, []);
 
   useEffect(() => {
-    loadDashboardData();
-  }, []);
+    if (!tenantLoading) {
+      loadDashboardData();
+    }
+  }, [tenantId, tenantLoading]);
 
   const loadDashboardData = async () => {
     try {
@@ -82,41 +86,42 @@ export default function Home() {
       };
       const semanaActual = getWeekNumber(new Date());
 
-      // Estadisticas de cultivos
-      const { count: totalCultivos } = await supabase
-        .from('cultivos')
-        .select('*', { count: 'exact', head: true });
+      // Helper para filtrar por tenant
+      const tenantFilter = (query: any) => {
+        if (tenantId) {
+          return query.eq('tenant_id', tenantId);
+        }
+        return query;
+      };
 
-      const { count: cultivosActivos } = await supabase
-        .from('cultivos')
-        .select('*', { count: 'exact', head: true })
-        .eq('activo', true);
+      // Estadisticas de cultivos
+      let cultivosQuery = supabase.from('cultivos').select('*', { count: 'exact', head: true });
+      if (tenantId) cultivosQuery = cultivosQuery.eq('tenant_id', tenantId);
+      const { count: totalCultivos } = await cultivosQuery;
+
+      let cultivosActivosQuery = supabase.from('cultivos').select('*', { count: 'exact', head: true }).eq('activo', true);
+      if (tenantId) cultivosActivosQuery = cultivosActivosQuery.eq('tenant_id', tenantId);
+      const { count: cultivosActivos } = await cultivosActivosQuery;
 
       // Registros de esta semana
-      const { count: registrosSemana } = await supabase
-        .from('bitacora')
-        .select('*', { count: 'exact', head: true })
-        .eq('semana', semanaActual);
+      let registrosSemanaQuery = supabase.from('bitacora').select('*', { count: 'exact', head: true }).eq('semana', semanaActual);
+      if (tenantId) registrosSemanaQuery = registrosSemanaQuery.eq('tenant_id', tenantId);
+      const { count: registrosSemana } = await registrosSemanaQuery;
 
       // Problemas criticos esta semana
-      const { count: problemasCriticos } = await supabase
-        .from('bitacora')
-        .select('*', { count: 'exact', head: true })
-        .eq('semana', semanaActual)
-        .in('severidad', ['critica', 'alta']);
+      let criticosQuery = supabase.from('bitacora').select('*', { count: 'exact', head: true }).eq('semana', semanaActual).in('severidad', ['critica', 'alta']);
+      if (tenantId) criticosQuery = criticosQuery.eq('tenant_id', tenantId);
+      const { count: problemasCriticos } = await criticosQuery;
 
       // Alertas pendientes
-      const { count: alertasPendientes } = await supabase
-        .from('alertas_sistema')
-        .select('*', { count: 'exact', head: true })
-        .eq('leida', false);
+      let alertasQuery = supabase.from('alertas_sistema').select('*', { count: 'exact', head: true }).eq('leida', false);
+      if (tenantId) alertasQuery = alertasQuery.eq('tenant_id', tenantId);
+      const { count: alertasPendientes } = await alertasQuery;
 
       // Ultimos registros
-      const { data: registros } = await supabase
-        .from('bitacora')
-        .select('id, fecha, cultivo, sector, tipo_problema, problema, severidad')
-        .order('created_at', { ascending: false })
-        .limit(5);
+      let registrosQuery = supabase.from('bitacora').select('id, fecha, cultivo, sector, tipo_problema, problema, severidad').order('created_at', { ascending: false }).limit(5);
+      if (tenantId) registrosQuery = registrosQuery.eq('tenant_id', tenantId);
+      const { data: registros } = await registrosQuery;
 
       setStats({
         totalCultivos: totalCultivos || 0,
@@ -185,12 +190,19 @@ export default function Home() {
       } lg:translate-x-0`}>
         <div className="p-6">
           <div className="flex items-center gap-3 mb-8">
-            <div className="w-10 h-10 bg-gradient-to-br from-green-400 to-emerald-600 rounded-xl flex items-center justify-center">
-              <Leaf className="w-6 h-6 text-white" />
-            </div>
+            {tenant.logo_url ? (
+              <img src={tenant.logo_url} alt={tenant.name} className="w-10 h-10 rounded-xl object-contain" />
+            ) : (
+              <div
+                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                style={{ background: `linear-gradient(135deg, ${tenant.primary_color}, ${tenant.secondary_color})` }}
+              >
+                <Leaf className="w-6 h-6 text-white" />
+              </div>
+            )}
             <div>
-              <h1 className="text-lg font-bold text-white">Cultivo Vision</h1>
-              <p className="text-green-400 text-xs">Bitacora de Campo</p>
+              <h1 className="text-lg font-bold text-white">{tenant.app_name}</h1>
+              <p className="text-xs" style={{ color: tenant.primary_color }}>{tenant.app_subtitle}</p>
             </div>
           </div>
 
@@ -219,7 +231,7 @@ export default function Home() {
 
         <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
           <p className="text-gray-600 text-xs text-center">
-            Cultivo Vision v2.0
+            {tenant.app_name} v2.0
           </p>
         </div>
       </aside>
@@ -423,7 +435,7 @@ export default function Home() {
               {/* Footer */}
               <div className="mt-12 text-center">
                 <p className="text-gray-700 text-sm">
-                  Cultivo Vision v2.0 - Sistema de Bitacora de Campo
+                  {tenant.app_name} v2.0 - {tenant.app_subtitle}
                 </p>
               </div>
             </>

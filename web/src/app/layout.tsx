@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
+import { TenantProvider } from "@/contexts/TenantContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -13,13 +14,13 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "BerryVision AI - Dashboard",
-  description: "Sistema de monitoreo inteligente de cultivos de berries con IA",
+  title: "Cultivo Vision - Dashboard",
+  description: "Sistema de monitoreo inteligente de cultivos con IA",
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "black-translucent",
-    title: "BerryVision AI",
+    title: "Cultivo Vision",
   },
   icons: {
     icon: "/icons/icon-192x192.png",
@@ -49,7 +50,9 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
+        <TenantProvider>
+          {children}
+        </TenantProvider>
       </body>
     </html>
   );
