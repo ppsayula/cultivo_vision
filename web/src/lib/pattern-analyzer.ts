@@ -3,6 +3,7 @@
 // Compara reciente vs promedio historico para distinguir lo normal de lo anomalo
 
 import { createClient } from '@supabase/supabase-js';
+import { searchProtocols, getFieldContext } from './rag-claude';
 
 function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
@@ -57,13 +58,30 @@ export interface ProblemForecast {
   sevGraves: number; // alta+critica count in recent
 }
 
+export interface SectorDetail {
+  sector: string;
+  count: number;
+  severidadMax: string;
+  diasDesdeObs: number;
+  fechaUltimaObs: string;
+}
+
 export interface UntreatedProblem {
   problema: string;
   sinTratar: number;
   sectoresAfectados: number;
-  sectoresList: string[]; // actual sector names
+  sectoresList: string[];
+  sectorDetails: SectorDetail[];
   severidadMax: string;
-  score: number; // weighted urgency score
+  score: number;
+}
+
+export interface RecipeData {
+  products: { nombre: string; dosis: string; ingrediente_activo: string }[];
+  method: string;
+  frequency: string;
+  carencia: number;
+  fieldTreatments: { producto: string; dosis: string; count: number }[];
 }
 
 export interface SectorHotspot {
@@ -100,6 +118,7 @@ export interface WeeklyIntelligence {
   sinTratar: UntreatedProblem[];
   hotspots: SectorHotspot[];
   fumigacion: SectorFumigationRisk[];
+  recetas: Record<string, RecipeData>;
 }
 
 // Get current week number (ISO)
@@ -254,7 +273,7 @@ export async function getUntreatedProblems(): Promise<{ problems: UntreatedProbl
   // Now get only recent untreated
   const { data, error } = await supabase
     .from('v_bitacora_campo')
-    .select('problema, severidad, sector, tratamiento_aplicado')
+    .select('problema, severidad, sector, tratamiento_aplicado, fecha')
     .in('semana', recentWeeks)
     .not('problema', 'is', null)
     .not('problema', 'eq', '');
@@ -262,12 +281,15 @@ export async function getUntreatedProblems(): Promise<{ problems: UntreatedProbl
   if (error || !data) return { problems: [], recentTotal: 0 };
 
   const sevWeight: Record<string, number> = { baja: 1, media: 2, alta: 4, critica: 8 };
+  const sevOrder = ['baja', 'media', 'alta', 'critica'];
+  const now = new Date();
 
   const grouped: Record<string, {
     sinTratar: number;
-    sectores: Set<string>;
     severidades: string[];
     score: number;
+    // Per individual sector tracking
+    sectorMap: Record<string, { count: number; sevMax: string; lastDate: string }>;
   }> = {};
 
   let recentTotal = 0;
@@ -275,28 +297,49 @@ export async function getUntreatedProblems(): Promise<{ problems: UntreatedProbl
   data.forEach(r => {
     if (!r.tratamiento_aplicado) {
       const key = r.problema.toLowerCase();
-      if (!grouped[key]) grouped[key] = { sinTratar: 0, sectores: new Set(), severidades: [], score: 0 };
+      if (!grouped[key]) grouped[key] = { sinTratar: 0, severidades: [], score: 0, sectorMap: {} };
       grouped[key].sinTratar++;
-      if (r.sector) grouped[key].sectores.add(r.sector);
       if (r.severidad) grouped[key].severidades.push(r.severidad);
       grouped[key].score += sevWeight[r.severidad] || 2;
       recentTotal++;
+
+      // Track per individual sector
+      if (r.sector) {
+        parseSectorNumbers(r.sector).forEach(s => {
+          if (!grouped[key].sectorMap[s]) {
+            grouped[key].sectorMap[s] = { count: 0, sevMax: r.severidad || 'media', lastDate: r.fecha || '' };
+          }
+          grouped[key].sectorMap[s].count++;
+          const cur = sevOrder.indexOf(grouped[key].sectorMap[s].sevMax);
+          const inc = sevOrder.indexOf(r.severidad || 'media');
+          if (inc > cur) grouped[key].sectorMap[s].sevMax = r.severidad || 'media';
+          if (r.fecha && r.fecha > grouped[key].sectorMap[s].lastDate) {
+            grouped[key].sectorMap[s].lastDate = r.fecha;
+          }
+        });
+      }
     }
   });
 
-  const sevOrder = ['baja', 'media', 'alta', 'critica'];
-
   const problems = Object.entries(grouped)
     .map(([problema, info]) => {
-      const maxSev = info.severidades.sort((a, b) => sevOrder.indexOf(b) - sevOrder.indexOf(a))[0] || 'media';
-      // Extract unique individual sector numbers across all sector groups
-      const allIndivSectors = new Set<string>();
-      info.sectores.forEach(sg => parseSectorNumbers(sg).forEach(s => allIndivSectors.add(s)));
+      const maxSev = [...info.severidades].sort((a, b) => sevOrder.indexOf(b) - sevOrder.indexOf(a))[0] || 'media';
+      const sectorDetails: SectorDetail[] = Object.entries(info.sectorMap)
+        .map(([sector, sd]) => ({
+          sector,
+          count: sd.count,
+          severidadMax: sd.sevMax,
+          diasDesdeObs: sd.lastDate ? Math.floor((now.getTime() - new Date(sd.lastDate).getTime()) / 86400000) : 999,
+          fechaUltimaObs: sd.lastDate,
+        }))
+        .sort((a, b) => a.diasDesdeObs - b.diasDesdeObs);
+
       return {
         problema,
         sinTratar: info.sinTratar,
-        sectoresAfectados: allIndivSectors.size,
-        sectoresList: [...allIndivSectors].sort((a, b) => parseInt(a) - parseInt(b)).slice(0, 8),
+        sectoresAfectados: sectorDetails.length,
+        sectoresList: sectorDetails.map(s => s.sector).slice(0, 8),
+        sectorDetails,
         severidadMax: maxSev,
         score: info.score,
       };
@@ -406,7 +449,7 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
     }
   });
 
-  // STEP 2: Group recent observations by sector group
+  // STEP 2: Group recent observations by INDIVIDUAL sector number (fixes 201/202 gap)
   const bySector: Record<string, {
     obs: number;
     treated: number;
@@ -416,39 +459,34 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
   data.forEach(r => {
     if (!r.sector || !recentSet.has(r.semana)) return;
 
-    if (!bySector[r.sector]) bySector[r.sector] = { obs: 0, treated: 0, problemas: {} };
-    bySector[r.sector].obs++;
-    if (r.tratamiento_aplicado) bySector[r.sector].treated++;
+    // Explode to individual sectors so every sector gets tracked
+    parseSectorNumbers(r.sector).forEach(s => {
+      if (!bySector[s]) bySector[s] = { obs: 0, treated: 0, problemas: {} };
+      bySector[s].obs++;
+      if (r.tratamiento_aplicado) bySector[s].treated++;
 
-    const probKey = r.problema.toLowerCase();
-    if (!bySector[r.sector].problemas[probKey]) {
-      bySector[r.sector].problemas[probKey] = { count: 0, sevMax: r.severidad || 'media' };
-    }
-    bySector[r.sector].problemas[probKey].count++;
-    const current = sevOrder.indexOf(bySector[r.sector].problemas[probKey].sevMax);
-    const incoming = sevOrder.indexOf(r.severidad || 'media');
-    if (incoming > current) bySector[r.sector].problemas[probKey].sevMax = r.severidad || 'media';
+      const probKey = r.problema.toLowerCase();
+      if (!bySector[s].problemas[probKey]) {
+        bySector[s].problemas[probKey] = { count: 0, sevMax: r.severidad || 'media' };
+      }
+      bySector[s].problemas[probKey].count++;
+      const current = sevOrder.indexOf(bySector[s].problemas[probKey].sevMax);
+      const incoming = sevOrder.indexOf(r.severidad || 'media');
+      if (incoming > current) bySector[s].problemas[probKey].sevMax = r.severidad || 'media';
+    });
   });
 
-  // STEP 3: For each sector group, find most recent fumigation among its individual sectors
+  // STEP 3: For each individual sector, match directly with fumigation record
   return Object.entries(bySector)
     .filter(([, info]) => info.obs > 0)
     .map(([sector, info]) => {
       const sinTratar = info.obs - info.treated;
       const cobertura = info.obs > 0 ? Math.round((info.treated / info.obs) * 100) : 0;
 
-      // Match individual sectors to find fumigation
-      const individualSectors = parseSectorNumbers(sector);
-      let lastFumDate: string | null = null;
-      let lastProduct: string | null = null;
-
-      individualSectors.forEach(s => {
-        const fum = fumByIndivSector[s];
-        if (fum && (!lastFumDate || fum.date > lastFumDate)) {
-          lastFumDate = fum.date;
-          lastProduct = fum.product;
-        }
-      });
+      // Direct match - sector is already individual
+      const fum = fumByIndivSector[sector];
+      const lastFumDate = fum?.date || null;
+      const lastProduct = fum?.product || null;
 
       let diasSinFumigar: number | null = null;
       if (lastFumDate) {
@@ -486,7 +524,7 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
       if (rDiff !== 0) return rDiff;
       return (b.diasSinFumigar || 999) - (a.diasSinFumigar || 999);
     })
-    .slice(0, 10);
+    .slice(0, 20);
 }
 
 // Get parcela counts by crop
@@ -505,6 +543,45 @@ async function getParcelaCounts(): Promise<{ arandano: number; frambuesa: number
   };
 }
 
+// Build recipe data for active problems using protocols + field context
+async function buildRecipes(problems: UntreatedProblem[]): Promise<Record<string, RecipeData>> {
+  const recetas: Record<string, RecipeData> = {};
+  if (problems.length === 0) return recetas;
+
+  // Fetch protocols and field context in parallel for all problems
+  const promises = problems.map(async (p) => {
+    const key = p.problema.toLowerCase();
+    try {
+      const [protocols, fieldCtx] = await Promise.all([
+        searchProtocols(p.problema, {}),
+        getFieldContext(p.problema),
+      ]);
+
+      const primary = protocols[0];
+      recetas[key] = {
+        products: primary?.products?.slice(0, 3).map(pr => ({
+          nombre: pr.nombre,
+          dosis: pr.dosis,
+          ingrediente_activo: pr.ingrediente_activo,
+        })) || [],
+        method: primary?.application_method || '',
+        frequency: primary?.frequency || '',
+        carencia: primary?.waiting_period_days || 0,
+        fieldTreatments: fieldCtx?.tratamientosUsados?.slice(0, 3).map(t => ({
+          producto: t.producto,
+          dosis: t.dosis,
+          count: t.count,
+        })) || [],
+      };
+    } catch {
+      recetas[key] = { products: [], method: '', frequency: '', carencia: 0, fieldTreatments: [] };
+    }
+  });
+
+  await Promise.all(promises);
+  return recetas;
+}
+
 // Full weekly intelligence report
 export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
   const currentWeek = getCurrentWeek();
@@ -517,11 +594,20 @@ export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
     getParcelaCounts(),
   ]);
 
+  // Build recipes for untreated + high-risk problems
+  const allProblems = [...untreatedResult.problems];
+  forecastResult.forecasts.forEach(f => {
+    if (f.riesgo === 'alto' && !allProblems.some(p => p.problema === f.problema.toLowerCase())) {
+      allProblems.push({ problema: f.problema, sinTratar: 0, sectoresAfectados: 0, sectoresList: [], sectorDetails: [], severidadMax: 'media', score: 0 });
+    }
+  });
+  const recetas = await buildRecipes(allProblems);
+
   return {
     semanaActual: currentWeek,
     ultimaSemanaConDatos: forecastResult.lastWeek,
     resumen: {
-      totalObservacionesRecientes: untreatedResult.recentTotal + (untreatedResult.problems.length > 0 ? 0 : 0),
+      totalObservacionesRecientes: untreatedResult.recentTotal,
       problemasActivos: forecastResult.forecasts.filter(f => f.obsReciente > 0).length,
       sinTratarReciente: untreatedResult.recentTotal,
       parcelasArandano: parcelas.arandano,
@@ -531,5 +617,6 @@ export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
     sinTratar: untreatedResult.problems,
     hotspots,
     fumigacion,
+    recetas,
   };
 }

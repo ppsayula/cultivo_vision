@@ -361,30 +361,39 @@ export default function Home() {
                   })()}
 
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-                    {/* Widget 1: Atencion Requerida (merges: sin tratar + sectores + fumigacion) */}
+                    {/* Widget 1: Atencion Requerida (resumen compacto) */}
                     <Link href="/inteligencia#sintratar" className="bg-gray-800/30 border border-gray-700/30 hover:border-orange-500/30 rounded-xl p-5 transition-colors block">
                       <div className="flex items-center gap-2 mb-3">
                         <Target className="w-5 h-5 text-orange-400" />
                         <h4 className="text-white font-medium">Atencion Requerida</h4>
-                        <span className="text-xs text-gray-500 ml-auto">Toca para ver detalle</span>
+                        <span className="text-xs text-gray-500 ml-auto">Ver detalle</span>
                         <ChevronRight className="w-4 h-4 text-gray-600" />
                       </div>
 
-                      {/* Problemas sin tratar */}
-                      {intelligence.sinTratar?.length > 0 ? (
+                      {intelligence.sinTratar?.length > 0 || intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 ? (
                         <>
-                          <p className="text-xs text-orange-400/70 font-medium mb-2 uppercase tracking-wide">Problemas detectados sin tratamiento</p>
-                          {intelligence.sinTratar.slice(0, 4).map((u: any, i: number) => (
-                            <div key={`u${i}`} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                              <div className="flex items-center gap-2 min-w-0">
+                          {/* Summary line */}
+                          <p className="text-sm text-gray-300 mb-3">
+                            {intelligence.sinTratar?.length > 0 && (
+                              <span>{intelligence.sinTratar.length} problemas sin tratar</span>
+                            )}
+                            {intelligence.sinTratar?.length > 0 && intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 && (
+                              <span className="text-gray-600"> · </span>
+                            )}
+                            {intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 && (
+                              <span>{intelligence.fumigacion.filter((f: any) => f.riesgo === 'expuesto').length} sectores expuestos</span>
+                            )}
+                          </p>
+
+                          {/* Problem pills */}
+                          <div className="flex flex-wrap gap-2">
+                            {intelligence.sinTratar?.slice(0, 4).map((u: any, i: number) => (
+                              <div key={`u${i}`} className="flex items-center gap-1.5">
                                 <span className={`w-2 h-2 rounded-full shrink-0 ${
                                   u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-400' :
                                   u.severidadMax === 'media' ? 'bg-yellow-400' : 'bg-gray-400'
                                 }`} />
-                                <span className="text-sm text-gray-200 capitalize truncate">{u.problema}</span>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs text-gray-500">{u.sinTratar} obs · {u.sectoresAfectados || '?'} sect</span>
+                                <span className="text-sm text-gray-200 capitalize">{u.problema}</span>
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
                                   u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
                                   u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -393,45 +402,10 @@ export default function Home() {
                                   {u.severidadMax}
                                 </span>
                               </div>
-                            </div>
-                          ))}
+                            ))}
+                          </div>
                         </>
                       ) : (
-                        <div className="flex items-center gap-2 py-2 mb-1">
-                          <CheckCircle className="w-4 h-4 text-green-500" />
-                          <span className="text-green-400 text-sm">Todo tratado</span>
-                        </div>
-                      )}
-
-                      {/* Sectores expuestos (sin fumigar recientemente) */}
-                      {intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto' || f.riesgo === 'parcial').length > 0 && (
-                        <>
-                          <p className="text-xs text-blue-400/70 font-medium mb-2 mt-4 uppercase tracking-wide">Sectores sin fumigacion reciente</p>
-                          {intelligence.fumigacion
-                            .filter((f: any) => f.riesgo === 'expuesto' || f.riesgo === 'parcial')
-                            .slice(0, 4)
-                            .map((f: any, i: number) => (
-                            <div key={`f${i}`} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                              <span className="text-sm text-gray-300 truncate">{f.sector}</span>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span className={`text-xs font-medium ${
-                                  f.diasSinFumigar > 21 ? 'text-red-400' : 'text-yellow-400'
-                                }`}>
-                                  {f.diasSinFumigar !== null ? `hace ${f.diasSinFumigar} dias` : 'nunca'}
-                                </span>
-                                <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                  f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
-                                }`}>
-                                  {f.riesgo === 'expuesto' ? 'Expuesto' : 'Parcial'}
-                                </span>
-                              </div>
-                            </div>
-                          ))}
-                        </>
-                      )}
-
-                      {/* Si no hay nada que atender */}
-                      {(!intelligence.sinTratar?.length && !intelligence.fumigacion?.filter((f: any) => f.riesgo !== 'protegido').length) && (
                         <div className="text-center py-6">
                           <CheckCircle className="w-10 h-10 text-green-500/40 mx-auto mb-2" />
                           <p className="text-green-400 text-sm">Todo bajo control</p>

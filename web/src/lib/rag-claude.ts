@@ -40,7 +40,7 @@ export interface FieldContext {
   totalObservaciones: number;
   severidadDistribucion: Record<string, number>;
   sectoresAfectados: string[];
-  tratamientosUsados: { producto: string; dosis: string; count: number }[];
+  tratamientosUsados: { producto: string; dosis: string; count: number; ultimaFecha?: string }[];
 }
 
 export interface AssistantResponse {
@@ -148,7 +148,7 @@ export async function getFieldContext(
 
   let query = supabase
     .from('v_bitacora_campo')
-    .select('severidad, sector, tratamiento_producto, tratamiento_dosis')
+    .select('severidad, sector, tratamiento_producto, tratamiento_dosis, fecha')
     .ilike('problema', `%${problem}%`);
 
   if (cropType) query = query.ilike('cultivo', `%${cropType}%`);
@@ -161,15 +161,18 @@ export async function getFieldContext(
   // Agregar distribución de severidad
   const severidadDist: Record<string, number> = {};
   const sectoresSet = new Set<string>();
-  const tratamientoMap: Record<string, { dosis: string; count: number }> = {};
+  const tratamientoMap: Record<string, { dosis: string; count: number; ultimaFecha: string }> = {};
 
   data.forEach(r => {
     if (r.severidad) severidadDist[r.severidad] = (severidadDist[r.severidad] || 0) + 1;
     if (r.sector) sectoresSet.add(r.sector);
     if (r.tratamiento_producto) {
       const key = r.tratamiento_producto;
-      if (!tratamientoMap[key]) tratamientoMap[key] = { dosis: r.tratamiento_dosis || '', count: 0 };
+      if (!tratamientoMap[key]) tratamientoMap[key] = { dosis: r.tratamiento_dosis || '', count: 0, ultimaFecha: '' };
       tratamientoMap[key].count++;
+      if (r.fecha && r.fecha > tratamientoMap[key].ultimaFecha) {
+        tratamientoMap[key].ultimaFecha = r.fecha;
+      }
     }
   });
 
@@ -178,7 +181,7 @@ export async function getFieldContext(
     severidadDistribucion: severidadDist,
     sectoresAfectados: Array.from(sectoresSet).sort(),
     tratamientosUsados: Object.entries(tratamientoMap)
-      .map(([producto, { dosis, count }]) => ({ producto, dosis, count }))
+      .map(([producto, { dosis, count, ultimaFecha }]) => ({ producto, dosis, count, ultimaFecha: ultimaFecha || undefined }))
       .sort((a, b) => b.count - a.count)
       .slice(0, 5),
   };
