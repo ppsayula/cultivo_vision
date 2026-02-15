@@ -396,45 +396,60 @@ export default function Home() {
               {/* Intelligence Widgets */}
               {intelligence && (
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
-                  {/* Prediccion esta semana */}
+                  {/* Tendencias vs promedio */}
                   <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <Activity className="w-5 h-5 text-cyan-400" />
-                      <h4 className="text-white font-medium">Prediccion Semana {intelligence.semanaActual}</h4>
+                      <h4 className="text-white font-medium">Tendencias</h4>
                     </div>
-                    {intelligence.pronostico?.slice(0, 4).map((f: any, i: number) => (
+                    <p className="text-xs text-gray-500 mb-3">vs promedio historico (ultimas 3 semanas)</p>
+                    {intelligence.pronostico?.slice(0, 5).map((f: any, i: number) => (
                       <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                        <span className="text-sm text-gray-300 capitalize">{f.problema}</span>
-                        <span className={`text-xs px-2 py-0.5 rounded-full ${
-                          f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
-                          f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
-                          'bg-green-500/20 text-green-400'
-                        }`}>
-                          {f.riesgo}
-                        </span>
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="text-sm text-gray-300 capitalize truncate">{f.problema}</span>
+                          {f.tendencia === 'subiendo' && <TrendingUp className="w-3 h-3 text-red-400 shrink-0" />}
+                          {f.tendencia === 'bajando' && <TrendingUp className="w-3 h-3 text-green-400 shrink-0 rotate-180" />}
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <span className={`text-xs font-mono ${
+                            f.cambio > 30 ? 'text-red-400' :
+                            f.cambio < -30 ? 'text-green-400' :
+                            'text-gray-500'
+                          }`}>
+                            {f.cambio > 0 ? '+' : ''}{f.cambio}%
+                          </span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
+                            f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-green-500/20 text-green-400'
+                          }`}>
+                            {f.riesgo}
+                          </span>
+                        </div>
                       </div>
                     ))}
                     {(!intelligence.pronostico || intelligence.pronostico.length === 0) && (
-                      <p className="text-gray-500 text-sm">Sin datos suficientes para prediccion</p>
+                      <p className="text-gray-500 text-sm">Sin datos suficientes</p>
                     )}
                   </div>
 
-                  {/* Problemas sin tratar */}
+                  {/* Sin tratar reciente */}
                   <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <Target className="w-5 h-5 text-orange-400" />
                       <h4 className="text-white font-medium">Sin Tratar</h4>
-                      {intelligence.resumen?.sinTratar > 0 && (
+                      {intelligence.resumen?.sinTratarReciente > 0 && (
                         <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-auto">
-                          {intelligence.resumen.sinTratar}
+                          {intelligence.resumen.sinTratarReciente}
                         </span>
                       )}
                     </div>
+                    <p className="text-xs text-gray-500 mb-3">ultimas 3 semanas, ordenado por urgencia</p>
                     {intelligence.sinTratar?.slice(0, 4).map((u: any, i: number) => (
                       <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
                         <span className="text-sm text-gray-300 capitalize">{u.problema}</span>
                         <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{u.sinTratar} obs</span>
+                          <span className="text-xs text-gray-500">{u.sinTratar}</span>
                           <span className={`text-xs px-1.5 py-0.5 rounded ${
                             u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
                             u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -452,23 +467,26 @@ export default function Home() {
                     )}
                   </div>
 
-                  {/* Sectores criticos */}
+                  {/* Sectores recientes */}
                   <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center gap-2 mb-1">
                       <Eye className="w-5 h-5 text-purple-400" />
-                      <h4 className="text-white font-medium">Sectores Criticos</h4>
+                      <h4 className="text-white font-medium">Sectores</h4>
                     </div>
+                    <p className="text-xs text-gray-500 mb-3">con mas problemas distintos (reciente)</p>
                     {intelligence.hotspots?.slice(0, 4).map((h: any, i: number) => (
                       <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                        <div>
+                        <div className="min-w-0">
                           <span className="text-sm text-white">{h.sector}</span>
-                          <span className="text-xs text-gray-500 ml-2">{h.problemasDistintos} problemas</span>
                         </div>
-                        <span className="text-xs text-gray-400">{h.totalObservaciones} obs</span>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-gray-500">{h.problemasDistintos} prob</span>
+                          <span className="text-xs text-gray-400">{h.totalObservaciones} obs</span>
+                        </div>
                       </div>
                     ))}
                     {(!intelligence.hotspots || intelligence.hotspots.length === 0) && (
-                      <p className="text-gray-500 text-sm">Sin sectores criticos</p>
+                      <p className="text-gray-500 text-sm">Sin datos recientes</p>
                     )}
                   </div>
                 </div>

@@ -1,6 +1,6 @@
-// Cultivo Vision - Pattern Analyzer
-// Analiza datos historicos de campo para identificar patrones estacionales,
-// problemas recurrentes por sector, y generar pronosticos
+// Cultivo Vision - Pattern Analyzer v2
+// Analiza tendencias RELATIVAS (no absolutas) para dar predicciones accionables
+// Compara reciente vs promedio historico para distinguir lo normal de lo anomalo
 
 import { createClient } from '@supabase/supabase-js';
 
@@ -11,13 +11,23 @@ function getSupabase() {
 }
 
 // Types
-export interface WeeklyPattern {
-  semana: number;
+export interface ProblemForecast {
   problema: string;
-  observaciones: number;
-  sectoresAfectados: number;
-  severidadPredominante: string;
+  riesgo: 'bajo' | 'medio' | 'alto';
+  razon: string;
+  obsReciente: number;
+  obsPromedio: number;
+  cambio: number; // % change vs average
   tendencia: 'subiendo' | 'estable' | 'bajando';
+  sevGraves: number; // alta+critica count in recent
+}
+
+export interface UntreatedProblem {
+  problema: string;
+  sinTratar: number;
+  sectoresAfectados: number;
+  severidadMax: string;
+  score: number; // weighted urgency score
 }
 
 export interface SectorHotspot {
@@ -27,36 +37,17 @@ export interface SectorHotspot {
   problemasPrincipales: { problema: string; count: number; severidad: string }[];
 }
 
-export interface ProblemForecast {
-  problema: string;
-  riesgo: 'bajo' | 'medio' | 'alto';
-  razon: string;
-  semanasHistorico: number[];
-  promedioObservaciones: number;
-}
-
-export interface UntreatedProblem {
-  problema: string;
-  total: number;
-  sinTratar: number;
-  porcentajeSinTratar: number;
-  sectoresAfectados: number;
-  severidadMax: string;
-}
-
 export interface WeeklyIntelligence {
   semanaActual: number;
+  ultimaSemanaConDatos: number;
   resumen: {
-    totalObservaciones: number;
+    totalObservacionesRecientes: number;
     problemasActivos: number;
-    sectoresAfectados: number;
-    sinTratar: number;
+    sinTratarReciente: number;
   };
-  topProblemas: { problema: string; count: number; tendencia: string }[];
+  pronostico: ProblemForecast[];
   sinTratar: UntreatedProblem[];
   hotspots: SectorHotspot[];
-  pronostico: ProblemForecast[];
-  patronesEstacionales: WeeklyPattern[];
 }
 
 // Get current week number (ISO)
@@ -68,120 +59,228 @@ function getCurrentWeek(): number {
   return Math.ceil((diff / oneWeek) + start.getDay() / 7);
 }
 
-// Analyze weekly patterns for a problem across all weeks
-export async function getWeeklyPatterns(
-  options: { problema?: string; limit?: number } = {}
-): Promise<WeeklyPattern[]> {
+// SMART FORECAST: Compare recent trend vs historical average
+// Instead of "does this problem exist?" → "is this problem ABOVE or BELOW normal?"
+export async function generateForecast(): Promise<{ forecasts: ProblemForecast[]; lastWeek: number }> {
   const supabase = getSupabase();
-  const { problema, limit = 50 } = options;
 
-  let query = supabase
+  const { data, error } = await supabase
     .from('v_bitacora_campo')
-    .select('semana, problema, severidad, sector')
+    .select('semana, problema, severidad')
     .not('problema', 'is', null)
     .not('problema', 'eq', '');
 
-  if (problema) {
-    query = query.ilike('problema', `%${problema}%`);
-  }
+  if (error || !data) return { forecasts: [], lastWeek: 0 };
 
-  const { data, error } = await query;
-  if (error || !data) return [];
-
-  // Group by semana + problema
-  const grouped: Record<string, {
-    semana: number;
-    problema: string;
-    observaciones: number;
-    sectores: Set<string>;
-    severidades: Record<string, number>;
+  // Group by problema → { semana: count, sevGraves: count }
+  const byProblem: Record<string, {
+    weekCounts: Record<number, number>;
+    weekGraves: Record<number, number>;
+    totalWeeks: number;
   }> = {};
+
+  const allWeeks = new Set<number>();
 
   data.forEach(r => {
     if (!r.problema || !r.semana) return;
-    const key = `${r.semana}-${r.problema.toLowerCase()}`;
-    if (!grouped[key]) {
-      grouped[key] = {
-        semana: r.semana,
-        problema: r.problema,
-        observaciones: 0,
-        sectores: new Set(),
-        severidades: {},
-      };
-    }
-    grouped[key].observaciones++;
-    if (r.sector) grouped[key].sectores.add(r.sector);
-    if (r.severidad) {
-      grouped[key].severidades[r.severidad] = (grouped[key].severidades[r.severidad] || 0) + 1;
+    const key = r.problema.toLowerCase();
+    allWeeks.add(r.semana);
+
+    if (!byProblem[key]) byProblem[key] = { weekCounts: {}, weekGraves: {}, totalWeeks: 0 };
+    byProblem[key].weekCounts[r.semana] = (byProblem[key].weekCounts[r.semana] || 0) + 1;
+
+    if (r.severidad === 'alta' || r.severidad === 'critica') {
+      byProblem[key].weekGraves[r.semana] = (byProblem[key].weekGraves[r.semana] || 0) + 1;
     }
   });
 
-  // Convert to array and calculate trends
-  const patterns = Object.values(grouped).map(g => {
-    const sevEntries = Object.entries(g.severidades);
-    const predominante = sevEntries.length > 0
-      ? sevEntries.sort((a, b) => b[1] - a[1])[0][0]
-      : 'media';
+  // Find the last 3 weeks with data (recent window)
+  const sortedWeeks = [...allWeeks].sort((a, b) => a - b);
+  const lastWeek = sortedWeeks[sortedWeeks.length - 1] || 0;
+  const recentWeeks = sortedWeeks.slice(-3); // last 3 weeks with data
+  const olderWeeks = sortedWeeks.slice(0, -3); // everything before that
 
-    return {
-      semana: g.semana,
-      problema: g.problema,
-      observaciones: g.observaciones,
-      sectoresAfectados: g.sectores.size,
-      severidadPredominante: predominante,
-      tendencia: 'estable' as 'subiendo' | 'estable' | 'bajando',
-    };
-  });
+  const forecasts: ProblemForecast[] = [];
 
-  // Calculate trends by comparing consecutive weeks per problem
-  const byProblem: Record<string, typeof patterns> = {};
-  patterns.forEach(p => {
-    const key = p.problema.toLowerCase();
-    if (!byProblem[key]) byProblem[key] = [];
-    byProblem[key].push(p);
-  });
+  Object.entries(byProblem).forEach(([problema, info]) => {
+    const weeks = Object.keys(info.weekCounts).map(Number);
+    if (weeks.length < 3) return; // need enough history
 
-  Object.values(byProblem).forEach(weeks => {
-    weeks.sort((a, b) => a.semana - b.semana);
-    for (let i = 1; i < weeks.length; i++) {
-      const diff = weeks[i].observaciones - weeks[i - 1].observaciones;
-      if (diff > 2) weeks[i].tendencia = 'subiendo';
-      else if (diff < -2) weeks[i].tendencia = 'bajando';
-      else weeks[i].tendencia = 'estable';
+    // Recent observations (last 3 weeks avg)
+    const recentObs = recentWeeks.reduce((sum, w) => sum + (info.weekCounts[w] || 0), 0);
+    const recentAvg = recentObs / recentWeeks.length;
+
+    // Historical average (excluding recent)
+    const olderObs = olderWeeks.reduce((sum, w) => sum + (info.weekCounts[w] || 0), 0);
+    const olderAvg = olderWeeks.length > 0 ? olderObs / olderWeeks.length : recentAvg;
+
+    // Skip problems with very low presence (noise)
+    if (recentAvg < 1 && olderAvg < 1) return;
+
+    // % change from historical average
+    const cambio = olderAvg > 0 ? Math.round(((recentAvg - olderAvg) / olderAvg) * 100) : 0;
+
+    // Trend: compare last week vs second-to-last week
+    const lastWeekObs = info.weekCounts[recentWeeks[recentWeeks.length - 1]] || 0;
+    const prevWeekObs = recentWeeks.length >= 2 ? (info.weekCounts[recentWeeks[recentWeeks.length - 2]] || 0) : lastWeekObs;
+    const tendencia: 'subiendo' | 'estable' | 'bajando' =
+      lastWeekObs > prevWeekObs + 1 ? 'subiendo' :
+      lastWeekObs < prevWeekObs - 1 ? 'bajando' : 'estable';
+
+    // Recent severe observations
+    const sevGraves = recentWeeks.reduce((sum, w) => sum + (info.weekGraves[w] || 0), 0);
+
+    // Risk calculation - RELATIVE to normal
+    let riesgo: 'bajo' | 'medio' | 'alto' = 'bajo';
+    let razon = '';
+
+    if (cambio > 40 && sevGraves > 0) {
+      // Significantly above normal AND has severe cases
+      riesgo = 'alto';
+      razon = `+${cambio}% vs promedio con ${sevGraves} obs graves`;
+    } else if (cambio > 40 || (tendencia === 'subiendo' && sevGraves > 0)) {
+      // Above normal OR trending up with severe cases
+      riesgo = 'medio';
+      razon = cambio > 40
+        ? `+${cambio}% por encima del promedio`
+        : `Tendencia creciente con ${sevGraves} obs graves`;
+    } else if (cambio < -30) {
+      // Significantly below normal - improving
+      riesgo = 'bajo';
+      razon = `${cambio}% por debajo del promedio - mejorando`;
+    } else {
+      // Normal levels
+      riesgo = 'bajo';
+      razon = tendencia === 'bajando'
+        ? 'Tendencia a la baja'
+        : `Nivel normal (~${recentAvg.toFixed(1)} obs/semana)`;
     }
+
+    forecasts.push({
+      problema,
+      riesgo,
+      razon,
+      obsReciente: Math.round(recentAvg * 10) / 10,
+      obsPromedio: Math.round(olderAvg * 10) / 10,
+      cambio,
+      tendencia,
+      sevGraves,
+    });
   });
 
-  return patterns
-    .sort((a, b) => b.semana - a.semana || b.observaciones - a.observaciones)
-    .slice(0, limit);
+  // Sort: alto first, then medio, then by absolute change
+  return {
+    forecasts: forecasts
+      .sort((a, b) => {
+        const riesgoOrder = { alto: 3, medio: 2, bajo: 1 };
+        const rDiff = riesgoOrder[b.riesgo] - riesgoOrder[a.riesgo];
+        if (rDiff !== 0) return rDiff;
+        return Math.abs(b.cambio) - Math.abs(a.cambio);
+      })
+      .slice(0, 8),
+    lastWeek,
+  };
 }
 
-// Identify sector hotspots
-export async function getSectorHotspots(
-  options: { semana?: number; limit?: number } = {}
-): Promise<SectorHotspot[]> {
+// UNTREATED: Only recent 3 weeks, weighted by severity
+export async function getUntreatedProblems(): Promise<{ problems: UntreatedProblem[]; recentTotal: number }> {
   const supabase = getSupabase();
-  const { semana, limit = 10 } = options;
 
-  let query = supabase
+  // First get the last 3 weeks that have data
+  const { data: weekData } = await supabase
+    .from('v_bitacora_campo')
+    .select('semana')
+    .not('problema', 'is', null)
+    .not('problema', 'eq', '');
+
+  if (!weekData) return { problems: [], recentTotal: 0 };
+
+  const allWeeks = [...new Set(weekData.map(r => r.semana))].sort((a, b) => a - b);
+  const recentWeeks = allWeeks.slice(-3);
+
+  // Now get only recent untreated
+  const { data, error } = await supabase
+    .from('v_bitacora_campo')
+    .select('problema, severidad, sector, tratamiento_aplicado')
+    .in('semana', recentWeeks)
+    .not('problema', 'is', null)
+    .not('problema', 'eq', '');
+
+  if (error || !data) return { problems: [], recentTotal: 0 };
+
+  const sevWeight: Record<string, number> = { baja: 1, media: 2, alta: 4, critica: 8 };
+
+  const grouped: Record<string, {
+    sinTratar: number;
+    sectores: Set<string>;
+    severidades: string[];
+    score: number;
+  }> = {};
+
+  let recentTotal = 0;
+
+  data.forEach(r => {
+    if (!r.tratamiento_aplicado) {
+      const key = r.problema.toLowerCase();
+      if (!grouped[key]) grouped[key] = { sinTratar: 0, sectores: new Set(), severidades: [], score: 0 };
+      grouped[key].sinTratar++;
+      if (r.sector) grouped[key].sectores.add(r.sector);
+      if (r.severidad) grouped[key].severidades.push(r.severidad);
+      grouped[key].score += sevWeight[r.severidad] || 2;
+      recentTotal++;
+    }
+  });
+
+  const sevOrder = ['baja', 'media', 'alta', 'critica'];
+
+  const problems = Object.entries(grouped)
+    .map(([problema, info]) => {
+      const maxSev = info.severidades.sort((a, b) => sevOrder.indexOf(b) - sevOrder.indexOf(a))[0] || 'media';
+      return {
+        problema,
+        sinTratar: info.sinTratar,
+        sectoresAfectados: info.sectores.size,
+        severidadMax: maxSev,
+        score: info.score,
+      };
+    })
+    .sort((a, b) => b.score - a.score) // Sort by weighted urgency, not raw count
+    .slice(0, 6);
+
+  return { problems, recentTotal };
+}
+
+// HOTSPOTS: Recent 3 weeks only
+export async function getSectorHotspots(limit = 5): Promise<SectorHotspot[]> {
+  const supabase = getSupabase();
+
+  // Get last 3 weeks with data
+  const { data: weekData } = await supabase
+    .from('v_bitacora_campo')
+    .select('semana')
+    .not('problema', 'is', null);
+
+  if (!weekData) return [];
+
+  const allWeeks = [...new Set(weekData.map(r => r.semana))].sort((a, b) => a - b);
+  const recentWeeks = allWeeks.slice(-3);
+
+  const { data, error } = await supabase
     .from('v_bitacora_campo')
     .select('sector, problema, severidad')
+    .in('semana', recentWeeks)
     .not('sector', 'is', null)
     .not('problema', 'is', null)
     .not('problema', 'eq', '');
 
-  if (semana) {
-    query = query.eq('semana', semana);
-  }
-
-  const { data, error } = await query;
   if (error || !data) return [];
 
-  // Group by sector
   const bySector: Record<string, {
     total: number;
     problemas: Record<string, { count: number; severidad: string }>;
   }> = {};
+
+  const sevOrder = ['baja', 'media', 'alta', 'critica'];
 
   data.forEach(r => {
     if (!r.sector) return;
@@ -193,8 +292,6 @@ export async function getSectorHotspots(
       bySector[r.sector].problemas[probKey] = { count: 0, severidad: r.severidad || 'media' };
     }
     bySector[r.sector].problemas[probKey].count++;
-    // Keep highest severity
-    const sevOrder = ['baja', 'media', 'alta', 'critica'];
     const current = sevOrder.indexOf(bySector[r.sector].problemas[probKey].severidad);
     const incoming = sevOrder.indexOf(r.severidad || 'media');
     if (incoming > current) {
@@ -216,177 +313,26 @@ export async function getSectorHotspots(
     .slice(0, limit);
 }
 
-// Get untreated problems (monitoreo sin sanidad)
-export async function getUntreatedProblems(): Promise<UntreatedProblem[]> {
-  const supabase = getSupabase();
-
-  const { data, error } = await supabase
-    .from('v_bitacora_campo')
-    .select('problema, severidad, sector, tratamiento_aplicado')
-    .not('problema', 'is', null)
-    .not('problema', 'eq', '');
-
-  if (error || !data) return [];
-
-  const grouped: Record<string, {
-    total: number;
-    sinTratar: number;
-    sectores: Set<string>;
-    severidades: string[];
-  }> = {};
-
-  data.forEach(r => {
-    const key = r.problema.toLowerCase();
-    if (!grouped[key]) grouped[key] = { total: 0, sinTratar: 0, sectores: new Set(), severidades: [] };
-    grouped[key].total++;
-    if (!r.tratamiento_aplicado) grouped[key].sinTratar++;
-    if (r.sector) grouped[key].sectores.add(r.sector);
-    if (r.severidad) grouped[key].severidades.push(r.severidad);
-  });
-
-  const sevOrder = ['baja', 'media', 'alta', 'critica'];
-
-  return Object.entries(grouped)
-    .filter(([_, info]) => info.sinTratar > 0)
-    .map(([problema, info]) => {
-      const maxSev = info.severidades.sort((a, b) => sevOrder.indexOf(b) - sevOrder.indexOf(a))[0] || 'media';
-      return {
-        problema,
-        total: info.total,
-        sinTratar: info.sinTratar,
-        porcentajeSinTratar: Math.round((info.sinTratar / info.total) * 100),
-        sectoresAfectados: info.sectores.size,
-        severidadMax: maxSev,
-      };
-    })
-    .sort((a, b) => b.sinTratar - a.sinTratar)
-    .slice(0, 10);
-}
-
-// Generate problem forecast for next weeks
-export async function generateForecast(): Promise<ProblemForecast[]> {
-  const supabase = getSupabase();
-  const currentWeek = getCurrentWeek();
-
-  const { data, error } = await supabase
-    .from('v_bitacora_campo')
-    .select('semana, problema')
-    .not('problema', 'is', null)
-    .not('problema', 'eq', '');
-
-  if (error || !data) return [];
-
-  // Group by problema → semana distribution
-  const byProblem: Record<string, Record<number, number>> = {};
-  data.forEach(r => {
-    if (!r.problema || !r.semana) return;
-    const key = r.problema.toLowerCase();
-    if (!byProblem[key]) byProblem[key] = {};
-    byProblem[key][r.semana] = (byProblem[key][r.semana] || 0) + 1;
-  });
-
-  const forecasts: ProblemForecast[] = [];
-
-  Object.entries(byProblem).forEach(([problema, weekData]) => {
-    const weeks = Object.keys(weekData).map(Number).sort();
-    if (weeks.length < 2) return;
-
-    // Check if this problem appeared near current week historically
-    const nearbyWeeks = weeks.filter(w => Math.abs(w - currentWeek) <= 2);
-    const avgObs = nearbyWeeks.length > 0
-      ? nearbyWeeks.reduce((sum, w) => sum + weekData[w], 0) / nearbyWeeks.length
-      : 0;
-
-    // Recent trend (last 3 weeks of data)
-    const recentWeeks = weeks.slice(-3);
-    const recentCounts = recentWeeks.map(w => weekData[w]);
-    const isIncreasing = recentCounts.length >= 2 &&
-      recentCounts[recentCounts.length - 1] > recentCounts[recentCounts.length - 2];
-
-    let riesgo: 'bajo' | 'medio' | 'alto' = 'bajo';
-    let razon = '';
-
-    if (avgObs >= 5 && isIncreasing) {
-      riesgo = 'alto';
-      razon = `Promedio de ${avgObs.toFixed(0)} observaciones en semanas cercanas y tendencia creciente`;
-    } else if (avgObs >= 3 || isIncreasing) {
-      riesgo = 'medio';
-      razon = avgObs >= 3
-        ? `Historicamente aparece con ${avgObs.toFixed(0)} observaciones en esta epoca`
-        : 'Tendencia creciente en semanas recientes';
-    } else if (nearbyWeeks.length > 0) {
-      riesgo = 'bajo';
-      razon = 'Presencia historica baja en esta epoca';
-    } else {
-      return; // No relevant data for forecast
-    }
-
-    forecasts.push({
-      problema,
-      riesgo,
-      razon,
-      semanasHistorico: weeks,
-      promedioObservaciones: Math.round(avgObs * 10) / 10,
-    });
-  });
-
-  return forecasts
-    .sort((a, b) => {
-      const riesgoOrder = { alto: 3, medio: 2, bajo: 1 };
-      return riesgoOrder[b.riesgo] - riesgoOrder[a.riesgo] || b.promedioObservaciones - a.promedioObservaciones;
-    })
-    .slice(0, 8);
-}
-
 // Full weekly intelligence report
 export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
   const currentWeek = getCurrentWeek();
 
-  const [patterns, hotspots, untreated, forecast] = await Promise.all([
-    getWeeklyPatterns({ limit: 30 }),
-    getSectorHotspots({ limit: 8 }),
-    getUntreatedProblems(),
+  const [forecastResult, untreatedResult, hotspots] = await Promise.all([
     generateForecast(),
+    getUntreatedProblems(),
+    getSectorHotspots(5),
   ]);
-
-  // Recent patterns (current and last week)
-  const recentPatterns = patterns.filter(
-    p => p.semana >= currentWeek - 1
-  );
-
-  // Summary stats
-  const totalObs = recentPatterns.reduce((sum, p) => sum + p.observaciones, 0);
-  const problemasActivos = new Set(recentPatterns.map(p => p.problema.toLowerCase())).size;
-  const sectoresSet = new Set<string>();
-  hotspots.forEach(h => sectoresSet.add(h.sector));
-
-  // Top problems with trend
-  const problemCounts: Record<string, { count: number; tendencia: string }> = {};
-  recentPatterns.forEach(p => {
-    const key = p.problema.toLowerCase();
-    if (!problemCounts[key]) problemCounts[key] = { count: 0, tendencia: p.tendencia };
-    problemCounts[key].count += p.observaciones;
-    // Keep latest trend
-    if (p.semana === currentWeek) problemCounts[key].tendencia = p.tendencia;
-  });
-
-  const topProblemas = Object.entries(problemCounts)
-    .map(([problema, info]) => ({ problema, ...info }))
-    .sort((a, b) => b.count - a.count)
-    .slice(0, 6);
 
   return {
     semanaActual: currentWeek,
+    ultimaSemanaConDatos: forecastResult.lastWeek,
     resumen: {
-      totalObservaciones: totalObs,
-      problemasActivos,
-      sectoresAfectados: sectoresSet.size,
-      sinTratar: untreated.reduce((sum, u) => sum + u.sinTratar, 0),
+      totalObservacionesRecientes: untreatedResult.recentTotal + (untreatedResult.problems.length > 0 ? 0 : 0),
+      problemasActivos: forecastResult.forecasts.filter(f => f.obsReciente > 0).length,
+      sinTratarReciente: untreatedResult.recentTotal,
     },
-    topProblemas,
-    sinTratar: untreated.slice(0, 5),
-    hotspots: hotspots.slice(0, 5),
-    pronostico: forecast,
-    patronesEstacionales: patterns.filter(p => p.observaciones >= 3).slice(0, 20),
+    pronostico: forecastResult.forecasts,
+    sinTratar: untreatedResult.problems,
+    hotspots,
   };
 }
