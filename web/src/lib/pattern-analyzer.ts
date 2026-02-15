@@ -11,7 +11,7 @@ function getSupabase() {
 }
 
 // Seasonal context for Sayula, Jalisco (Secas Nov-May, Lluvias Jun-Oct)
-function getSeasonalContext(problema: string): string {
+export function getSeasonalContext(problema: string): string {
   const month = new Date().getMonth() + 1;
   const isSecas = month >= 11 || month <= 5;
 
@@ -40,7 +40,7 @@ function getSeasonalContext(problema: string): string {
 }
 
 // Parse sector string "203, 211, 204" or "22-23-24" into individual numbers
-function parseSectorNumbers(sectorStr: string): string[] {
+export function parseSectorNumbers(sectorStr: string): string[] {
   return sectorStr.split(/[,\-\s]+/).map(s => s.trim()).filter(s => /^\d+$/.test(s));
 }
 

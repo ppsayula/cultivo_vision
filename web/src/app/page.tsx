@@ -182,6 +182,7 @@ export default function Home() {
     { icon: Sprout, label: 'Cultivos', href: '/cultivos' },
     { icon: Camera, label: 'Bitacora', href: '/bitacora' },
     { icon: Zap, label: 'Diagnostico', href: '/diagnostico' },
+    { icon: MapPin, label: 'Sectores', href: '/sectores' },
     { icon: Beaker, label: 'Catalogos', href: '/catalogos' },
     { icon: BookOpen, label: 'Conocimiento', href: '/conocimiento' },
     { icon: Bell, label: 'Alertas', href: '/alertas', badge: stats.alertasPendientes > 0 ? stats.alertasPendientes : undefined },
