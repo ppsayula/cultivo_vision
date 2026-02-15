@@ -395,141 +395,214 @@ export default function Home() {
                 </Link>
               </div>
 
-              {/* Intelligence Widgets */}
+              {/* Intelligence Section */}
               {intelligence && (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
-                  {/* Tendencias vs promedio */}
-                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Activity className="w-5 h-5 text-cyan-400" />
-                      <h4 className="text-white font-medium">Tendencias</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">vs promedio historico (ultimas 3 semanas)</p>
-                    {intelligence.pronostico?.slice(0, 5).map((f: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="text-sm text-gray-300 capitalize truncate">{f.problema}</span>
-                          {f.tendencia === 'subiendo' && <TrendingUp className="w-3 h-3 text-red-400 shrink-0" />}
-                          {f.tendencia === 'bajando' && <TrendingUp className="w-3 h-3 text-green-400 shrink-0 rotate-180" />}
+                <>
+                  {/* Data freshness alert */}
+                  {(() => {
+                    const lastDataWeek = intelligence.ultimaSemanaConDatos;
+                    const currentWeek = intelligence.semanaActual;
+                    const weeksBehind = currentWeek - lastDataWeek;
+                    if (weeksBehind >= 2) {
+                      return (
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-center gap-3">
+                          <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0" />
+                          <div>
+                            <p className="text-yellow-300 text-sm font-medium">
+                              Datos desactualizados - Ultimo monitoreo: semana {lastDataWeek} ({weeksBehind} semanas atras)
+                            </p>
+                            <p className="text-yellow-500/70 text-xs mt-0.5">
+                              El analisis se basa en datos de las semanas {lastDataWeek - 2}-{lastDataWeek}. Registra nuevas observaciones para mejorar las predicciones.
+                            </p>
+                          </div>
+                          <Link href="/bitacora" className="ml-auto shrink-0 px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-xs rounded-lg transition-colors">
+                            Nuevo registro
+                          </Link>
                         </div>
-                        <div className="flex items-center gap-1.5 shrink-0">
-                          <span className={`text-xs font-mono ${
-                            f.cambio > 30 ? 'text-red-400' :
-                            f.cambio < -30 ? 'text-green-400' :
-                            'text-gray-500'
-                          }`}>
-                            {f.cambio > 0 ? '+' : ''}{f.cambio}%
-                          </span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
-                            f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-green-500/20 text-green-400'
-                          }`}>
-                            {f.riesgo}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {(!intelligence.pronostico || intelligence.pronostico.length === 0) && (
-                      <p className="text-gray-500 text-sm">Sin datos suficientes</p>
-                    )}
-                  </div>
+                      );
+                    }
+                    return null;
+                  })()}
 
-                  {/* Sin tratar reciente */}
-                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Target className="w-5 h-5 text-orange-400" />
-                      <h4 className="text-white font-medium">Sin Tratar</h4>
-                      {intelligence.resumen?.sinTratarReciente > 0 && (
-                        <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-auto">
-                          {intelligence.resumen.sinTratarReciente}
-                        </span>
+                  <h3 className="text-lg font-semibold text-white mb-4">Inteligencia de Campo</h3>
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+                    {/* Tendencias vs promedio */}
+                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Activity className="w-5 h-5 text-cyan-400" />
+                        <h4 className="text-white font-medium">Tendencias vs Promedio</h4>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3">Problemas que suben o bajan respecto al historico</p>
+                      {intelligence.pronostico?.length > 0 ? (
+                        intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm text-gray-300 capitalize truncate">{f.problema}</span>
+                              {f.tendencia === 'subiendo' && <TrendingUp className="w-3 h-3 text-red-400 shrink-0" />}
+                              {f.tendencia === 'bajando' && <TrendingUp className="w-3 h-3 text-green-400 shrink-0 rotate-180" />}
+                            </div>
+                            <div className="flex items-center gap-1.5 shrink-0">
+                              <span className={`text-xs font-mono ${
+                                f.cambio > 30 ? 'text-red-400' :
+                                f.cambio < -30 ? 'text-green-400' :
+                                'text-gray-500'
+                              }`}>
+                                {f.cambio > 0 ? '+' : ''}{f.cambio}%
+                              </span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
+                                f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-green-500/20 text-green-400'
+                              }`}>
+                                {f.riesgo}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <Activity className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">Se necesitan al menos 3 semanas de datos para calcular tendencias</p>
+                        </div>
                       )}
                     </div>
-                    <p className="text-xs text-gray-500 mb-3">ultimas 3 semanas, ordenado por urgencia</p>
-                    {intelligence.sinTratar?.slice(0, 4).map((u: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                        <span className="text-sm text-gray-300 capitalize">{u.problema}</span>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{u.sinTratar}</span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
-                            u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-green-500/20 text-green-400'
-                          }`}>
-                            {u.severidadMax}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                    {(!intelligence.sinTratar || intelligence.sinTratar.length === 0) && (
-                      <p className="text-green-400 text-sm flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4" /> Todo tratado
-                      </p>
-                    )}
-                  </div>
 
-                  {/* Sectores recientes */}
-                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Eye className="w-5 h-5 text-purple-400" />
-                      <h4 className="text-white font-medium">Sectores</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">con mas problemas distintos (reciente)</p>
-                    {intelligence.hotspots?.slice(0, 4).map((h: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                        <div className="min-w-0">
-                          <span className="text-sm text-white">{h.sector}</span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs text-gray-500">{h.problemasDistintos} prob</span>
-                          <span className="text-xs text-gray-400">{h.totalObservaciones} obs</span>
-                        </div>
-                      </div>
-                    ))}
-                    {(!intelligence.hotspots || intelligence.hotspots.length === 0) && (
-                      <p className="text-gray-500 text-sm">Sin datos recientes</p>
-                    )}
-                  </div>
-
-                  {/* Fumigation Coverage */}
-                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Droplets className="w-5 h-5 text-blue-400" />
-                      <h4 className="text-white font-medium">Cobertura Fumigacion</h4>
-                    </div>
-                    <p className="text-xs text-gray-500 mb-3">sectores con problemas sin tratar</p>
-                    {intelligence.fumigacion?.slice(0, 4).map((f: any, i: number) => (
-                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                        <div className="min-w-0">
-                          <span className="text-sm text-gray-300 truncate block max-w-[140px]">{f.sector}</span>
-                        </div>
-                        <div className="flex items-center gap-2 shrink-0">
-                          <span className="text-xs text-gray-500">{f.cobertura}%</span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${
-                            f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
-                            f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
-                            'bg-green-500/20 text-green-400'
-                          }`}>
-                            {f.riesgo}
+                    {/* Sin tratar + urgencia */}
+                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Target className="w-5 h-5 text-orange-400" />
+                        <h4 className="text-white font-medium">Problemas Sin Tratar</h4>
+                        {intelligence.resumen?.sinTratarReciente > 0 && (
+                          <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-auto">
+                            {intelligence.resumen.sinTratarReciente} obs
                           </span>
-                        </div>
+                        )}
                       </div>
-                    ))}
-                    {(!intelligence.fumigacion || intelligence.fumigacion.length === 0) && (
-                      <p className="text-green-400 text-sm flex items-center gap-1">
-                        <CheckCircle className="w-4 h-4" /> Todo cubierto
-                      </p>
-                    )}
+                      <p className="text-xs text-gray-500 mb-3">Observaciones sin tratamiento aplicado (por urgencia)</p>
+                      {intelligence.sinTratar?.length > 0 ? (
+                        intelligence.sinTratar.slice(0, 5).map((u: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className="text-sm text-gray-300 capitalize truncate">{u.problema}</span>
+                              {u.sectoresAfectados > 1 && (
+                                <span className="text-xs text-gray-600">{u.sectoresAfectados} sect</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-xs text-gray-500">{u.sinTratar} obs</span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
+                                u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-green-500/20 text-green-400'
+                              }`}>
+                                {u.severidadMax}
+                              </span>
+                            </div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <CheckCircle className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
+                          <p className="text-green-400 text-sm">Todos los problemas detectados tienen tratamiento</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Sectores criticos + fumigacion combinado */}
+                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <MapPin className="w-5 h-5 text-purple-400" />
+                        <h4 className="text-white font-medium">Sectores Criticos</h4>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3">Sectores con mas diversidad de problemas</p>
+                      {intelligence.hotspots?.length > 0 ? (
+                        intelligence.hotspots.slice(0, 5).map((h: any, i: number) => (
+                          <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-white truncate max-w-[200px]">{h.sector}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs text-gray-500">{h.problemasDistintos} prob</span>
+                                <span className="text-xs text-gray-600">{h.totalObservaciones} obs</span>
+                              </div>
+                            </div>
+                            {h.problemasPrincipales?.length > 0 && (
+                              <div className="flex gap-1.5 mt-1 flex-wrap">
+                                {h.problemasPrincipales.slice(0, 3).map((p: any, j: number) => (
+                                  <span key={j} className={`text-xs px-1.5 py-0.5 rounded ${
+                                    p.severidad === 'alta' || p.severidad === 'critica' ? 'bg-red-500/10 text-red-400/80' :
+                                    p.severidad === 'media' ? 'bg-yellow-500/10 text-yellow-400/80' :
+                                    'bg-gray-500/10 text-gray-400/80'
+                                  }`}>
+                                    {p.problema} ({p.count})
+                                  </span>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4">
+                          <MapPin className="w-8 h-8 text-gray-700 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">Sin datos de sectores en las ultimas semanas</p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Cobertura de fumigacion */}
+                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Droplets className="w-5 h-5 text-blue-400" />
+                        <h4 className="text-white font-medium">Cobertura de Fumigacion</h4>
+                      </div>
+                      <p className="text-xs text-gray-500 mb-3">Que sectores estan protegidos vs expuestos</p>
+                      {intelligence.fumigacion?.length > 0 ? (
+                        <>
+                          {intelligence.fumigacion.slice(0, 5).map((f: any, i: number) => (
+                            <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                              <div className="min-w-0">
+                                <span className="text-sm text-gray-300 truncate block max-w-[180px]">{f.sector}</span>
+                              </div>
+                              <div className="flex items-center gap-2 shrink-0">
+                                {/* Progress bar mini */}
+                                <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full ${
+                                      f.cobertura >= 80 ? 'bg-green-500' :
+                                      f.cobertura >= 30 ? 'bg-yellow-500' :
+                                      'bg-red-500'
+                                    }`}
+                                    style={{ width: `${f.cobertura}%` }}
+                                  />
+                                </div>
+                                <span className={`text-xs px-1.5 py-0.5 rounded min-w-[70px] text-center ${
+                                  f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
+                                  f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-green-500/20 text-green-400'
+                                }`}>
+                                  {f.riesgo === 'expuesto' ? 'Sin fumigar' :
+                                   f.riesgo === 'parcial' ? `${f.cobertura}% cubierto` :
+                                   'Protegido'}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </>
+                      ) : (
+                        <div className="text-center py-4">
+                          <CheckCircle className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
+                          <p className="text-green-400 text-sm">Todos los sectores con problemas tienen tratamiento</p>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </>
               )}
 
               {/* Registros Recientes */}
               <div className="flex items-center justify-between mb-4">
-                <h3 className="text-lg font-semibold text-white">Registros Recientes</h3>
+                <h3 className="text-lg font-semibold text-white">Ultimas Observaciones</h3>
                 <Link href="/bitacora" className="text-green-400 text-sm hover:underline flex items-center gap-1">
-                  Ver todos <ChevronRight className="w-4 h-4" />
+                  Ver bitacora completa <ChevronRight className="w-4 h-4" />
                 </Link>
               </div>
 
@@ -546,35 +619,29 @@ export default function Home() {
                   </Link>
                 </div>
               ) : (
-                <div className="space-y-3">
-                  {registrosRecientes.map(registro => (
-                    <div
-                      key={registro.id}
-                      className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 hover:border-gray-600/50 transition-colors"
-                    >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-3">
-                          {getTipoIcon(registro.tipo_problema)}
-                          <div>
-                            <span className="text-white font-medium">{registro.problema}</span>
-                            <span className={`ml-2 px-2 py-0.5 rounded-full text-xs ${getSeveridadColor(registro.severidad)}`}>
-                              {registro.severidad}
-                            </span>
-                          </div>
-                        </div>
-                        <span className="text-gray-500 text-sm">
-                          {new Date(registro.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
+                  <div className="divide-y divide-gray-800/50">
+                    {registrosRecientes.map(registro => (
+                      <div
+                        key={registro.id}
+                        className="flex items-center gap-3 px-4 py-3 hover:bg-gray-700/20 transition-colors"
+                      >
+                        {getTipoIcon(registro.tipo_problema)}
+                        <span className="text-white text-sm font-medium min-w-0 truncate">{registro.problema}</span>
+                        <span className={`px-2 py-0.5 rounded-full text-xs shrink-0 ${getSeveridadColor(registro.severidad)}`}>
+                          {registro.severidad}
                         </span>
-                      </div>
-                      <div className="flex items-center gap-4 mt-2 text-sm text-gray-500">
-                        <span>{registro.cultivo}</span>
-                        <span className="flex items-center gap-1">
+                        <span className="text-gray-600 text-xs shrink-0">{registro.cultivo}</span>
+                        <span className="text-gray-600 text-xs flex items-center gap-1 shrink-0">
                           <MapPin className="w-3 h-3" />
                           {registro.sector}
                         </span>
+                        <span className="text-gray-600 text-xs ml-auto shrink-0">
+                          {new Date(registro.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                        </span>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
 
