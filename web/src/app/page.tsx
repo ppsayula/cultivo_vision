@@ -28,7 +28,9 @@ import {
   Activity,
   Target,
   Eye,
-  BookOpen
+  BookOpen,
+  Bot,
+  MessageSquare
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useTenant } from '@/contexts/TenantContext';
@@ -382,20 +384,20 @@ export default function Home() {
                 </Link>
 
                 <Link
-                  href="/ayuda"
-                  className="group bg-gray-800/50 hover:bg-yellow-500/20 border border-gray-700 hover:border-yellow-500/30 rounded-xl p-5 transition-all"
+                  href="/asistente"
+                  className="group bg-gray-800/50 hover:bg-emerald-500/20 border border-gray-700 hover:border-emerald-500/30 rounded-xl p-5 transition-all"
                 >
-                  <div className="w-12 h-12 bg-yellow-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <HelpCircle className="w-6 h-6 text-yellow-400" />
+                  <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                    <Bot className="w-6 h-6 text-emerald-400" />
                   </div>
-                  <h4 className="text-white font-medium mb-1">Instructivo</h4>
-                  <p className="text-gray-500 text-sm">Como usar el sistema</p>
+                  <h4 className="text-white font-medium mb-1">Agronomo IA</h4>
+                  <p className="text-gray-500 text-sm">Consulta diagnosticos y tratamientos</p>
                 </Link>
               </div>
 
               {/* Intelligence Widgets */}
               {intelligence && (
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-4 mb-8">
                   {/* Tendencias vs promedio */}
                   <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
                     <div className="flex items-center gap-2 mb-1">
@@ -489,6 +491,37 @@ export default function Home() {
                       <p className="text-gray-500 text-sm">Sin datos recientes</p>
                     )}
                   </div>
+
+                  {/* Fumigation Coverage */}
+                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Droplets className="w-5 h-5 text-blue-400" />
+                      <h4 className="text-white font-medium">Cobertura Fumigacion</h4>
+                    </div>
+                    <p className="text-xs text-gray-500 mb-3">sectores con problemas sin tratar</p>
+                    {intelligence.fumigacion?.slice(0, 4).map((f: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                        <div className="min-w-0">
+                          <span className="text-sm text-gray-300 truncate block max-w-[140px]">{f.sector}</span>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-xs text-gray-500">{f.cobertura}%</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
+                            f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-green-500/20 text-green-400'
+                          }`}>
+                            {f.riesgo}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {(!intelligence.fumigacion || intelligence.fumigacion.length === 0) && (
+                      <p className="text-green-400 text-sm flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4" /> Todo cubierto
+                      </p>
+                    )}
+                  </div>
                 </div>
               )}
 
@@ -555,6 +588,16 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      {/* Floating Asistente IA button */}
+      <Link
+        href="/asistente"
+        className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105 transition-all group"
+      >
+        <Bot className="w-5 h-5" />
+        <span className="font-medium text-sm">Agronomo IA</span>
+        <MessageSquare className="w-4 h-4 opacity-60 group-hover:opacity-100 transition-opacity" />
+      </Link>
     </div>
   );
 }

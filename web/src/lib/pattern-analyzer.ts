@@ -37,6 +37,16 @@ export interface SectorHotspot {
   problemasPrincipales: { problema: string; count: number; severidad: string }[];
 }
 
+export interface SectorFumigationRisk {
+  sector: string;
+  problemas: { nombre: string; count: number; severidadMax: string }[];
+  observaciones: number;
+  tratados: number;
+  sinTratar: number;
+  cobertura: number; // % de observaciones con tratamiento
+  riesgo: 'protegido' | 'parcial' | 'expuesto';
+}
+
 export interface WeeklyIntelligence {
   semanaActual: number;
   ultimaSemanaConDatos: number;
@@ -48,6 +58,7 @@ export interface WeeklyIntelligence {
   pronostico: ProblemForecast[];
   sinTratar: UntreatedProblem[];
   hotspots: SectorHotspot[];
+  fumigacion: SectorFumigationRisk[];
 }
 
 // Get current week number (ISO)
@@ -313,14 +324,96 @@ export async function getSectorHotspots(limit = 5): Promise<SectorHotspot[]> {
     .slice(0, limit);
 }
 
+// FUMIGATION RISK: Which sectors have problems but haven't been treated
+export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]> {
+  const supabase = getSupabase();
+
+  // Get last 3 weeks with data
+  const { data: weekData } = await supabase
+    .from('v_bitacora_campo')
+    .select('semana')
+    .not('problema', 'is', null);
+
+  if (!weekData) return [];
+
+  const allWeeks = [...new Set(weekData.map(r => r.semana))].sort((a: number, b: number) => a - b);
+  const recentWeeks = allWeeks.slice(-3);
+
+  const { data, error } = await supabase
+    .from('v_bitacora_campo')
+    .select('sector, problema, severidad, tratamiento_aplicado')
+    .in('semana', recentWeeks)
+    .not('sector', 'is', null)
+    .not('problema', 'is', null)
+    .not('problema', 'eq', '');
+
+  if (error || !data) return [];
+
+  const sevOrder = ['baja', 'media', 'alta', 'critica'];
+
+  const bySector: Record<string, {
+    obs: number;
+    treated: number;
+    problemas: Record<string, { count: number; sevMax: string }>;
+  }> = {};
+
+  data.forEach(r => {
+    if (!r.sector) return;
+    if (!bySector[r.sector]) bySector[r.sector] = { obs: 0, treated: 0, problemas: {} };
+    bySector[r.sector].obs++;
+    if (r.tratamiento_aplicado) bySector[r.sector].treated++;
+
+    const probKey = r.problema.toLowerCase();
+    if (!bySector[r.sector].problemas[probKey]) {
+      bySector[r.sector].problemas[probKey] = { count: 0, sevMax: r.severidad || 'media' };
+    }
+    bySector[r.sector].problemas[probKey].count++;
+    const current = sevOrder.indexOf(bySector[r.sector].problemas[probKey].sevMax);
+    const incoming = sevOrder.indexOf(r.severidad || 'media');
+    if (incoming > current) bySector[r.sector].problemas[probKey].sevMax = r.severidad || 'media';
+  });
+
+  return Object.entries(bySector)
+    .map(([sector, info]) => {
+      const sinTratar = info.obs - info.treated;
+      const cobertura = info.obs > 0 ? Math.round((info.treated / info.obs) * 100) : 0;
+      const riesgo: 'protegido' | 'parcial' | 'expuesto' =
+        cobertura >= 80 ? 'protegido' :
+        cobertura >= 30 ? 'parcial' : 'expuesto';
+
+      return {
+        sector,
+        problemas: Object.entries(info.problemas)
+          .map(([nombre, { count, sevMax }]) => ({ nombre, count, severidadMax: sevMax }))
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 3),
+        observaciones: info.obs,
+        tratados: info.treated,
+        sinTratar,
+        cobertura,
+        riesgo,
+      };
+    })
+    .filter(s => s.sinTratar > 0) // Only show sectors with untreated problems
+    .sort((a, b) => {
+      // Exposed first, then partial, then by untreated count
+      const rOrder = { expuesto: 3, parcial: 2, protegido: 1 };
+      const rDiff = rOrder[b.riesgo] - rOrder[a.riesgo];
+      if (rDiff !== 0) return rDiff;
+      return b.sinTratar - a.sinTratar;
+    })
+    .slice(0, 8);
+}
+
 // Full weekly intelligence report
 export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
   const currentWeek = getCurrentWeek();
 
-  const [forecastResult, untreatedResult, hotspots] = await Promise.all([
+  const [forecastResult, untreatedResult, hotspots, fumigacion] = await Promise.all([
     generateForecast(),
     getUntreatedProblems(),
     getSectorHotspots(5),
+    getSectorFumigationRisk(),
   ]);
 
   return {
@@ -334,5 +427,6 @@ export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
     pronostico: forecastResult.forecasts,
     sinTratar: untreatedResult.problems,
     hotspots,
+    fumigacion,
   };
 }

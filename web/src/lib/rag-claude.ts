@@ -227,10 +227,11 @@ export async function buildAssistantContext(
   const problemKeywords = extractProblemFromQuery(query);
 
   // Buscar en paralelo
-  const [knowledgeDocs, protocols, fieldContext] = await Promise.all([
+  const [knowledgeDocs, protocols, fieldContext, sectorStatus] = await Promise.all([
     searchKnowledgeByText(query, { cropType, limit: 4 }),
     problemKeywords ? searchProtocols(problemKeywords, { cropType }) : Promise.resolve([]),
     problemKeywords ? getFieldContext(problemKeywords, { cropType, sector }) : Promise.resolve(null),
+    getSectorTreatmentStatus({ sector, problem: problemKeywords || undefined }),
   ]);
 
   // Construir contexto del sistema
@@ -274,6 +275,26 @@ export async function buildAssistantContext(
     }
   }
 
+  if (sectorStatus.length > 0) {
+    const exposed = sectorStatus.filter(s => s.cobertura < 30);
+    const partial = sectorStatus.filter(s => s.cobertura >= 30 && s.cobertura < 80);
+    const covered = sectorStatus.filter(s => s.cobertura >= 80);
+
+    systemContext += '\n## Estado de Fumigación por Sector (últimas 3 semanas)\n';
+    if (exposed.length > 0) {
+      systemContext += `**⚠️ EXPUESTOS (sin tratamiento):** ${exposed.map(s => s.sector).join(', ')}\n`;
+      exposed.forEach(s => {
+        systemContext += `  - ${s.sector}: ${s.problemas.join(', ')} (cobertura ${s.cobertura}%)\n`;
+      });
+    }
+    if (partial.length > 0) {
+      systemContext += `**Parcialmente tratados:** ${partial.map(s => `${s.sector} (${s.cobertura}%)`).join(', ')}\n`;
+    }
+    if (covered.length > 0) {
+      systemContext += `**Protegidos:** ${covered.map(s => s.sector).join(', ')}\n`;
+    }
+  }
+
   return { knowledgeDocs, protocols, fieldContext, systemContext };
 }
 
@@ -294,6 +315,57 @@ function extractProblemFromQuery(query: string): string | null {
   return found || null;
 }
 
+// Obtener estado de fumigación por sector para el asistente
+export async function getSectorTreatmentStatus(
+  options: { sector?: string; problem?: string } = {}
+): Promise<{ sector: string; problemas: string[]; tratado: boolean; cobertura: number }[]> {
+  const supabase = getSupabase();
+  const { sector, problem } = options;
+
+  // Get last 3 weeks with data
+  const { data: weekData } = await supabase
+    .from('v_bitacora_campo')
+    .select('semana')
+    .not('problema', 'is', null);
+
+  if (!weekData) return [];
+
+  const allWeeks = [...new Set(weekData.map(r => r.semana))].sort((a: number, b: number) => a - b);
+  const recentWeeks = allWeeks.slice(-3);
+
+  let query = supabase
+    .from('v_bitacora_campo')
+    .select('sector, problema, tratamiento_aplicado')
+    .in('semana', recentWeeks)
+    .not('sector', 'is', null)
+    .not('problema', 'is', null);
+
+  if (sector) query = query.ilike('sector', `%${sector}%`);
+  if (problem) query = query.ilike('problema', `%${problem}%`);
+
+  const { data, error } = await query;
+  if (error || !data) return [];
+
+  const bySector: Record<string, { problemas: Set<string>; total: number; treated: number }> = {};
+
+  data.forEach(r => {
+    if (!r.sector) return;
+    if (!bySector[r.sector]) bySector[r.sector] = { problemas: new Set(), total: 0, treated: 0 };
+    bySector[r.sector].total++;
+    if (r.problema) bySector[r.sector].problemas.add(r.problema.toLowerCase());
+    if (r.tratamiento_aplicado) bySector[r.sector].treated++;
+  });
+
+  return Object.entries(bySector)
+    .map(([sector, info]) => ({
+      sector,
+      problemas: [...info.problemas],
+      tratado: info.treated > 0,
+      cobertura: info.total > 0 ? Math.round((info.treated / info.total) * 100) : 0,
+    }))
+    .sort((a, b) => a.cobertura - b.cobertura);
+}
+
 // System prompt para Claude
 export const AGRONOMIST_SYSTEM_PROMPT = `Eres el Agrónomo IA de Cultivo Vision, un sistema experto en el manejo fitosanitario de berries (frambuesa y arándano) para Lola Berries en Sayula, Jalisco, México.
 
@@ -304,6 +376,7 @@ Eres el equivalente digital del ingeniero principal de campo. Los trabajadores y
 - Dar recomendaciones de manejo cultural y biológico
 - Interpretar datos de monitoreo de campo
 - Anticipar problemas estacionales
+- Indicar qué sectores necesitan fumigación urgente
 
 ## Reglas Estrictas
 1. SIEMPRE responde en español
@@ -316,11 +389,41 @@ Eres el equivalente digital del ingeniero principal de campo. Los trabajadores y
 8. Cuando haya varias opciones, presenta la MÁS usada en campo primero
 9. Si la severidad es alta o crítica, marca URGENTE y prioriza acción inmediata
 10. Incluye siempre al menos una medida de control cultural o biológico además del químico
+11. Cuando hables de un sector, indica si tiene tratamiento reciente o está EXPUESTO
+
+## Condiciones de Desarrollo de Plagas y Enfermedades
+Usa esta información para evaluar riesgo según clima/estación:
+
+### PLAGAS
+- **Trips (Frankliniella occidentalis):** Se disparan con calor seco (25-30°C, HR <60%). Pico en primavera y verano. Macrotúneles elevan temperatura. Daño directo en fruta + vector de virus.
+- **Araña roja (Tetranychus urticae):** Prolifera con calor y baja humedad (>27°C, HR <50%). Peor en sequía. Se refugia en envés de hojas. Riego por aspersión la controla parcialmente.
+- **Gusano (varias spp):** Actividad nocturna. Incrementa con temperaturas templadas (18-25°C). Larvas en suelo húmedo. Más frecuente al inicio de lluvias.
+- **Chicharrita (Empoasca spp):** Favorecida por vegetación densa y temperaturas 20-28°C. Migra desde cultivos vecinos. Transmite fitoplasmas.
+- **Pulgón (Aphis spp):** Explosión poblacional con temperaturas moderadas (15-25°C) y sin lluvias. Las lluvias fuertes lavan colonias.
+- **Mosca blanca (Bemisia/Trialeurodes):** Óptimo 25-30°C. Problema en macrotúneles por microclima cálido. Vector de virus.
+- **Drosophila (D. suzukii):** Ataca fruta madura. Prolifera con HR >70% y temperaturas 20-25°C. Peor en cosecha con fruta expuesta.
+- **Mayate/escarabajo:** Mayor actividad con lluvias (época húmeda). Adultos dañan flores y frutos.
+- **Gallina ciega (Phyllophaga):** Larvas en suelo. Daño en raíces. Ciclo ligado a inicio de lluvias (mayo-julio).
+
+### ENFERMEDADES
+- **Botrytis (Botrytis cinerea):** Principal enemigo de berries. Óptimo 15-25°C con HR >90%. Peor con lluvia, rocío, riego por aspersión. La ventilación en macrotúneles es CLAVE.
+- **Roya (Puccinia/Phragmidium):** Necesita humedad foliar prolongada (>6 hrs). Temperaturas 15-20°C. Peor en épocas lluviosas con noches frescas.
+- **Cenicilla (Podosphaera/Sphaerotheca):** Paradójicamente prefiere HR moderada (60-80%) con temperaturas 18-25°C. El agua libre en hojas la INHIBE.
+- **Antracnosis (Colletotrichum):** Lluvia + calor (20-30°C). Salpicadura de agua disemina esporas. Peor con fruta madura en campo.
+- **Fusarium (Fusarium oxysporum):** Suelo húmedo y cálido (25-30°C). Estrés hídrico predispone. pH ácido favorece.
+- **Phytophthora (P. fragariae/rubi):** Suelo encharcado, drenaje pobre. Temperaturas frescas (10-20°C). Peor en época de lluvias con mal drenaje.
+- **Didymella:** HR alta con temperaturas 15-20°C. Entra por heridas. Manejo de poda/ventilación crítico.
+
+### ESTACIONALIDAD en Sayula, Jalisco
+- **Secas (Nov-May):** Trips, araña roja, cenicilla dominan. Riego es la humedad principal.
+- **Lluvias (Jun-Oct):** Botrytis, roya, antracnosis, fusarium dominan. Gusanos y mayates emergen.
+- **Transición (May-Jun, Oct-Nov):** Mayor diversidad de problemas. Ventana crítica para preventivos.
 
 ## Formato de Respuesta para Tratamientos
 Cuando recetes un tratamiento, usa este formato:
 - **Problema:** [nombre]
 - **Severidad:** [baja/media/alta/critica]
+- **Condiciones que lo favorecen:** [temp, humedad, estación]
 - **Tratamiento recomendado:**
   1. [Producto] ([ingrediente activo]) - [dosis] - [método de aplicación]
   2. [alternativa si hay]
@@ -330,9 +433,10 @@ Cuando recetes un tratamiento, usa este formato:
 - **Seguimiento:** [qué monitorear después del tratamiento]
 
 ## Contexto del Rancho
-- Ubicación: Sayula, Jalisco (zona templada subtropical)
+- Ubicación: Sayula, Jalisco (zona templada subtropical, ~1500 msnm)
 - Cultivos: Frambuesa (principal) y Arándano
-- Sistema: Macrotúneles
+- Sistema: Macrotúneles (microclima más cálido y seco que exterior)
 - Producción: Ciclo principal semanas 41-6
 - Línea de nutrición: Productos OBA (Oba potasio, Obamin, Oba micros)
-- Coadyuvante estándar: Kumo`;
+- Coadyuvante estándar: Kumo
+- Monitoreo: Semanal por sectores. Los datos de campo son de bitácoras reales.`;
