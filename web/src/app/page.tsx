@@ -18,7 +18,6 @@ import {
   X,
   AlertTriangle,
   CheckCircle,
-  TrendingUp,
   FileText,
   Settings,
   HelpCircle,
@@ -27,7 +26,6 @@ import {
   Zap,
   Activity,
   Target,
-  Eye,
   BookOpen,
   Bot,
   MessageSquare
@@ -308,93 +306,33 @@ export default function Home() {
             </div>
           ) : (
             <>
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/20">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Sprout className="w-5 h-5 text-green-400" />
-                    <span className="text-gray-400 text-sm">Parcelas Activas</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{stats.cultivosActivos}</p>
-                  <p className="text-gray-500 text-xs mt-1">
-                    {intelligence?.resumen?.parcelasArandano || '—'} arandano · {intelligence?.resumen?.parcelasFrambuesa || '—'} frambuesa
-                  </p>
+              {/* Stats compactos */}
+              <div className="flex flex-wrap gap-3 mb-6">
+                <div className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-3 py-2 border border-gray-700/30">
+                  <Sprout className="w-4 h-4 text-green-400" />
+                  <span className="text-white font-semibold text-sm">{stats.cultivosActivos}</span>
+                  <span className="text-gray-500 text-xs">parcelas</span>
+                  <span className="text-gray-600 text-xs">({intelligence?.resumen?.parcelasArandano || 0}A / {intelligence?.resumen?.parcelasFrambuesa || 0}F)</span>
                 </div>
-
-                <div className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 rounded-xl p-4 border border-blue-500/20">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Camera className="w-5 h-5 text-blue-400" />
-                    <span className="text-gray-400 text-sm">Registros Semana</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{stats.registrosSemana}</p>
-                  <p className="text-gray-500 text-xs mt-1">esta semana</p>
+                <div className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-3 py-2 border border-gray-700/30">
+                  <Camera className="w-4 h-4 text-blue-400" />
+                  <span className="text-white font-semibold text-sm">{stats.registrosSemana}</span>
+                  <span className="text-gray-500 text-xs">registros esta semana</span>
                 </div>
-
-                <div className="bg-gradient-to-br from-orange-500/20 to-red-600/20 rounded-xl p-4 border border-orange-500/20">
-                  <div className="flex items-center gap-3 mb-2">
-                    <AlertTriangle className="w-5 h-5 text-orange-400" />
-                    <span className="text-gray-400 text-sm">Criticos/Altos</span>
+                {stats.problemasCriticos > 0 && (
+                  <div className="flex items-center gap-2 bg-orange-500/10 rounded-lg px-3 py-2 border border-orange-500/20">
+                    <AlertTriangle className="w-4 h-4 text-orange-400" />
+                    <span className="text-orange-300 font-semibold text-sm">{stats.problemasCriticos}</span>
+                    <span className="text-orange-400/70 text-xs">criticos/altos</span>
                   </div>
-                  <p className="text-3xl font-bold text-white">{stats.problemasCriticos}</p>
-                  <p className="text-gray-500 text-xs mt-1">requieren atencion</p>
-                </div>
-
-                <div className="bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-xl p-4 border border-purple-500/20">
-                  <div className="flex items-center gap-3 mb-2">
-                    <Bell className="w-5 h-5 text-purple-400" />
-                    <span className="text-gray-400 text-sm">Alertas</span>
-                  </div>
-                  <p className="text-3xl font-bold text-white">{stats.alertasPendientes}</p>
-                  <p className="text-gray-500 text-xs mt-1">pendientes</p>
-                </div>
-              </div>
-
-              {/* Acciones Rapidas */}
-              <h3 className="text-lg font-semibold text-white mb-4">Acciones Rapidas</h3>
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-                <Link
-                  href="/bitacora"
-                  className="group bg-gray-800/50 hover:bg-green-500/20 border border-gray-700 hover:border-green-500/30 rounded-xl p-5 transition-all"
-                >
-                  <div className="w-12 h-12 bg-green-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Camera className="w-6 h-6 text-green-400" />
-                  </div>
-                  <h4 className="text-white font-medium mb-1">Nuevo Registro</h4>
-                  <p className="text-gray-500 text-sm">Documenta lo que observas en campo</p>
-                </Link>
-
-                <Link
-                  href="/cultivos"
-                  className="group bg-gray-800/50 hover:bg-blue-500/20 border border-gray-700 hover:border-blue-500/30 rounded-xl p-5 transition-all"
-                >
-                  <div className="w-12 h-12 bg-blue-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Sprout className="w-6 h-6 text-blue-400" />
-                  </div>
-                  <h4 className="text-white font-medium mb-1">Alta de Cultivo</h4>
-                  <p className="text-gray-500 text-sm">Registra un nuevo cultivo</p>
-                </Link>
-
-                <Link
-                  href="/catalogos"
-                  className="group bg-gray-800/50 hover:bg-purple-500/20 border border-gray-700 hover:border-purple-500/30 rounded-xl p-5 transition-all"
-                >
-                  <div className="w-12 h-12 bg-purple-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Beaker className="w-6 h-6 text-purple-400" />
-                  </div>
-                  <h4 className="text-white font-medium mb-1">Catalogos</h4>
-                  <p className="text-gray-500 text-sm">Administra plagas, tratamientos...</p>
-                </Link>
-
-                <Link
-                  href="/asistente"
-                  className="group bg-gray-800/50 hover:bg-emerald-500/20 border border-gray-700 hover:border-emerald-500/30 rounded-xl p-5 transition-all"
-                >
-                  <div className="w-12 h-12 bg-emerald-500/20 rounded-xl flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
-                    <Bot className="w-6 h-6 text-emerald-400" />
-                  </div>
-                  <h4 className="text-white font-medium mb-1">Agronomo IA</h4>
-                  <p className="text-gray-500 text-sm">Consulta diagnosticos y tratamientos</p>
-                </Link>
+                )}
+                {stats.alertasPendientes > 0 && (
+                  <Link href="/alertas" className="flex items-center gap-2 bg-red-500/10 rounded-lg px-3 py-2 border border-red-500/20 hover:bg-red-500/20 transition-colors">
+                    <Bell className="w-4 h-4 text-red-400" />
+                    <span className="text-red-300 font-semibold text-sm">{stats.alertasPendientes}</span>
+                    <span className="text-red-400/70 text-xs">alertas</span>
+                  </Link>
+                )}
               </div>
 
               {/* Intelligence Section */}
@@ -407,18 +345,13 @@ export default function Home() {
                     const weeksBehind = currentWeek - lastDataWeek;
                     if (weeksBehind >= 2) {
                       return (
-                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-4 mb-4 flex items-center gap-3">
+                        <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mb-4 flex items-center gap-3">
                           <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0" />
-                          <div>
-                            <p className="text-yellow-300 text-sm font-medium">
-                              Datos desactualizados - Ultimo monitoreo: semana {lastDataWeek} ({weeksBehind} semanas atras)
-                            </p>
-                            <p className="text-yellow-500/70 text-xs mt-0.5">
-                              El analisis se basa en datos de las semanas {lastDataWeek - 2}-{lastDataWeek}. Registra nuevas observaciones para mejorar las predicciones.
-                            </p>
-                          </div>
-                          <Link href="/bitacora" className="ml-auto shrink-0 px-3 py-1.5 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-xs rounded-lg transition-colors">
-                            Nuevo registro
+                          <p className="text-yellow-300 text-sm">
+                            Ultimo monitoreo: semana {lastDataWeek} ({weeksBehind} sem atras)
+                          </p>
+                          <Link href="/bitacora" className="ml-auto shrink-0 px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-xs rounded-lg transition-colors">
+                            Registrar
                           </Link>
                         </div>
                       );
@@ -426,76 +359,31 @@ export default function Home() {
                     return null;
                   })()}
 
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-white">Inteligencia de Campo</h3>
-                    <Link href="/inteligencia" className="text-green-400 text-sm hover:underline flex items-center gap-1">
-                      Ver analisis completo <ChevronRight className="w-4 h-4" />
-                    </Link>
-                  </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-                    {/* Tendencias vs promedio */}
-                    <Link href="/inteligencia#tendencias" className="bg-gray-800/30 border border-gray-700/30 hover:border-cyan-500/30 rounded-xl p-5 transition-colors block">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Activity className="w-5 h-5 text-cyan-400" />
-                        <h4 className="text-white font-medium">Tendencias vs Promedio</h4>
-                        <ChevronRight className="w-4 h-4 text-gray-600 ml-auto" />
-                      </div>
-                      <p className="text-xs text-gray-500 mb-3">Que plagas estan subiendo o bajando respecto a su nivel normal. +% = mas que lo usual, -% = menos que lo usual.</p>
-                      {intelligence.pronostico?.length > 0 ? (
-                        intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm text-gray-300 capitalize truncate">{f.problema}</span>
-                              {f.tendencia === 'subiendo' && <TrendingUp className="w-3 h-3 text-red-400 shrink-0" />}
-                              {f.tendencia === 'bajando' && <TrendingUp className="w-3 h-3 text-green-400 shrink-0 rotate-180" />}
-                            </div>
-                            <div className="flex items-center gap-1.5 shrink-0">
-                              <span className="text-xs text-gray-600">{f.obsReciente}/sem</span>
-                              <span className={`text-xs font-mono ${
-                                f.cambio > 30 ? 'text-red-400' :
-                                f.cambio < -30 ? 'text-green-400' :
-                                'text-gray-500'
-                              }`}>
-                                {f.cambio > 0 ? '+' : ''}{f.cambio}%
-                              </span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
-                                f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-green-500/20 text-green-400'
-                              }`}>
-                                {f.riesgo}
-                              </span>
-                            </div>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4">
-                          <Activity className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-                          <p className="text-gray-500 text-sm">Se necesitan al menos 3 semanas de datos para calcular tendencias</p>
-                        </div>
-                      )}
-                    </Link>
-
-                    {/* Sin tratar + urgencia */}
+                    {/* Widget 1: Atencion Requerida (merges: sin tratar + sectores + fumigacion) */}
                     <Link href="/inteligencia#sintratar" className="bg-gray-800/30 border border-gray-700/30 hover:border-orange-500/30 rounded-xl p-5 transition-colors block">
-                      <div className="flex items-center gap-2 mb-1">
+                      <div className="flex items-center gap-2 mb-3">
                         <Target className="w-5 h-5 text-orange-400" />
-                        <h4 className="text-white font-medium">Detectado Sin Tratar</h4>
-                        {intelligence.resumen?.sinTratarReciente > 0 && (
-                          <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-auto">
-                            {intelligence.resumen.sinTratarReciente} obs
-                          </span>
-                        )}
+                        <h4 className="text-white font-medium">Atencion Requerida</h4>
+                        <span className="text-xs text-gray-500 ml-auto">Toca para ver detalle</span>
                         <ChevronRight className="w-4 h-4 text-gray-600" />
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">Plagas/enfermedades que se detectaron en monitoreo pero NO se les aplico tratamiento. Ordenado por urgencia (severidad x cantidad).</p>
+
+                      {/* Problemas sin tratar */}
                       {intelligence.sinTratar?.length > 0 ? (
-                        intelligence.sinTratar.slice(0, 5).map((u: any, i: number) => (
-                          <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-gray-300 capitalize">{u.problema}</span>
+                        <>
+                          <p className="text-xs text-orange-400/70 font-medium mb-2 uppercase tracking-wide">Problemas detectados sin tratamiento</p>
+                          {intelligence.sinTratar.slice(0, 4).map((u: any, i: number) => (
+                            <div key={`u${i}`} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                                  u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-400' :
+                                  u.severidadMax === 'media' ? 'bg-yellow-400' : 'bg-gray-400'
+                                }`} />
+                                <span className="text-sm text-gray-200 capitalize truncate">{u.problema}</span>
+                              </div>
                               <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs text-gray-500">{u.sinTratar} obs</span>
+                                <span className="text-xs text-gray-500">{u.sinTratar} obs · {u.sectoresAfectados || '?'} sect</span>
                                 <span className={`text-xs px-1.5 py-0.5 rounded ${
                                   u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
                                   u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -505,95 +393,89 @@ export default function Home() {
                                 </span>
                               </div>
                             </div>
-                            {u.sectoresAfectados > 0 && (
-                              <p className="text-xs text-gray-600 mt-0.5">en {u.sectoresAfectados} {u.sectoresAfectados === 1 ? 'sector' : 'sectores'}</p>
-                            )}
-                          </div>
-                        ))
+                          ))}
+                        </>
                       ) : (
-                        <div className="text-center py-4">
-                          <CheckCircle className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
-                          <p className="text-green-400 text-sm">Todo lo detectado ya tiene tratamiento aplicado</p>
+                        <div className="flex items-center gap-2 py-2 mb-1">
+                          <CheckCircle className="w-4 h-4 text-green-500" />
+                          <span className="text-green-400 text-sm">Todo tratado</span>
                         </div>
                       )}
-                    </Link>
 
-                    {/* Sectores criticos */}
-                    <Link href="/inteligencia#sectores" className="bg-gray-800/30 border border-gray-700/30 hover:border-purple-500/30 rounded-xl p-5 transition-colors block">
-                      <div className="flex items-center gap-2 mb-1">
-                        <MapPin className="w-5 h-5 text-purple-400" />
-                        <h4 className="text-white font-medium">Sectores con Mas Problemas</h4>
-                        <ChevronRight className="w-4 h-4 text-gray-600 ml-auto" />
-                      </div>
-                      <p className="text-xs text-gray-500 mb-3">Sectores donde se detectaron mas tipos diferentes de plagas/enfermedades. A mas diversidad, mayor riesgo de brote.</p>
-                      {intelligence.hotspots?.length > 0 ? (
-                        intelligence.hotspots.slice(0, 4).map((h: any, i: number) => (
-                          <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
-                            <div className="flex items-center justify-between">
-                              <span className="text-sm text-white truncate max-w-[200px]">{h.sector}</span>
-                              <span className="text-xs text-gray-500 shrink-0">{h.problemasDistintos} problemas, {h.totalObservaciones} obs</span>
-                            </div>
-                            {h.problemasPrincipales?.length > 0 && (
-                              <div className="flex gap-1.5 mt-1 flex-wrap">
-                                {h.problemasPrincipales.slice(0, 3).map((p: any, j: number) => (
-                                  <span key={j} className={`text-xs px-1.5 py-0.5 rounded ${
-                                    p.severidad === 'alta' || p.severidad === 'critica' ? 'bg-red-500/10 text-red-400/80' :
-                                    p.severidad === 'media' ? 'bg-yellow-500/10 text-yellow-400/80' :
-                                    'bg-gray-500/10 text-gray-400/80'
-                                  }`}>
-                                    {p.problema} ({p.count})
-                                  </span>
-                                ))}
+                      {/* Sectores expuestos (sin fumigar recientemente) */}
+                      {intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto' || f.riesgo === 'parcial').length > 0 && (
+                        <>
+                          <p className="text-xs text-blue-400/70 font-medium mb-2 mt-4 uppercase tracking-wide">Sectores sin fumigacion reciente</p>
+                          {intelligence.fumigacion
+                            .filter((f: any) => f.riesgo === 'expuesto' || f.riesgo === 'parcial')
+                            .slice(0, 4)
+                            .map((f: any, i: number) => (
+                            <div key={`f${i}`} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                              <span className="text-sm text-gray-300 truncate">{f.sector}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className={`text-xs font-medium ${
+                                  f.diasSinFumigar > 21 ? 'text-red-400' : 'text-yellow-400'
+                                }`}>
+                                  {f.diasSinFumigar !== null ? `hace ${f.diasSinFumigar} dias` : 'nunca'}
+                                </span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' : 'bg-yellow-500/20 text-yellow-400'
+                                }`}>
+                                  {f.riesgo === 'expuesto' ? 'Expuesto' : 'Parcial'}
+                                </span>
                               </div>
-                            )}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="text-center py-4">
-                          <MapPin className="w-8 h-8 text-gray-700 mx-auto mb-2" />
-                          <p className="text-gray-500 text-sm">Sin datos de sectores en las ultimas semanas</p>
+                            </div>
+                          ))}
+                        </>
+                      )}
+
+                      {/* Si no hay nada que atender */}
+                      {(!intelligence.sinTratar?.length && !intelligence.fumigacion?.filter((f: any) => f.riesgo !== 'protegido').length) && (
+                        <div className="text-center py-6">
+                          <CheckCircle className="w-10 h-10 text-green-500/40 mx-auto mb-2" />
+                          <p className="text-green-400 text-sm">Todo bajo control</p>
+                          <p className="text-gray-600 text-xs mt-1">Sin problemas pendientes ni sectores expuestos</p>
                         </div>
                       )}
                     </Link>
 
-                    {/* Cobertura de fumigacion con dias */}
-                    <Link href="/inteligencia#fumigacion" className="bg-gray-800/30 border border-gray-700/30 hover:border-blue-500/30 rounded-xl p-5 transition-colors block">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Droplets className="w-5 h-5 text-blue-400" />
-                        <h4 className="text-white font-medium">Ultima Fumigacion</h4>
-                        <ChevronRight className="w-4 h-4 text-gray-600 ml-auto" />
+                    {/* Widget 2: Tendencias simplificadas */}
+                    <Link href="/inteligencia#tendencias" className="bg-gray-800/30 border border-gray-700/30 hover:border-cyan-500/30 rounded-xl p-5 transition-colors block">
+                      <div className="flex items-center gap-2 mb-3">
+                        <Activity className="w-5 h-5 text-cyan-400" />
+                        <h4 className="text-white font-medium">Tendencias</h4>
+                        <span className="text-xs text-gray-500 ml-auto">Toca para ver detalle</span>
+                        <ChevronRight className="w-4 h-4 text-gray-600" />
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">Hace cuantos dias se fumigo cada sector. Sectores sin tratamiento reciente necesitan atencion.</p>
-                      {intelligence.fumigacion?.length > 0 ? (
-                        intelligence.fumigacion.slice(0, 5).map((f: any, i: number) => (
+                      <p className="text-xs text-gray-500 mb-3">Comparado con su nivel historico normal en el rancho</p>
+                      {intelligence.pronostico?.length > 0 ? (
+                        intelligence.pronostico.slice(0, 7).map((f: any, i: number) => (
                           <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                            <div className="min-w-0">
-                              <span className="text-sm text-gray-300 truncate block max-w-[160px]">{f.sector}</span>
+                            <div className="flex items-center gap-2 min-w-0">
+                              <span className={`w-2 h-2 rounded-full shrink-0 ${
+                                f.riesgo === 'alto' ? 'bg-red-400' :
+                                f.riesgo === 'medio' ? 'bg-yellow-400' : 'bg-green-400'
+                              }`} />
+                              <span className="text-sm text-gray-200 capitalize truncate">{f.problema}</span>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className={`text-xs ${
-                                f.diasSinFumigar > 21 ? 'text-red-400' :
-                                f.diasSinFumigar > 14 ? 'text-yellow-400' :
-                                'text-gray-500'
-                              }`}>
-                                {f.diasSinFumigar !== null ? `hace ${f.diasSinFumigar}d` : 'nunca'}
-                              </span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded min-w-[70px] text-center ${
-                                f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
-                                f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-green-500/20 text-green-400'
-                              }`}>
-                                {f.riesgo === 'expuesto' ? 'Expuesto' :
-                                 f.riesgo === 'parcial' ? 'Parcial' :
-                                 'Protegido'}
-                              </span>
-                            </div>
+                            <span className={`text-xs font-medium shrink-0 ${
+                              f.cambio > 50 ? 'text-red-400' :
+                              f.cambio > 20 ? 'text-orange-400' :
+                              f.cambio < -30 ? 'text-green-400' :
+                              'text-gray-500'
+                            }`}>
+                              {f.cambio > 50 ? 'Subiendo mucho' :
+                               f.cambio > 20 ? 'Subiendo' :
+                               f.cambio > -20 ? 'Normal' :
+                               f.cambio > -50 ? 'Bajando' :
+                               'Desaparecio'}
+                            </span>
                           </div>
                         ))
                       ) : (
-                        <div className="text-center py-4">
-                          <CheckCircle className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
-                          <p className="text-green-400 text-sm">Todos los sectores con problemas estan protegidos</p>
+                        <div className="text-center py-6">
+                          <Activity className="w-10 h-10 text-gray-700 mx-auto mb-2" />
+                          <p className="text-gray-500 text-sm">Se necesitan 3+ semanas de datos para calcular tendencias</p>
                         </div>
                       )}
                     </Link>
