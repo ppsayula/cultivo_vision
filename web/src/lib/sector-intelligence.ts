@@ -1,6 +1,7 @@
 // Cultivo Vision - Sector Intelligence
-// Calcula riesgo individual por sector cruzando cultivos + bitacora + fumigacion
+// Calcula riesgo individual por sector cruzando catalogo + cultivos + bitacora + fumigacion
 // Genera explicacion contextual y recomendaciones proactivas
+// Usa intervalos de seguridad por cultivo para determinar urgencia de fumigacion
 
 import { createClient } from '@supabase/supabase-js';
 import { parseSectorNumbers, getSeasonalContext } from './pattern-analyzer';
@@ -9,6 +10,19 @@ function getSupabase() {
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
   return createClient(url, key);
+}
+
+// Intervalos de seguridad para fumigacion por tipo de cultivo (dias)
+// Basado en practica agronomica real para berries en Jalisco
+const FUMIGATION_INTERVALS: Record<string, { optimo: number; alerta: number; critico: number }> = {
+  'arándano': { optimo: 10, alerta: 14, critico: 21 },
+  'arandano': { optimo: 10, alerta: 14, critico: 21 },
+  'frambuesa': { optimo: 7, alerta: 10, critico: 14 },
+};
+
+function getFumigationInterval(cultivo: string): { optimo: number; alerta: number; critico: number } {
+  const key = cultivo.toLowerCase();
+  return FUMIGATION_INTERVALS[key] || { optimo: 10, alerta: 14, critico: 21 };
 }
 
 export interface SectorProblem {
@@ -32,11 +46,12 @@ export interface SectorInfo {
   sistema_riego: string | null;
   fecha_estimada_cosecha: string | null;
   responsable: string | null;
-  tieneCultivo: boolean; // true if has a matching row in cultivos table
   riskScore: number;
   riskLevel: 'bajo' | 'medio' | 'alto' | 'critico';
+  fumigacionStatus: 'al-dia' | 'por-vencer' | 'vencido' | 'critico' | 'sin-dato';
   problemasActivos: SectorProblem[];
   diasSinFumigar: number | null;
+  intervaloSeguridad: number; // days - the safety interval for this crop
   ultimaFumigacion: string | null;
   productoUsado: string | null;
   totalObservaciones: number;
@@ -54,7 +69,7 @@ export interface SectorStats {
   altos: number;
   medios: number;
   bajos: number;
-  sinFumigar14d: number;
+  fumigacionVencida: number; // sectors past their safety interval
 }
 
 // Generate GPS coordinates based on sector number and finca
@@ -65,7 +80,6 @@ function generateCoords(sectorNum: number, finca: string): { lat: number; lng: n
   const isLola = finca.toLowerCase().includes('lola');
 
   if (isLola) {
-    // Lola Berries sectors (1-31): grid north
     const row = Math.floor((sectorNum - 1) / 6);
     const col = (sectorNum - 1) % 6;
     return {
@@ -73,8 +87,6 @@ function generateCoords(sectorNum: number, finca: string): { lat: number; lng: n
       lng: baseLng - 0.002 + col * 0.001,
     };
   } else {
-    // Bosbes Berries sectors (100+): grid south, grouped by hundreds
-    // 100s → row offset 0, 200s → row offset 7, 300s → row offset 14, 400s → row offset 21
     const hundred = Math.floor(sectorNum / 100);
     const unit = sectorNum % 100;
     const rowOffset = (hundred - 1) * 7;
@@ -88,13 +100,12 @@ function generateCoords(sectorNum: number, finca: string): { lat: number; lng: n
 }
 
 const SEV_ORDER = ['baja', 'media', 'alta', 'critica'];
-const SEV_WEIGHT: Record<string, number> = { baja: 1, media: 2, alta: 4, critica: 8 };
 
 export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[]; stats: SectorStats }> {
   const supabase = getSupabase();
   const now = new Date();
 
-  // 1. Get ALL sectors from catalogo_sectores (67 sectors = source of truth)
+  // 1. Get ALL sectors from catalogo_sectores (source of truth - all are planted)
   const { data: catalogSectors } = await supabase
     .from('catalogo_sectores')
     .select('id, nombre, finca, activo')
@@ -102,43 +113,35 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     .order('nombre');
 
   if (!catalogSectors || catalogSectors.length === 0) {
-    return { sectores: [], stats: { total: 0, criticos: 0, altos: 0, medios: 0, bajos: 0, sinFumigar14d: 0 } };
+    return { sectores: [], stats: { total: 0, criticos: 0, altos: 0, medios: 0, bajos: 0, fumigacionVencida: 0 } };
   }
 
-  // 2. Get crop details from cultivos (LEFT JOIN - not all sectors have a cultivo row)
+  // 2. Get crop details from cultivos (enrichment - some sectors have extra detail here)
   const { data: cultivos } = await supabase
     .from('cultivos')
     .select('sector, cultivo, variedad, fecha_plantacion, tipo_suelo, en_maceta, sustrato, densidad_plantas, sistema_riego, fecha_estimada_cosecha, responsable')
     .eq('activo', true);
 
-  // Index cultivos by sector number for quick lookup
   const cultivosBySector: Record<string, any> = {};
   (cultivos || []).forEach((c: any) => {
     if (c.sector) cultivosBySector[c.sector.toString()] = c;
   });
 
-  // 3. Get recent field observations (last 6 weeks)
-  const { data: weekData } = await supabase
-    .from('v_bitacora_campo')
-    .select('semana')
-    .not('problema', 'is', null);
-
-  const allWeeks = weekData ? [...new Set(weekData.map((r: any) => r.semana))].sort((a: number, b: number) => a - b) : [];
-  const recentWeeks = allWeeks.slice(-6);
-
-  const { data: bitacora } = await supabase
+  // 3. Get ALL field observations (not just recent - for fumigation history)
+  const { data: allBitacora } = await supabase
     .from('v_bitacora_campo')
     .select('sector, problema, severidad, tratamiento_aplicado, tratamiento_producto, fecha, semana')
-    .in('semana', recentWeeks.length > 0 ? recentWeeks : [0])
-    .not('sector', 'is', null)
-    .not('problema', 'is', null)
-    .not('problema', 'eq', '');
+    .not('sector', 'is', null);
 
-  const records = bitacora || [];
+  const allRecords = allBitacora || [];
 
-  // 4. Build fumigation index by individual sector number
+  // Get recent weeks for risk calculation
+  const allWeeks = [...new Set(allRecords.filter(r => r.problema).map(r => r.semana))].sort((a: number, b: number) => a - b);
+  const recentWeeks = new Set(allWeeks.slice(-6));
+
+  // 4. Build fumigation index by individual sector (ALL time, not just recent)
   const fumByIndiv: Record<string, { date: string; product: string | null }> = {};
-  records.forEach(r => {
+  allRecords.forEach(r => {
     if (r.tratamiento_aplicado && r.fecha && r.sector) {
       parseSectorNumbers(r.sector).forEach(s => {
         if (!fumByIndiv[s] || r.fecha > fumByIndiv[s].date) {
@@ -148,15 +151,15 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     }
   });
 
-  // 5. Build observation index by individual sector number
+  // 5. Build observation index (recent only) by individual sector number
   const obsByIndiv: Record<string, {
     total: number;
     sinTratar: number;
     problemas: Record<string, { count: number; sevMax: string; hasTreatment: boolean }>;
   }> = {};
 
-  records.forEach(r => {
-    if (!r.sector) return;
+  allRecords.forEach(r => {
+    if (!r.sector || !r.problema || !recentWeeks.has(r.semana)) return;
     parseSectorNumbers(r.sector).forEach(s => {
       if (!obsByIndiv[s]) obsByIndiv[s] = { total: 0, sinTratar: 0, problemas: {} };
       obsByIndiv[s].total++;
@@ -186,7 +189,7 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     if (!protocolMap[key]) protocolMap[key] = p;
   });
 
-  // 7. Calculate risk for each sector from catalogo_sectores
+  // 7. Calculate risk for each sector
   const sectores: SectorInfo[] = catalogSectors.map(cat => {
     const sectorStr = cat.nombre?.toString() || '';
     const sectorNum = parseInt(sectorStr) || 0;
@@ -194,24 +197,36 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     const coords = generateCoords(sectorNum, finca);
 
     // Enrich with cultivo data if available
-    const cultivo = cultivosBySector[sectorStr];
-    const tieneCultivo = !!cultivo;
+    const cultivoData = cultivosBySector[sectorStr];
 
     // Infer crop type from finca: Lola = Arandano, Bosbes = Frambuesa
     const cropType = finca.toLowerCase().includes('lola') ? 'Arándano' : 'Frambuesa';
+    const actualCultivo = cultivoData?.cultivo || cropType;
 
     const obs = obsByIndiv[sectorStr] || { total: 0, sinTratar: 0, problemas: {} };
 
-    // Fumigation status
+    // Fumigation status with crop-specific safety intervals
+    const interval = getFumigationInterval(actualCultivo);
     const fum = fumByIndiv[sectorStr];
     let diasSinFumigar: number | null = null;
     let ultimaFumigacion: string | null = null;
     let productoUsado: string | null = null;
+    let fumigacionStatus: 'al-dia' | 'por-vencer' | 'vencido' | 'critico' | 'sin-dato' = 'sin-dato';
 
     if (fum) {
       diasSinFumigar = Math.floor((now.getTime() - new Date(fum.date).getTime()) / 86400000);
       ultimaFumigacion = fum.date;
       productoUsado = fum.product;
+
+      if (diasSinFumigar <= interval.optimo) {
+        fumigacionStatus = 'al-dia';
+      } else if (diasSinFumigar <= interval.alerta) {
+        fumigacionStatus = 'por-vencer';
+      } else if (diasSinFumigar <= interval.critico) {
+        fumigacionStatus = 'vencido';
+      } else {
+        fumigacionStatus = 'critico';
+      }
     }
 
     // Active problems
@@ -240,17 +255,22 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
       razones.push(`${untreatedMedium.map(p => p.nombre).join(', ')} (media) sin tratar`);
     }
 
-    if (diasSinFumigar === null && obs.total > 0) {
+    // Fumigation risk based on safety intervals
+    if (fumigacionStatus === 'critico') {
+      riskScore += 30;
+      razones.push(`${diasSinFumigar} dias sin fumigar (intervalo seguro: ${interval.alerta}d para ${actualCultivo})`);
+    } else if (fumigacionStatus === 'vencido') {
+      riskScore += 20;
+      razones.push(`${diasSinFumigar} dias sin fumigar (intervalo ${interval.alerta}d vencido)`);
+    } else if (fumigacionStatus === 'por-vencer') {
+      riskScore += 10;
+      razones.push(`${diasSinFumigar} dias sin fumigar (proximo a vencer)`);
+    } else if (fumigacionStatus === 'sin-dato' && obs.total > 0) {
       riskScore += 25;
       razones.push('Sin registro de fumigacion');
-    } else if (diasSinFumigar !== null && diasSinFumigar > 14) {
-      riskScore += 25;
-      razones.push(`${diasSinFumigar} dias sin fumigar`);
-    } else if (diasSinFumigar !== null && diasSinFumigar > 7) {
-      riskScore += 15;
-      razones.push(`${diasSinFumigar} dias sin fumigar`);
     }
 
+    // Problem diversity
     const distinctProblems = Math.min(problemasActivos.length, 3);
     riskScore += distinctProblems * 5;
     if (obs.total > 0) riskScore += 10;
@@ -262,36 +282,43 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     else if (riskScore >= 20) riskLevel = 'medio';
     else riskLevel = 'bajo';
 
+    // Seasonal context
     const topProblem = problemasActivos[0];
     const contextoEstacional = topProblem ? getSeasonalContext(topProblem.nombre) : '';
 
+    // Build risk explanation
     let razonRiesgo = '';
     if (razones.length > 0) {
       razonRiesgo = razones.join('. ');
       if (contextoEstacional) razonRiesgo += `. ${contextoEstacional}`;
     } else if (obs.total > 0) {
-      razonRiesgo = 'Observaciones recientes pero todos los problemas han sido tratados';
+      razonRiesgo = 'Observaciones recientes, todos los problemas tratados y fumigacion al dia';
     } else {
       razonRiesgo = 'Sin observaciones recientes de campo';
     }
 
+    // Build recommendation - prioritize by urgency
     let recomendacion = '';
     if (untreatedSevere.length > 0) {
       const prob = untreatedSevere[0];
-      const cropKey = `${prob.nombre}|${(cultivo?.cultivo || cropType).toLowerCase()}`;
+      const cropKey = `${prob.nombre}|${actualCultivo.toLowerCase()}`;
       const protocol = protocolMap[cropKey];
       if (protocol && protocol.products?.length > 0) {
         const prod = protocol.products[0];
-        recomendacion = `Aplicar ${prod.nombre} ${prod.dosis} via ${protocol.application_method || 'aspersion'}. Frecuencia: ${protocol.frequency || 'cada 7-10 dias'}. Carencia: ${protocol.waiting_period_days || 7} dias.`;
+        recomendacion = `URGENTE: Aplicar ${prod.nombre} ${prod.dosis} via ${protocol.application_method || 'aspersion'}. Frecuencia: ${protocol.frequency || 'cada 7-10 dias'}. Carencia: ${protocol.waiting_period_days || 7} dias.`;
       } else {
-        recomendacion = `Tratar ${prob.nombre} (${prob.severidadMax}) lo antes posible. Consultar protocolo en Agronomo IA.`;
+        recomendacion = `URGENTE: Tratar ${prob.nombre} (${prob.severidadMax}) lo antes posible. Consultar Agronomo IA para protocolo.`;
       }
+    } else if (fumigacionStatus === 'critico' || fumigacionStatus === 'vencido') {
+      recomendacion = `Fumigacion vencida (${diasSinFumigar}d vs intervalo ${interval.alerta}d para ${actualCultivo}). Programar aplicacion preventiva inmediata.`;
     } else if (untreatedMedium.length > 0) {
       recomendacion = `Monitorear ${untreatedMedium[0].nombre} y aplicar tratamiento preventivo si aumenta.`;
-    } else if (diasSinFumigar !== null && diasSinFumigar > 14) {
-      recomendacion = `Programar fumigacion preventiva. Ultima aplicacion hace ${diasSinFumigar} dias.`;
+    } else if (fumigacionStatus === 'por-vencer') {
+      recomendacion = `Fumigacion por vencer en ${interval.alerta - (diasSinFumigar || 0)} dias. Programar siguiente aplicacion.`;
+    } else if (fumigacionStatus === 'sin-dato') {
+      recomendacion = 'Sin datos de fumigacion. Registrar siguiente aplicacion en bitacora.';
     } else if (obs.total === 0) {
-      recomendacion = 'Sin datos recientes. Programar monitoreo de campo.';
+      recomendacion = 'Sin monitoreo reciente. Programar inspeccion de campo.';
     } else {
       recomendacion = 'Sector bajo control. Continuar monitoreo regular.';
     }
@@ -300,21 +327,22 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
       id: cat.id,
       sector: sectorStr,
       finca,
-      cultivo: cultivo?.cultivo || cropType,
-      variedad: cultivo?.variedad || '',
-      fecha_plantacion: cultivo?.fecha_plantacion || null,
-      tipo_suelo: cultivo?.tipo_suelo || null,
-      en_maceta: cultivo?.en_maceta || false,
-      sustrato: cultivo?.sustrato || null,
-      densidad_plantas: cultivo?.densidad_plantas || null,
-      sistema_riego: cultivo?.sistema_riego || null,
-      fecha_estimada_cosecha: cultivo?.fecha_estimada_cosecha || null,
-      responsable: cultivo?.responsable || null,
-      tieneCultivo,
+      cultivo: actualCultivo,
+      variedad: cultivoData?.variedad || '',
+      fecha_plantacion: cultivoData?.fecha_plantacion || null,
+      tipo_suelo: cultivoData?.tipo_suelo || null,
+      en_maceta: cultivoData?.en_maceta || false,
+      sustrato: cultivoData?.sustrato || null,
+      densidad_plantas: cultivoData?.densidad_plantas || null,
+      sistema_riego: cultivoData?.sistema_riego || null,
+      fecha_estimada_cosecha: cultivoData?.fecha_estimada_cosecha || null,
+      responsable: cultivoData?.responsable || null,
       riskScore,
       riskLevel,
+      fumigacionStatus,
       problemasActivos,
       diasSinFumigar,
+      intervaloSeguridad: interval.alerta,
       ultimaFumigacion,
       productoUsado,
       totalObservaciones: obs.total,
@@ -336,7 +364,7 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     altos: sectores.filter(s => s.riskLevel === 'alto').length,
     medios: sectores.filter(s => s.riskLevel === 'medio').length,
     bajos: sectores.filter(s => s.riskLevel === 'bajo').length,
-    sinFumigar14d: sectores.filter(s => s.diasSinFumigar === null || s.diasSinFumigar > 14).filter(s => s.totalObservaciones > 0).length,
+    fumigacionVencida: sectores.filter(s => s.fumigacionStatus === 'vencido' || s.fumigacionStatus === 'critico').length,
   };
 
   return { sectores, stats };

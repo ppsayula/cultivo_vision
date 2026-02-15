@@ -41,7 +41,7 @@ export default function SectoresPage() {
     if (filter === 'criticos') {
       list = list.filter(s => s.riskLevel === 'critico' || s.riskLevel === 'alto');
     } else if (filter === 'sin-fumigar') {
-      list = list.filter(s => s.diasSinFumigar === null || s.diasSinFumigar > 14);
+      list = list.filter(s => s.fumigacionStatus === 'vencido' || s.fumigacionStatus === 'critico' || s.fumigacionStatus === 'sin-dato');
     } else if (filter === 'protegidos') {
       list = list.filter(s => s.riskLevel === 'bajo');
     }
@@ -145,11 +145,11 @@ export default function SectoresPage() {
               <span className="text-orange-400/70 text-xs">altos</span>
             </div>
           )}
-          {stats.sinFumigar14d > 0 && (
+          {stats.fumigacionVencida > 0 && (
             <div className="flex items-center gap-2 bg-yellow-500/10 rounded-lg px-3 py-1.5 border border-yellow-500/20">
               <Droplets className="w-4 h-4 text-yellow-400" />
-              <span className="text-yellow-300 font-semibold text-sm">{stats.sinFumigar14d}</span>
-              <span className="text-yellow-400/70 text-xs">sin fumigar &gt;14d</span>
+              <span className="text-yellow-300 font-semibold text-sm">{stats.fumigacionVencida}</span>
+              <span className="text-yellow-400/70 text-xs">fumigacion vencida</span>
             </div>
           )}
           <div className="flex items-center gap-2 bg-green-500/10 rounded-lg px-3 py-1.5 border border-green-500/20">
@@ -242,8 +242,17 @@ export default function SectoresPage() {
                             {p.nombre}{!p.tratado && ' ⚠'}
                           </span>
                         ))}
-                        {sector.diasSinFumigar !== null && sector.diasSinFumigar > 14 && (
-                          <span className="text-xs text-yellow-400">{sector.diasSinFumigar}d sin fumigar</span>
+                        {sector.fumigacionStatus !== 'al-dia' && sector.fumigacionStatus !== 'sin-dato' && (
+                          <span className={`text-xs ${
+                            sector.fumigacionStatus === 'critico' ? 'text-red-400' :
+                            sector.fumigacionStatus === 'vencido' ? 'text-yellow-400' :
+                            'text-yellow-400/70'
+                          }`}>
+                            {sector.diasSinFumigar}d/{sector.intervaloSeguridad}d
+                          </span>
+                        )}
+                        {sector.fumigacionStatus === 'sin-dato' && sector.totalObservaciones > 0 && (
+                          <span className="text-xs text-gray-500">sin dato fumigacion</span>
                         )}
                       </div>
                     </div>
@@ -269,10 +278,6 @@ export default function SectoresPage() {
                         {sector.en_maceta && <CensusItem label="Sustrato" value={sector.sustrato || 'En maceta'} />}
                         <CensusItem label="Responsable" value={sector.responsable || '-'} />
                       </div>
-                      {!sector.tieneCultivo && (
-                        <p className="text-xs text-yellow-400/60 mb-3">Este sector no tiene cultivo asignado en el ciclo actual</p>
-                      )}
-
                       {/* Risk status */}
                       <div className={`rounded-lg p-3 mb-3 ${riskBgColor(sector.riskLevel)}`}>
                         <div className="flex items-center gap-2 mb-1">
@@ -296,13 +301,22 @@ export default function SectoresPage() {
                             ))}
                           </div>
                         )}
-                        {sector.diasSinFumigar !== null && (
-                          <p className="text-xs text-gray-400 mt-2">
-                            Ultima fumigacion: hace {sector.diasSinFumigar} dias
-                            {sector.productoUsado && ` con ${sector.productoUsado}`}
-                            {sector.ultimaFumigacion && ` (${formatDate(sector.ultimaFumigacion)})`}
-                          </p>
-                        )}
+                        <div className="mt-2">
+                          <div className={`inline-flex items-center gap-1.5 text-xs px-2 py-1 rounded-lg ${fumStatusStyle(sector.fumigacionStatus)}`}>
+                            <Droplets className="w-3 h-3" />
+                            {sector.fumigacionStatus === 'sin-dato'
+                              ? 'Sin datos de fumigacion'
+                              : sector.fumigacionStatus === 'al-dia'
+                              ? `Al dia (${sector.diasSinFumigar}d de ${sector.intervaloSeguridad}d)`
+                              : `${sector.diasSinFumigar}d sin fumigar (intervalo: ${sector.intervaloSeguridad}d)`}
+                          </div>
+                          {sector.ultimaFumigacion && (
+                            <p className="text-xs text-gray-500 mt-1">
+                              Ultima: {formatDate(sector.ultimaFumigacion)}
+                              {sector.productoUsado && ` · ${sector.productoUsado}`}
+                            </p>
+                          )}
+                        </div>
                       </div>
 
                       {/* Why at risk */}
@@ -410,6 +424,16 @@ function riskBorderFull(level: string): string {
     case 'alto': return 'border-orange-500/40';
     case 'medio': return 'border-yellow-500/40';
     default: return 'border-green-500/40';
+  }
+}
+
+function fumStatusStyle(status: string): string {
+  switch (status) {
+    case 'critico': return 'bg-red-500/20 text-red-400';
+    case 'vencido': return 'bg-yellow-500/20 text-yellow-400';
+    case 'por-vencer': return 'bg-yellow-500/10 text-yellow-400/70';
+    case 'al-dia': return 'bg-green-500/10 text-green-400';
+    default: return 'bg-gray-500/10 text-gray-500';
   }
 }
 
