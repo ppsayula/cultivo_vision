@@ -23,7 +23,8 @@ import {
   Settings,
   HelpCircle,
   Bug,
-  Droplets
+  Droplets,
+  Zap
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useTenant } from '@/contexts/TenantContext';
@@ -169,6 +170,7 @@ export default function Home() {
     { icon: BarChart3, label: 'Dashboard', href: '/', active: true },
     { icon: Sprout, label: 'Cultivos', href: '/cultivos' },
     { icon: Camera, label: 'Bitacora', href: '/bitacora' },
+    { icon: Zap, label: 'Diagnostico', href: '/diagnostico' },
     { icon: Beaker, label: 'Catalogos', href: '/catalogos' },
     { icon: Bell, label: 'Alertas', href: '/alertas', badge: stats.alertasPendientes > 0 ? stats.alertasPendientes : undefined },
     { icon: FileText, label: 'Reportes', href: '/reportes' },
