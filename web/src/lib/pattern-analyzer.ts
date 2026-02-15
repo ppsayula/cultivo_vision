@@ -10,11 +10,46 @@ function getSupabase() {
   return createClient(url, key);
 }
 
+// Seasonal context for Sayula, Jalisco (Secas Nov-May, Lluvias Jun-Oct)
+function getSeasonalContext(problema: string): string {
+  const month = new Date().getMonth() + 1;
+  const isSecas = month >= 11 || month <= 5;
+
+  const ctx: Record<string, { secas: string; lluvias: string }> = {
+    'trips': { secas: 'Ambiente seco y calido favorece Trips', lluvias: 'Lluvias reducen Trips' },
+    'araña roja': { secas: 'Calor y sequedad favorecen araña roja', lluvias: 'Humedad reduce araña roja' },
+    'acaro': { secas: 'Calor y sequedad favorecen acaros', lluvias: 'Humedad reduce acaros' },
+    'botrytis': { secas: 'Rocio matutino de invierno favorece Botrytis', lluvias: 'Humedad constante es ideal para Botrytis' },
+    'roya': { secas: 'Rocio matutino puede mantener Roya activa', lluvias: 'Humedad favorece propagacion de Roya' },
+    'cenicilla': { secas: 'Cambios termicos dia/noche favorecen Cenicilla', lluvias: 'Humedad moderada favorece Cenicilla' },
+    'pulgon': { secas: 'Brotes nuevos atraen pulgon en primavera', lluvias: 'Lluvias fuertes lavan colonias' },
+    'pulgón': { secas: 'Brotes nuevos atraen pulgon en primavera', lluvias: 'Lluvias fuertes lavan colonias' },
+    'gusano': { secas: 'Actividad larval moderada en secas', lluvias: 'Mayor actividad de lepidopteros en lluvias' },
+    'mosca blanca': { secas: 'Calor favorece mosca blanca', lluvias: 'Lluvias reducen mosca blanca' },
+    'chicharrita': { secas: 'Condiciones secas favorecen chicharrita', lluvias: 'Poblaciones se mantienen con lluvias' },
+    'mayate': { secas: 'Emergencia de adultos en calor', lluvias: 'Larvas activas con humedad del suelo' },
+    'chinche': { secas: 'Chinches activas en clima seco', lluvias: 'Lluvias reducen actividad' },
+    'nutricion': { secas: 'Deficit hidrico afecta absorcion', lluvias: 'Lluvias pueden lixiviar nutrientes' },
+    'foliar': { secas: 'Aplicaciones foliares mas efectivas sin lluvia', lluvias: 'Lluvia puede lavar aplicaciones' },
+    'antracnosis': { secas: 'Menos activa en secas', lluvias: 'Humedad y salpicaduras propagan Antracnosis' },
+  };
+
+  const match = ctx[problema.toLowerCase()];
+  if (!match) return '';
+  return isSecas ? match.secas : match.lluvias;
+}
+
+// Parse sector string "203, 211, 204" or "22-23-24" into individual numbers
+function parseSectorNumbers(sectorStr: string): string[] {
+  return sectorStr.split(/[,\-\s]+/).map(s => s.trim()).filter(s => /^\d+$/.test(s));
+}
+
 // Types
 export interface ProblemForecast {
   problema: string;
   riesgo: 'bajo' | 'medio' | 'alto';
   razon: string;
+  contexto: string; // seasonal/environmental context
   obsReciente: number;
   obsPromedio: number;
   cambio: number; // % change vs average
@@ -26,6 +61,7 @@ export interface UntreatedProblem {
   problema: string;
   sinTratar: number;
   sectoresAfectados: number;
+  sectoresList: string[]; // actual sector names
   severidadMax: string;
   score: number; // weighted urgency score
 }
@@ -176,6 +212,7 @@ export async function generateForecast(): Promise<{ forecasts: ProblemForecast[]
       problema,
       riesgo,
       razon,
+      contexto: getSeasonalContext(problema),
       obsReciente: Math.round(recentAvg * 10) / 10,
       obsPromedio: Math.round(olderAvg * 10) / 10,
       cambio,
@@ -252,15 +289,19 @@ export async function getUntreatedProblems(): Promise<{ problems: UntreatedProbl
   const problems = Object.entries(grouped)
     .map(([problema, info]) => {
       const maxSev = info.severidades.sort((a, b) => sevOrder.indexOf(b) - sevOrder.indexOf(a))[0] || 'media';
+      // Extract unique individual sector numbers across all sector groups
+      const allIndivSectors = new Set<string>();
+      info.sectores.forEach(sg => parseSectorNumbers(sg).forEach(s => allIndivSectors.add(s)));
       return {
         problema,
         sinTratar: info.sinTratar,
-        sectoresAfectados: info.sectores.size,
+        sectoresAfectados: allIndivSectors.size,
+        sectoresList: [...allIndivSectors].sort((a, b) => parseInt(a) - parseInt(b)).slice(0, 8),
         severidadMax: maxSev,
         score: info.score,
       };
     })
-    .sort((a, b) => b.score - a.score) // Sort by weighted urgency, not raw count
+    .sort((a, b) => b.score - a.score)
     .slice(0, 6);
 
   return { problems, recentTotal };
@@ -330,10 +371,11 @@ export async function getSectorHotspots(limit = 5): Promise<SectorHotspot[]> {
 }
 
 // FUMIGATION RISK: Which sectors have problems, when was last fumigation
+// FIX: Parse individual sector numbers to match fumigation records across different groupings
+// e.g. monitoring says "203, 211, 204, 205" and treatment says "203, 206, 209, 211" - they share sectors
 export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]> {
   const supabase = getSupabase();
 
-  // Get ALL records to calculate days since last fumigation
   const { data, error } = await supabase
     .from('v_bitacora_campo')
     .select('sector, problema, severidad, tratamiento_aplicado, tratamiento_producto, fecha, semana')
@@ -343,40 +385,38 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
 
   if (error || !data) return [];
 
-  // Find last 3 weeks for "recent" window
   const allWeeks = [...new Set(data.map(r => r.semana))].sort((a: number, b: number) => a - b);
   const recentWeeks = allWeeks.slice(-3);
   const recentSet = new Set(recentWeeks);
-
   const sevOrder = ['baja', 'media', 'alta', 'critica'];
   const now = new Date();
 
+  // STEP 1: Collect ALL fumigation dates by INDIVIDUAL sector number
+  // This fixes matching: "203, 206, 209" treated != "203, 211, 204, 205" monitoring
+  const fumByIndivSector: Record<string, { date: string; product: string | null }> = {};
+
+  data.forEach(r => {
+    if (r.tratamiento_aplicado && r.fecha && r.sector) {
+      const sectors = parseSectorNumbers(r.sector);
+      sectors.forEach(s => {
+        if (!fumByIndivSector[s] || r.fecha > fumByIndivSector[s].date) {
+          fumByIndivSector[s] = { date: r.fecha, product: r.tratamiento_producto || null };
+        }
+      });
+    }
+  });
+
+  // STEP 2: Group recent observations by sector group
   const bySector: Record<string, {
     obs: number;
     treated: number;
     problemas: Record<string, { count: number; sevMax: string }>;
-    lastFumigationDate: string | null;
-    lastProduct: string | null;
   }> = {};
 
   data.forEach(r => {
-    if (!r.sector) return;
+    if (!r.sector || !recentSet.has(r.semana)) return;
 
-    // Track last fumigation date across ALL time (not just recent)
-    if (!bySector[r.sector]) {
-      bySector[r.sector] = { obs: 0, treated: 0, problemas: {}, lastFumigationDate: null, lastProduct: null };
-    }
-
-    if (r.tratamiento_aplicado && r.fecha) {
-      if (!bySector[r.sector].lastFumigationDate || r.fecha > bySector[r.sector].lastFumigationDate!) {
-        bySector[r.sector].lastFumigationDate = r.fecha;
-        bySector[r.sector].lastProduct = r.tratamiento_producto || null;
-      }
-    }
-
-    // Only count recent observations for the risk analysis
-    if (!recentSet.has(r.semana)) return;
-
+    if (!bySector[r.sector]) bySector[r.sector] = { obs: 0, treated: 0, problemas: {} };
     bySector[r.sector].obs++;
     if (r.tratamiento_aplicado) bySector[r.sector].treated++;
 
@@ -390,18 +430,31 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
     if (incoming > current) bySector[r.sector].problemas[probKey].sevMax = r.severidad || 'media';
   });
 
+  // STEP 3: For each sector group, find most recent fumigation among its individual sectors
   return Object.entries(bySector)
-    .filter(([, info]) => info.obs > 0) // Only sectors with recent observations
+    .filter(([, info]) => info.obs > 0)
     .map(([sector, info]) => {
       const sinTratar = info.obs - info.treated;
       const cobertura = info.obs > 0 ? Math.round((info.treated / info.obs) * 100) : 0;
 
+      // Match individual sectors to find fumigation
+      const individualSectors = parseSectorNumbers(sector);
+      let lastFumDate: string | null = null;
+      let lastProduct: string | null = null;
+
+      individualSectors.forEach(s => {
+        const fum = fumByIndivSector[s];
+        if (fum && (!lastFumDate || fum.date > lastFumDate)) {
+          lastFumDate = fum.date;
+          lastProduct = fum.product;
+        }
+      });
+
       let diasSinFumigar: number | null = null;
-      if (info.lastFumigationDate) {
-        diasSinFumigar = Math.floor((now.getTime() - new Date(info.lastFumigationDate).getTime()) / 86400000);
+      if (lastFumDate) {
+        diasSinFumigar = Math.floor((now.getTime() - new Date(lastFumDate).getTime()) / 86400000);
       }
 
-      // Risk: combine coverage + days since last fumigation
       let riesgo: 'protegido' | 'parcial' | 'expuesto';
       if (cobertura >= 60 && (diasSinFumigar !== null && diasSinFumigar <= 14)) {
         riesgo = 'protegido';
@@ -423,8 +476,8 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
         cobertura,
         riesgo,
         diasSinFumigar,
-        ultimaFumigacion: info.lastFumigationDate,
-        productoUsado: info.lastProduct,
+        ultimaFumigacion: lastFumDate,
+        productoUsado: lastProduct,
       };
     })
     .sort((a, b) => {

@@ -1,11 +1,11 @@
-// Cultivo Vision - Inteligencia de Campo (pagina completa)
+// Cultivo Vision - Inteligencia de Campo (reporte unificado)
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Activity, Target, MapPin, Droplets, ChevronLeft, TrendingUp, CheckCircle,
-  AlertTriangle, Bot, Leaf, Bug, Beaker
+  ChevronLeft, Bot, AlertTriangle, CheckCircle,
+  Leaf, Bug, Droplets, Activity, Target, MapPin
 } from 'lucide-react';
 
 export default function InteligenciaPage() {
@@ -38,6 +38,9 @@ export default function InteligenciaPage() {
 
   const weeksBehind = data.semanaActual - data.ultimaSemanaConDatos;
 
+  // Merge forecasts + untreated into unified problem view
+  const mergedProblems = buildMergedProblems(data);
+
   return (
     <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
@@ -50,7 +53,7 @@ export default function InteligenciaPage() {
             <h1 className="text-2xl font-bold text-white">Inteligencia de Campo</h1>
             <p className="text-gray-500 text-sm">
               Semana {data.semanaActual} · Datos hasta semana {data.ultimaSemanaConDatos}
-              {weeksBehind >= 2 && <span className="text-yellow-400 ml-2">({weeksBehind} semanas atras)</span>}
+              {weeksBehind >= 2 && <span className="text-yellow-400 ml-2">({weeksBehind} sem atras)</span>}
             </p>
           </div>
           <Link
@@ -62,256 +65,323 @@ export default function InteligenciaPage() {
           </Link>
         </div>
 
-        {/* Resumen */}
-        <div className="grid grid-cols-3 gap-4 mb-8">
-          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-white">{data.resumen?.problemasActivos || 0}</p>
-            <p className="text-gray-500 text-sm">Problemas activos</p>
-          </div>
-          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-orange-400">{data.resumen?.sinTratarReciente || 0}</p>
-            <p className="text-gray-500 text-sm">Observaciones sin tratar</p>
-          </div>
-          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 text-center">
-            <p className="text-3xl font-bold text-white">{data.fumigacion?.length || 0}</p>
-            <p className="text-gray-500 text-sm">Sectores monitoreados</p>
-          </div>
+        {/* Resumen ejecutivo */}
+        <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 mb-8">
+          <h3 className="text-white font-medium mb-2">Resumen</h3>
+          <p className="text-gray-400 text-sm leading-relaxed">
+            {buildExecutiveSummary(data)}
+          </p>
         </div>
 
-        {/* TENDENCIAS */}
-        <section id="tendencias" className="mb-10 scroll-mt-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Activity className="w-6 h-6 text-cyan-400" />
-            <h2 className="text-xl font-bold text-white">Tendencias vs Promedio Historico</h2>
+        {/* SECCION 1: Estado por Problema */}
+        <section id="sintratar" className="mb-10 scroll-mt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <Target className="w-6 h-6 text-orange-400" />
+            <h2 className="text-xl font-bold text-white">Estado por Problema</h2>
           </div>
-          <div className="bg-gray-800/20 border border-gray-700/20 rounded-xl p-5 mb-4">
-            <p className="text-gray-400 text-sm leading-relaxed">
-              <strong className="text-gray-300">Como leer esta tabla:</strong> Comparamos las observaciones de las <strong className="text-cyan-400">ultimas 3 semanas con datos</strong> contra el promedio de <strong>todas las semanas anteriores</strong>.
-              Si un problema muestra <span className="text-red-400 font-mono">+121%</span> significa que se esta observando <strong>el doble de lo normal</strong>.
-              Si muestra <span className="text-green-400 font-mono">-61%</span> esta <strong>muy por debajo de lo normal</strong> (mejorando).
-              La flecha indica si la ultima semana subio o bajo respecto a la anterior.
-            </p>
-          </div>
-          {data.pronostico?.length > 0 ? (
-            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
-              <div className="grid grid-cols-[1fr,80px,80px,80px,80px,100px] gap-2 px-5 py-3 border-b border-gray-700/30 text-xs text-gray-500 font-medium">
-                <span>Problema</span>
-                <span className="text-right">Reciente</span>
-                <span className="text-right">Promedio</span>
-                <span className="text-right">Cambio</span>
-                <span className="text-right">Tendencia</span>
-                <span className="text-right">Riesgo</span>
-              </div>
-              {data.pronostico.map((f: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr,80px,80px,80px,80px,100px] gap-2 px-5 py-3 border-b border-gray-800/30 last:border-0 items-center">
-                  <span className="text-sm text-white capitalize">{f.problema}</span>
-                  <span className="text-sm text-gray-300 text-right font-mono">{f.obsReciente}/sem</span>
-                  <span className="text-sm text-gray-500 text-right font-mono">{f.obsPromedio}/sem</span>
-                  <span className={`text-sm text-right font-mono ${
-                    f.cambio > 30 ? 'text-red-400' : f.cambio < -30 ? 'text-green-400' : 'text-gray-500'
-                  }`}>
-                    {f.cambio > 0 ? '+' : ''}{f.cambio}%
-                  </span>
-                  <div className="flex items-center justify-end gap-1">
-                    {f.tendencia === 'subiendo' && <><TrendingUp className="w-3 h-3 text-red-400" /><span className="text-xs text-red-400">Sube</span></>}
-                    {f.tendencia === 'bajando' && <><TrendingUp className="w-3 h-3 text-green-400 rotate-180" /><span className="text-xs text-green-400">Baja</span></>}
-                    {f.tendencia === 'estable' && <span className="text-xs text-gray-500">Estable</span>}
-                  </div>
-                  <div className="flex justify-end">
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
-                      f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
+          <p className="text-gray-500 text-sm mb-4">
+            Cada problema con su tendencia, tratamiento y contexto. Todo en una vista.
+          </p>
+
+          {mergedProblems.length > 0 ? (
+            <div className="space-y-3">
+              {mergedProblems.map((p, i) => (
+                <div key={i} className={`bg-gray-800/30 border rounded-xl p-4 ${
+                  p.necesitaAccion ? 'border-orange-500/30' : 'border-gray-700/30'
+                }`}>
+                  {/* Row 1: Name + status */}
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
+                      p.riesgo === 'alto' ? 'bg-red-400' :
+                      p.riesgo === 'medio' ? 'bg-yellow-400' : 'bg-green-400'
+                    }`} />
+                    <span className="text-white font-medium capitalize text-lg">{p.problema}</span>
+
+                    {/* Trend badge */}
+                    <span className={`text-xs px-2 py-0.5 rounded ${
+                      p.cambio > 50 ? 'bg-red-500/20 text-red-400' :
+                      p.cambio > 20 ? 'bg-orange-500/20 text-orange-400' :
+                      p.cambio < -30 ? 'bg-green-500/20 text-green-400' :
+                      'bg-gray-500/20 text-gray-400'
+                    }`}>
+                      {p.cambio > 50 ? 'Subiendo mucho' :
+                       p.cambio > 20 ? 'Subiendo' :
+                       p.cambio > -20 ? 'Normal' :
+                       p.cambio > -50 ? 'Bajando' :
+                       'Desaparecio'}
+                    </span>
+
+                    {/* Untreated badge */}
+                    {p.sinTratar > 0 && (
+                      <span className="text-xs px-2 py-0.5 rounded bg-orange-500/20 text-orange-400">
+                        {p.sinTratar} sin tratar
+                      </span>
+                    )}
+
+                    {/* Risk */}
+                    <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
+                      p.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
+                      p.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
                       'bg-green-500/20 text-green-400'
                     }`}>
-                      {f.riesgo} {f.sevGraves > 0 ? `(${f.sevGraves} graves)` : ''}
+                      Riesgo {p.riesgo}
                     </span>
                   </div>
+
+                  {/* Row 2: Details grid */}
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-2">
+                    <div>
+                      <span className="text-gray-500 text-xs block">Frecuencia reciente</span>
+                      <span className="text-white">{p.obsReciente}/semana</span>
+                      <span className="text-gray-600 text-xs ml-1">(prom: {p.obsPromedio})</span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs block">Cambio vs normal</span>
+                      <span className={`font-mono ${
+                        p.cambio > 30 ? 'text-red-400' : p.cambio < -30 ? 'text-green-400' : 'text-gray-400'
+                      }`}>
+                        {p.cambio > 0 ? '+' : ''}{p.cambio}%
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs block">Obs graves (alta/critica)</span>
+                      <span className={p.sevGraves > 0 ? 'text-red-400' : 'text-gray-400'}>
+                        {p.sevGraves}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-gray-500 text-xs block">Sectores afectados</span>
+                      <span className="text-white">
+                        {p.sectoresList?.length > 0
+                          ? p.sectoresList.join(', ')
+                          : `${p.sectoresAfectados || '—'} sectores`}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Row 3: Context (WHY) */}
+                  {(p.contexto || p.razon) && (
+                    <div className="bg-gray-900/50 rounded-lg p-3 mt-2">
+                      <span className="text-gray-500 text-xs font-medium">Por que: </span>
+                      <span className="text-gray-300 text-sm">
+                        {p.razon}
+                        {p.contexto && <span className="text-cyan-400/80"> · {p.contexto}</span>}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* Action link */}
+                  {p.necesitaAccion && (
+                    <Link
+                      href={`/asistente?q=${encodeURIComponent(`Que hago con ${p.problema} severidad ${p.severidadMax || 'media'} en ${p.sectoresList?.slice(0, 3).join(', ') || 'el rancho'}`)}`}
+                      className="inline-flex items-center gap-1 mt-2 text-xs text-green-400 hover:text-green-300"
+                    >
+                      <Bot className="w-3 h-3" /> Consultar tratamiento recomendado
+                    </Link>
+                  )}
                 </div>
               ))}
             </div>
           ) : (
-            <p className="text-gray-500 text-sm p-4">Se necesitan al menos 3 semanas de datos para calcular tendencias.</p>
+            <div className="bg-gray-800/30 border border-green-500/20 rounded-xl p-6 text-center">
+              <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
+              <p className="text-green-400">Sin problemas activos</p>
+            </div>
           )}
-          <p className="text-gray-600 text-xs mt-2">
-            Riesgo alto = +40% sobre promedio Y observaciones graves. Riesgo medio = +40% o tendencia subiendo con graves. Bajo = nivel normal o mejorando.
-          </p>
         </section>
 
-        {/* SIN TRATAR */}
-        <section id="sintratar" className="mb-10 scroll-mt-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Target className="w-6 h-6 text-orange-400" />
-            <h2 className="text-xl font-bold text-white">Problemas Detectados Sin Tratamiento</h2>
+        {/* SECCION 2: Estado por Sector */}
+        <section id="sectores" className="mb-10 scroll-mt-6">
+          <div className="flex items-center gap-3 mb-4">
+            <MapPin className="w-6 h-6 text-blue-400" />
+            <h2 className="text-xl font-bold text-white">Estado por Sector</h2>
           </div>
-          <div className="bg-gray-800/20 border border-gray-700/20 rounded-xl p-5 mb-4">
-            <p className="text-gray-400 text-sm leading-relaxed">
-              <strong className="text-gray-300">Que significa:</strong> Estas plagas/enfermedades fueron <strong className="text-orange-400">detectadas en el monitoreo semanal</strong> pero en esos registros <strong>no se registro un tratamiento aplicado</strong>.
-              No necesariamente significa que no se fumigo - puede ser que el tratamiento se registro en otro momento o sector. Pero son las que requieren verificar si ya se atendieron.
-              Ordenadas por <strong>urgencia</strong> (severidad x cantidad de observaciones).
-            </p>
-          </div>
-          {data.sinTratar?.length > 0 ? (
+          <p className="text-gray-500 text-sm mb-4">
+            Cada sector con sus problemas, ultima fumigacion y estado de proteccion.
+          </p>
+
+          {data.fumigacion?.length > 0 ? (
             <div className="space-y-3">
-              {data.sinTratar.map((u: any, i: number) => (
-                <div key={i} className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <Bug className="w-5 h-5 text-orange-400" />
-                      <span className="text-white font-medium capitalize text-lg">{u.problema}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${
-                        u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
-                        u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
+              {data.fumigacion.map((f: any, i: number) => {
+                // Find matching hotspot for this sector
+                const hotspot = data.hotspots?.find((h: any) => h.sector === f.sector);
+
+                return (
+                  <div key={i} className={`bg-gray-800/30 border rounded-xl p-4 ${
+                    f.riesgo === 'expuesto' ? 'border-red-500/30' :
+                    f.riesgo === 'parcial' ? 'border-yellow-500/30' : 'border-gray-700/30'
+                  }`}>
+                    {/* Row 1: Sector name + status */}
+                    <div className="flex items-center gap-3 mb-2">
+                      <MapPin className={`w-4 h-4 shrink-0 ${
+                        f.riesgo === 'expuesto' ? 'text-red-400' :
+                        f.riesgo === 'parcial' ? 'text-yellow-400' : 'text-green-400'
+                      }`} />
+                      <span className="text-white font-medium">Sector {f.sector}</span>
+
+                      <span className={`ml-auto text-xs px-2 py-0.5 rounded ${
+                        f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
+                        f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
                         'bg-green-500/20 text-green-400'
                       }`}>
-                        Severidad max: {u.severidadMax}
+                        {f.riesgo === 'expuesto' ? 'EXPUESTO' :
+                         f.riesgo === 'parcial' ? 'Parcial' : 'Protegido'}
                       </span>
                     </div>
+
+                    {/* Row 2: Details */}
+                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm mb-2">
+                      <div>
+                        <span className="text-gray-500 text-xs block">Ultima fumigacion</span>
+                        <span className={`font-medium ${
+                          f.diasSinFumigar === null ? 'text-red-400' :
+                          f.diasSinFumigar > 21 ? 'text-red-400' :
+                          f.diasSinFumigar > 14 ? 'text-yellow-400' : 'text-green-400'
+                        }`}>
+                          {f.diasSinFumigar !== null ? `Hace ${f.diasSinFumigar} dias` : 'Sin registro'}
+                        </span>
+                        {f.ultimaFumigacion && (
+                          <span className="text-gray-600 text-xs block">
+                            {new Date(f.ultimaFumigacion).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
+                          </span>
+                        )}
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-xs block">Producto usado</span>
+                        <span className="text-gray-300 text-sm">{f.productoUsado || '—'}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-xs block">Observaciones</span>
+                        <span className="text-white">{f.observaciones}</span>
+                        <span className="text-gray-600 text-xs ml-1">
+                          ({f.tratados} tratados, {f.sinTratar} sin tratar)
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500 text-xs block">Problemas distintos</span>
+                        <span className="text-white">{hotspot?.problemasDistintos || f.problemas?.length || '—'}</span>
+                      </div>
+                    </div>
+
+                    {/* Row 3: Problem tags */}
+                    {f.problemas?.length > 0 && (
+                      <div className="flex gap-2 flex-wrap mt-1">
+                        {f.problemas.map((p: any, j: number) => (
+                          <span key={j} className={`text-xs px-2 py-0.5 rounded ${
+                            p.severidadMax === 'alta' || p.severidadMax === 'critica' ? 'bg-red-500/10 text-red-400/80 border border-red-500/20' :
+                            p.severidadMax === 'media' ? 'bg-yellow-500/10 text-yellow-400/80 border border-yellow-500/20' :
+                            'bg-gray-500/10 text-gray-400/80 border border-gray-500/20'
+                          }`}>
+                            {p.nombre} ({p.count})
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
-                  <div className="grid grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-500">Observaciones sin tratar:</span>
-                      <span className="text-orange-400 font-bold ml-2">{u.sinTratar}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Sectores afectados:</span>
-                      <span className="text-white ml-2">{u.sectoresAfectados}</span>
-                    </div>
-                    <div>
-                      <span className="text-gray-500">Puntuacion urgencia:</span>
-                      <span className="text-white ml-2">{u.score}</span>
-                    </div>
-                  </div>
-                  <Link
-                    href={`/asistente?q=${encodeURIComponent(`Como tratar ${u.problema} en frambuesa severidad ${u.severidadMax}`)}`}
-                    className="inline-flex items-center gap-1 mt-3 text-xs text-green-400 hover:text-green-300"
-                  >
-                    <Bot className="w-3 h-3" /> Consultar tratamiento recomendado
-                  </Link>
-                </div>
-              ))}
+                );
+              })}
             </div>
           ) : (
             <div className="bg-gray-800/30 border border-green-500/20 rounded-xl p-6 text-center">
               <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
-              <p className="text-green-400 font-medium">Todo lo detectado ya tiene tratamiento aplicado</p>
-            </div>
-          )}
-        </section>
-
-        {/* SECTORES */}
-        <section id="sectores" className="mb-10 scroll-mt-6">
-          <div className="flex items-center gap-3 mb-2">
-            <MapPin className="w-6 h-6 text-purple-400" />
-            <h2 className="text-xl font-bold text-white">Sectores con Mayor Diversidad de Problemas</h2>
-          </div>
-          <div className="bg-gray-800/20 border border-gray-700/20 rounded-xl p-5 mb-4">
-            <p className="text-gray-400 text-sm leading-relaxed">
-              <strong className="text-gray-300">Que significa:</strong> Estos sectores tienen la <strong className="text-purple-400">mayor variedad de problemas diferentes</strong> en las ultimas semanas.
-              Un sector con 10 tipos de plagas/enfermedades necesita mas atencion que uno con solo 2, aunque ambos tengan muchas observaciones.
-              Los tags de colores muestran los problemas principales con su severidad maxima detectada.
-            </p>
-          </div>
-          {data.hotspots?.length > 0 ? (
-            <div className="space-y-3">
-              {data.hotspots.map((h: any, i: number) => (
-                <div key={i} className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="w-5 h-5 text-purple-400" />
-                      <span className="text-white font-medium">Sector {h.sector}</span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm">
-                      <span className="text-purple-400 font-bold">{h.problemasDistintos} problemas</span>
-                      <span className="text-gray-500">{h.totalObservaciones} observaciones</span>
-                    </div>
-                  </div>
-                  <div className="flex gap-2 flex-wrap">
-                    {h.problemasPrincipales?.map((p: any, j: number) => (
-                      <span key={j} className={`text-sm px-2.5 py-1 rounded ${
-                        p.severidad === 'alta' || p.severidad === 'critica' ? 'bg-red-500/15 text-red-400 border border-red-500/20' :
-                        p.severidad === 'media' ? 'bg-yellow-500/15 text-yellow-400 border border-yellow-500/20' :
-                        'bg-gray-500/15 text-gray-400 border border-gray-500/20'
-                      }`}>
-                        {p.problema} <span className="opacity-60">({p.count})</span>
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500 text-sm p-4">Sin datos de sectores en las ultimas semanas.</p>
-          )}
-        </section>
-
-        {/* FUMIGACION */}
-        <section id="fumigacion" className="mb-10 scroll-mt-6">
-          <div className="flex items-center gap-3 mb-2">
-            <Droplets className="w-6 h-6 text-blue-400" />
-            <h2 className="text-xl font-bold text-white">Estado de Fumigacion por Sector</h2>
-          </div>
-          <div className="bg-gray-800/20 border border-gray-700/20 rounded-xl p-5 mb-4">
-            <p className="text-gray-400 text-sm leading-relaxed">
-              <strong className="text-gray-300">Que significa:</strong> Para cada sector con problemas detectados, muestra <strong className="text-blue-400">hace cuantos dias fue la ultima fumigacion</strong> y que producto se uso.
-              <br />
-              <span className="text-green-400">Protegido</span> = fumigado en los ultimos 14 dias con buena cobertura.
-              <span className="text-yellow-400 ml-2">Parcial</span> = fumigado pero hace mas de 14 dias o cobertura baja.
-              <span className="text-red-400 ml-2">Expuesto</span> = sin fumigacion reciente, necesita atencion urgente.
-            </p>
-          </div>
-          {data.fumigacion?.length > 0 ? (
-            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
-              <div className="grid grid-cols-[1fr,100px,120px,100px,120px] gap-2 px-5 py-3 border-b border-gray-700/30 text-xs text-gray-500 font-medium">
-                <span>Sector</span>
-                <span className="text-right">Dias sin fumigar</span>
-                <span>Producto usado</span>
-                <span className="text-right">Problemas</span>
-                <span className="text-right">Estado</span>
-              </div>
-              {data.fumigacion.map((f: any, i: number) => (
-                <div key={i} className="grid grid-cols-[1fr,100px,120px,100px,120px] gap-2 px-5 py-3 border-b border-gray-800/30 last:border-0 items-center">
-                  <span className="text-sm text-white">{f.sector}</span>
-                  <span className={`text-sm text-right font-mono ${
-                    f.diasSinFumigar === null ? 'text-red-400' :
-                    f.diasSinFumigar > 21 ? 'text-red-400' :
-                    f.diasSinFumigar > 14 ? 'text-yellow-400' :
-                    'text-green-400'
-                  }`}>
-                    {f.diasSinFumigar !== null ? `${f.diasSinFumigar} dias` : 'Nunca'}
-                  </span>
-                  <span className="text-sm text-gray-400 truncate">{f.productoUsado || '—'}</span>
-                  <div className="flex gap-1 flex-wrap justify-end">
-                    {f.problemas?.slice(0, 2).map((p: any, j: number) => (
-                      <span key={j} className="text-xs text-gray-400">{p.nombre}</span>
-                    ))}
-                  </div>
-                  <div className="flex justify-end">
-                    <span className={`text-xs px-2 py-1 rounded ${
-                      f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
-                      f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
-                      'bg-green-500/20 text-green-400'
-                    }`}>
-                      {f.riesgo === 'expuesto' ? 'EXPUESTO' :
-                       f.riesgo === 'parcial' ? 'Parcial' :
-                       'Protegido'}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="bg-gray-800/30 border border-green-500/20 rounded-xl p-6 text-center">
-              <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
-              <p className="text-green-400 font-medium">Todos los sectores monitoreados estan protegidos</p>
+              <p className="text-green-400">Todos los sectores protegidos</p>
             </div>
           )}
         </section>
 
         {/* Footer */}
         <div className="text-center text-gray-700 text-sm py-6">
-          Datos basados en semanas {data.ultimaSemanaConDatos - 2}-{data.ultimaSemanaConDatos} · Cultivo Vision v2.0
+          Analisis basado en semanas {Math.max(1, data.ultimaSemanaConDatos - 2)}-{data.ultimaSemanaConDatos} · Cultivo Vision v2.0
         </div>
       </div>
     </div>
   );
+}
+
+// Merge forecast + untreated data into unified per-problem view
+function buildMergedProblems(data: any) {
+  const forecastMap = new Map<string, any>();
+  const untreatedMap = new Map<string, any>();
+
+  // Index forecasts
+  (data.pronostico || []).forEach((f: any) => {
+    forecastMap.set(f.problema.toLowerCase(), f);
+  });
+
+  // Index untreated
+  (data.sinTratar || []).forEach((u: any) => {
+    untreatedMap.set(u.problema.toLowerCase(), u);
+  });
+
+  // Merge: all forecasted + any untreated not in forecasts
+  const allKeys = new Set([...forecastMap.keys(), ...untreatedMap.keys()]);
+  const merged: any[] = [];
+
+  allKeys.forEach(key => {
+    const f = forecastMap.get(key);
+    const u = untreatedMap.get(key);
+
+    merged.push({
+      problema: f?.problema || u?.problema || key,
+      riesgo: f?.riesgo || (u?.severidadMax === 'alta' || u?.severidadMax === 'critica' ? 'alto' : 'medio'),
+      razon: f?.razon || '',
+      contexto: f?.contexto || '',
+      obsReciente: f?.obsReciente || 0,
+      obsPromedio: f?.obsPromedio || 0,
+      cambio: f?.cambio || 0,
+      tendencia: f?.tendencia || 'estable',
+      sevGraves: f?.sevGraves || 0,
+      sinTratar: u?.sinTratar || 0,
+      sectoresAfectados: u?.sectoresAfectados || 0,
+      sectoresList: u?.sectoresList || [],
+      severidadMax: u?.severidadMax || '',
+      score: u?.score || 0,
+      necesitaAccion: (u?.sinTratar || 0) > 0 || f?.riesgo === 'alto',
+    });
+  });
+
+  // Sort: needs action first, then by risk, then by change
+  return merged.sort((a, b) => {
+    if (a.necesitaAccion !== b.necesitaAccion) return a.necesitaAccion ? -1 : 1;
+    const rOrder: Record<string, number> = { alto: 3, medio: 2, bajo: 1 };
+    const rDiff = (rOrder[b.riesgo] || 0) - (rOrder[a.riesgo] || 0);
+    if (rDiff !== 0) return rDiff;
+    return Math.abs(b.cambio) - Math.abs(a.cambio);
+  });
+}
+
+// Generate executive summary from data
+function buildExecutiveSummary(data: any): string {
+  const parts: string[] = [];
+  const sinTratar = data.resumen?.sinTratarReciente || 0;
+  const activos = data.resumen?.problemasActivos || 0;
+  const expuestos = data.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length || 0;
+  const subiendo = data.pronostico?.filter((f: any) => f.cambio > 30).length || 0;
+  const bajando = data.pronostico?.filter((f: any) => f.cambio < -30).length || 0;
+
+  if (activos > 0) {
+    parts.push(`Se monitorean ${activos} problemas activos en el rancho.`);
+  }
+
+  if (sinTratar > 0) {
+    const topProb = data.sinTratar?.[0];
+    parts.push(`Hay ${sinTratar} observaciones sin tratamiento registrado${topProb ? `, la mas urgente es ${topProb.problema} (${topProb.sinTratar} obs, severidad ${topProb.severidadMax})` : ''}.`);
+  } else {
+    parts.push('Todas las plagas/enfermedades detectadas tienen tratamiento registrado.');
+  }
+
+  if (expuestos > 0) {
+    parts.push(`${expuestos} ${expuestos === 1 ? 'grupo de sectores esta' : 'grupos de sectores estan'} sin fumigacion reciente.`);
+  }
+
+  if (subiendo > 0) {
+    const topSube = data.pronostico?.filter((f: any) => f.cambio > 30)?.[0];
+    parts.push(`${subiendo} ${subiendo === 1 ? 'problema esta' : 'problemas estan'} por encima de su nivel normal${topSube ? ` (${topSube.problema} +${topSube.cambio}%)` : ''}.`);
+  }
+
+  if (bajando > 0) {
+    parts.push(`${bajando} ${bajando === 1 ? 'problema esta' : 'problemas estan'} mejorando respecto a su promedio.`);
+  }
+
+  return parts.join(' ') || 'Sin datos suficientes para generar resumen.';
 }

@@ -449,27 +449,32 @@ export default function Home() {
                       </div>
                       <p className="text-xs text-gray-500 mb-3">Comparado con su nivel historico normal en el rancho</p>
                       {intelligence.pronostico?.length > 0 ? (
-                        intelligence.pronostico.slice(0, 7).map((f: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className={`w-2 h-2 rounded-full shrink-0 ${
-                                f.riesgo === 'alto' ? 'bg-red-400' :
-                                f.riesgo === 'medio' ? 'bg-yellow-400' : 'bg-green-400'
-                              }`} />
-                              <span className="text-sm text-gray-200 capitalize truncate">{f.problema}</span>
+                        intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
+                          <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2 min-w-0">
+                                <span className={`w-2 h-2 rounded-full shrink-0 ${
+                                  f.riesgo === 'alto' ? 'bg-red-400' :
+                                  f.riesgo === 'medio' ? 'bg-yellow-400' : 'bg-green-400'
+                                }`} />
+                                <span className="text-sm text-gray-200 capitalize truncate">{f.problema}</span>
+                              </div>
+                              <span className={`text-xs font-medium shrink-0 ${
+                                f.cambio > 50 ? 'text-red-400' :
+                                f.cambio > 20 ? 'text-orange-400' :
+                                f.cambio < -30 ? 'text-green-400' :
+                                'text-gray-500'
+                              }`}>
+                                {f.cambio > 50 ? 'Subiendo mucho' :
+                                 f.cambio > 20 ? 'Subiendo' :
+                                 f.cambio > -20 ? 'Normal' :
+                                 f.cambio > -50 ? 'Bajando' :
+                                 'Desaparecio'}
+                              </span>
                             </div>
-                            <span className={`text-xs font-medium shrink-0 ${
-                              f.cambio > 50 ? 'text-red-400' :
-                              f.cambio > 20 ? 'text-orange-400' :
-                              f.cambio < -30 ? 'text-green-400' :
-                              'text-gray-500'
-                            }`}>
-                              {f.cambio > 50 ? 'Subiendo mucho' :
-                               f.cambio > 20 ? 'Subiendo' :
-                               f.cambio > -20 ? 'Normal' :
-                               f.cambio > -50 ? 'Bajando' :
-                               'Desaparecio'}
-                            </span>
+                            {f.contexto && (
+                              <p className="text-xs text-cyan-400/60 ml-4 mt-0.5">{f.contexto}</p>
+                            )}
                           </div>
                         ))
                       ) : (
