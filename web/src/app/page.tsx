@@ -313,10 +313,12 @@ export default function Home() {
                 <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/20">
                   <div className="flex items-center gap-3 mb-2">
                     <Sprout className="w-5 h-5 text-green-400" />
-                    <span className="text-gray-400 text-sm">Cultivos Activos</span>
+                    <span className="text-gray-400 text-sm">Parcelas Activas</span>
                   </div>
                   <p className="text-3xl font-bold text-white">{stats.cultivosActivos}</p>
-                  <p className="text-gray-500 text-xs mt-1">de {stats.totalCultivos} totales</p>
+                  <p className="text-gray-500 text-xs mt-1">
+                    {intelligence?.resumen?.parcelasArandano || '—'} arandano · {intelligence?.resumen?.parcelasFrambuesa || '—'} frambuesa
+                  </p>
                 </div>
 
                 <div className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 rounded-xl p-4 border border-blue-500/20">
@@ -424,15 +426,21 @@ export default function Home() {
                     return null;
                   })()}
 
-                  <h3 className="text-lg font-semibold text-white mb-4">Inteligencia de Campo</h3>
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-white">Inteligencia de Campo</h3>
+                    <Link href="/inteligencia" className="text-green-400 text-sm hover:underline flex items-center gap-1">
+                      Ver analisis completo <ChevronRight className="w-4 h-4" />
+                    </Link>
+                  </div>
                   <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
                     {/* Tendencias vs promedio */}
-                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    <Link href="/inteligencia#tendencias" className="bg-gray-800/30 border border-gray-700/30 hover:border-cyan-500/30 rounded-xl p-5 transition-colors block">
                       <div className="flex items-center gap-2 mb-1">
                         <Activity className="w-5 h-5 text-cyan-400" />
                         <h4 className="text-white font-medium">Tendencias vs Promedio</h4>
+                        <ChevronRight className="w-4 h-4 text-gray-600 ml-auto" />
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">Problemas que suben o bajan respecto al historico</p>
+                      <p className="text-xs text-gray-500 mb-3">Que plagas estan subiendo o bajando respecto a su nivel normal. +% = mas que lo usual, -% = menos que lo usual.</p>
                       {intelligence.pronostico?.length > 0 ? (
                         intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
                           <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
@@ -442,6 +450,7 @@ export default function Home() {
                               {f.tendencia === 'bajando' && <TrendingUp className="w-3 h-3 text-green-400 shrink-0 rotate-180" />}
                             </div>
                             <div className="flex items-center gap-1.5 shrink-0">
+                              <span className="text-xs text-gray-600">{f.obsReciente}/sem</span>
                               <span className={`text-xs font-mono ${
                                 f.cambio > 30 ? 'text-red-400' :
                                 f.cambio < -30 ? 'text-green-400' :
@@ -465,65 +474,64 @@ export default function Home() {
                           <p className="text-gray-500 text-sm">Se necesitan al menos 3 semanas de datos para calcular tendencias</p>
                         </div>
                       )}
-                    </div>
+                    </Link>
 
                     {/* Sin tratar + urgencia */}
-                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    <Link href="/inteligencia#sintratar" className="bg-gray-800/30 border border-gray-700/30 hover:border-orange-500/30 rounded-xl p-5 transition-colors block">
                       <div className="flex items-center gap-2 mb-1">
                         <Target className="w-5 h-5 text-orange-400" />
-                        <h4 className="text-white font-medium">Problemas Sin Tratar</h4>
+                        <h4 className="text-white font-medium">Detectado Sin Tratar</h4>
                         {intelligence.resumen?.sinTratarReciente > 0 && (
                           <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-auto">
                             {intelligence.resumen.sinTratarReciente} obs
                           </span>
                         )}
+                        <ChevronRight className="w-4 h-4 text-gray-600" />
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">Observaciones sin tratamiento aplicado (por urgencia)</p>
+                      <p className="text-xs text-gray-500 mb-3">Plagas/enfermedades que se detectaron en monitoreo pero NO se les aplico tratamiento. Ordenado por urgencia (severidad x cantidad).</p>
                       {intelligence.sinTratar?.length > 0 ? (
                         intelligence.sinTratar.slice(0, 5).map((u: any, i: number) => (
-                          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                            <div className="flex items-center gap-2 min-w-0">
-                              <span className="text-sm text-gray-300 capitalize truncate">{u.problema}</span>
-                              {u.sectoresAfectados > 1 && (
-                                <span className="text-xs text-gray-600">{u.sectoresAfectados} sect</span>
-                              )}
+                          <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
+                            <div className="flex items-center justify-between">
+                              <span className="text-sm text-gray-300 capitalize">{u.problema}</span>
+                              <div className="flex items-center gap-2 shrink-0">
+                                <span className="text-xs text-gray-500">{u.sinTratar} obs</span>
+                                <span className={`text-xs px-1.5 py-0.5 rounded ${
+                                  u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
+                                  u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
+                                  'bg-green-500/20 text-green-400'
+                                }`}>
+                                  {u.severidadMax}
+                                </span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs text-gray-500">{u.sinTratar} obs</span>
-                              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                                u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
-                                u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
-                                'bg-green-500/20 text-green-400'
-                              }`}>
-                                {u.severidadMax}
-                              </span>
-                            </div>
+                            {u.sectoresAfectados > 0 && (
+                              <p className="text-xs text-gray-600 mt-0.5">en {u.sectoresAfectados} {u.sectoresAfectados === 1 ? 'sector' : 'sectores'}</p>
+                            )}
                           </div>
                         ))
                       ) : (
                         <div className="text-center py-4">
                           <CheckCircle className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
-                          <p className="text-green-400 text-sm">Todos los problemas detectados tienen tratamiento</p>
+                          <p className="text-green-400 text-sm">Todo lo detectado ya tiene tratamiento aplicado</p>
                         </div>
                       )}
-                    </div>
+                    </Link>
 
-                    {/* Sectores criticos + fumigacion combinado */}
-                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    {/* Sectores criticos */}
+                    <Link href="/inteligencia#sectores" className="bg-gray-800/30 border border-gray-700/30 hover:border-purple-500/30 rounded-xl p-5 transition-colors block">
                       <div className="flex items-center gap-2 mb-1">
                         <MapPin className="w-5 h-5 text-purple-400" />
-                        <h4 className="text-white font-medium">Sectores Criticos</h4>
+                        <h4 className="text-white font-medium">Sectores con Mas Problemas</h4>
+                        <ChevronRight className="w-4 h-4 text-gray-600 ml-auto" />
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">Sectores con mas diversidad de problemas</p>
+                      <p className="text-xs text-gray-500 mb-3">Sectores donde se detectaron mas tipos diferentes de plagas/enfermedades. A mas diversidad, mayor riesgo de brote.</p>
                       {intelligence.hotspots?.length > 0 ? (
-                        intelligence.hotspots.slice(0, 5).map((h: any, i: number) => (
+                        intelligence.hotspots.slice(0, 4).map((h: any, i: number) => (
                           <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
                             <div className="flex items-center justify-between">
                               <span className="text-sm text-white truncate max-w-[200px]">{h.sector}</span>
-                              <div className="flex items-center gap-2 shrink-0">
-                                <span className="text-xs text-gray-500">{h.problemasDistintos} prob</span>
-                                <span className="text-xs text-gray-600">{h.totalObservaciones} obs</span>
-                              </div>
+                              <span className="text-xs text-gray-500 shrink-0">{h.problemasDistintos} problemas, {h.totalObservaciones} obs</span>
                             </div>
                             {h.problemasPrincipales?.length > 0 && (
                               <div className="flex gap-1.5 mt-1 flex-wrap">
@@ -546,54 +554,49 @@ export default function Home() {
                           <p className="text-gray-500 text-sm">Sin datos de sectores en las ultimas semanas</p>
                         </div>
                       )}
-                    </div>
+                    </Link>
 
-                    {/* Cobertura de fumigacion */}
-                    <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    {/* Cobertura de fumigacion con dias */}
+                    <Link href="/inteligencia#fumigacion" className="bg-gray-800/30 border border-gray-700/30 hover:border-blue-500/30 rounded-xl p-5 transition-colors block">
                       <div className="flex items-center gap-2 mb-1">
                         <Droplets className="w-5 h-5 text-blue-400" />
-                        <h4 className="text-white font-medium">Cobertura de Fumigacion</h4>
+                        <h4 className="text-white font-medium">Ultima Fumigacion</h4>
+                        <ChevronRight className="w-4 h-4 text-gray-600 ml-auto" />
                       </div>
-                      <p className="text-xs text-gray-500 mb-3">Que sectores estan protegidos vs expuestos</p>
+                      <p className="text-xs text-gray-500 mb-3">Hace cuantos dias se fumigo cada sector. Sectores sin tratamiento reciente necesitan atencion.</p>
                       {intelligence.fumigacion?.length > 0 ? (
-                        <>
-                          {intelligence.fumigacion.slice(0, 5).map((f: any, i: number) => (
-                            <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
-                              <div className="min-w-0">
-                                <span className="text-sm text-gray-300 truncate block max-w-[180px]">{f.sector}</span>
-                              </div>
-                              <div className="flex items-center gap-2 shrink-0">
-                                {/* Progress bar mini */}
-                                <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full ${
-                                      f.cobertura >= 80 ? 'bg-green-500' :
-                                      f.cobertura >= 30 ? 'bg-yellow-500' :
-                                      'bg-red-500'
-                                    }`}
-                                    style={{ width: `${f.cobertura}%` }}
-                                  />
-                                </div>
-                                <span className={`text-xs px-1.5 py-0.5 rounded min-w-[70px] text-center ${
-                                  f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
-                                  f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
-                                  'bg-green-500/20 text-green-400'
-                                }`}>
-                                  {f.riesgo === 'expuesto' ? 'Sin fumigar' :
-                                   f.riesgo === 'parcial' ? `${f.cobertura}% cubierto` :
-                                   'Protegido'}
-                                </span>
-                              </div>
+                        intelligence.fumigacion.slice(0, 5).map((f: any, i: number) => (
+                          <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                            <div className="min-w-0">
+                              <span className="text-sm text-gray-300 truncate block max-w-[160px]">{f.sector}</span>
                             </div>
-                          ))}
-                        </>
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className={`text-xs ${
+                                f.diasSinFumigar > 21 ? 'text-red-400' :
+                                f.diasSinFumigar > 14 ? 'text-yellow-400' :
+                                'text-gray-500'
+                              }`}>
+                                {f.diasSinFumigar !== null ? `hace ${f.diasSinFumigar}d` : 'nunca'}
+                              </span>
+                              <span className={`text-xs px-1.5 py-0.5 rounded min-w-[70px] text-center ${
+                                f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
+                                f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
+                                'bg-green-500/20 text-green-400'
+                              }`}>
+                                {f.riesgo === 'expuesto' ? 'Expuesto' :
+                                 f.riesgo === 'parcial' ? 'Parcial' :
+                                 'Protegido'}
+                              </span>
+                            </div>
+                          </div>
+                        ))
                       ) : (
                         <div className="text-center py-4">
                           <CheckCircle className="w-8 h-8 text-green-500/50 mx-auto mb-2" />
-                          <p className="text-green-400 text-sm">Todos los sectores con problemas tienen tratamiento</p>
+                          <p className="text-green-400 text-sm">Todos los sectores con problemas estan protegidos</p>
                         </div>
                       )}
-                    </div>
+                    </Link>
                   </div>
                 </>
               )}

@@ -45,6 +45,9 @@ export interface SectorFumigationRisk {
   sinTratar: number;
   cobertura: number; // % de observaciones con tratamiento
   riesgo: 'protegido' | 'parcial' | 'expuesto';
+  diasSinFumigar: number | null; // days since last fumigation
+  ultimaFumigacion: string | null; // date of last fumigation
+  productoUsado: string | null; // last product used
 }
 
 export interface WeeklyIntelligence {
@@ -54,6 +57,8 @@ export interface WeeklyIntelligence {
     totalObservacionesRecientes: number;
     problemasActivos: number;
     sinTratarReciente: number;
+    parcelasArandano: number;
+    parcelasFrambuesa: number;
   };
   pronostico: ProblemForecast[];
   sinTratar: UntreatedProblem[];
@@ -324,42 +329,54 @@ export async function getSectorHotspots(limit = 5): Promise<SectorHotspot[]> {
     .slice(0, limit);
 }
 
-// FUMIGATION RISK: Which sectors have problems but haven't been treated
+// FUMIGATION RISK: Which sectors have problems, when was last fumigation
 export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]> {
   const supabase = getSupabase();
 
-  // Get last 3 weeks with data
-  const { data: weekData } = await supabase
-    .from('v_bitacora_campo')
-    .select('semana')
-    .not('problema', 'is', null);
-
-  if (!weekData) return [];
-
-  const allWeeks = [...new Set(weekData.map(r => r.semana))].sort((a: number, b: number) => a - b);
-  const recentWeeks = allWeeks.slice(-3);
-
+  // Get ALL records to calculate days since last fumigation
   const { data, error } = await supabase
     .from('v_bitacora_campo')
-    .select('sector, problema, severidad, tratamiento_aplicado')
-    .in('semana', recentWeeks)
+    .select('sector, problema, severidad, tratamiento_aplicado, tratamiento_producto, fecha, semana')
     .not('sector', 'is', null)
     .not('problema', 'is', null)
     .not('problema', 'eq', '');
 
   if (error || !data) return [];
 
+  // Find last 3 weeks for "recent" window
+  const allWeeks = [...new Set(data.map(r => r.semana))].sort((a: number, b: number) => a - b);
+  const recentWeeks = allWeeks.slice(-3);
+  const recentSet = new Set(recentWeeks);
+
   const sevOrder = ['baja', 'media', 'alta', 'critica'];
+  const now = new Date();
 
   const bySector: Record<string, {
     obs: number;
     treated: number;
     problemas: Record<string, { count: number; sevMax: string }>;
+    lastFumigationDate: string | null;
+    lastProduct: string | null;
   }> = {};
 
   data.forEach(r => {
     if (!r.sector) return;
-    if (!bySector[r.sector]) bySector[r.sector] = { obs: 0, treated: 0, problemas: {} };
+
+    // Track last fumigation date across ALL time (not just recent)
+    if (!bySector[r.sector]) {
+      bySector[r.sector] = { obs: 0, treated: 0, problemas: {}, lastFumigationDate: null, lastProduct: null };
+    }
+
+    if (r.tratamiento_aplicado && r.fecha) {
+      if (!bySector[r.sector].lastFumigationDate || r.fecha > bySector[r.sector].lastFumigationDate!) {
+        bySector[r.sector].lastFumigationDate = r.fecha;
+        bySector[r.sector].lastProduct = r.tratamiento_producto || null;
+      }
+    }
+
+    // Only count recent observations for the risk analysis
+    if (!recentSet.has(r.semana)) return;
+
     bySector[r.sector].obs++;
     if (r.tratamiento_aplicado) bySector[r.sector].treated++;
 
@@ -374,12 +391,25 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
   });
 
   return Object.entries(bySector)
+    .filter(([, info]) => info.obs > 0) // Only sectors with recent observations
     .map(([sector, info]) => {
       const sinTratar = info.obs - info.treated;
       const cobertura = info.obs > 0 ? Math.round((info.treated / info.obs) * 100) : 0;
-      const riesgo: 'protegido' | 'parcial' | 'expuesto' =
-        cobertura >= 80 ? 'protegido' :
-        cobertura >= 30 ? 'parcial' : 'expuesto';
+
+      let diasSinFumigar: number | null = null;
+      if (info.lastFumigationDate) {
+        diasSinFumigar = Math.floor((now.getTime() - new Date(info.lastFumigationDate).getTime()) / 86400000);
+      }
+
+      // Risk: combine coverage + days since last fumigation
+      let riesgo: 'protegido' | 'parcial' | 'expuesto';
+      if (cobertura >= 60 && (diasSinFumigar !== null && diasSinFumigar <= 14)) {
+        riesgo = 'protegido';
+      } else if (cobertura >= 30 || (diasSinFumigar !== null && diasSinFumigar <= 21)) {
+        riesgo = 'parcial';
+      } else {
+        riesgo = 'expuesto';
+      }
 
       return {
         sector,
@@ -392,28 +422,46 @@ export async function getSectorFumigationRisk(): Promise<SectorFumigationRisk[]>
         sinTratar,
         cobertura,
         riesgo,
+        diasSinFumigar,
+        ultimaFumigacion: info.lastFumigationDate,
+        productoUsado: info.lastProduct,
       };
     })
-    .filter(s => s.sinTratar > 0) // Only show sectors with untreated problems
     .sort((a, b) => {
-      // Exposed first, then partial, then by untreated count
       const rOrder = { expuesto: 3, parcial: 2, protegido: 1 };
       const rDiff = rOrder[b.riesgo] - rOrder[a.riesgo];
       if (rDiff !== 0) return rDiff;
-      return b.sinTratar - a.sinTratar;
+      return (b.diasSinFumigar || 999) - (a.diasSinFumigar || 999);
     })
-    .slice(0, 8);
+    .slice(0, 10);
+}
+
+// Get parcela counts by crop
+async function getParcelaCounts(): Promise<{ arandano: number; frambuesa: number }> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('cultivos')
+    .select('cultivo')
+    .eq('activo', true);
+
+  if (!data) return { arandano: 0, frambuesa: 0 };
+
+  return {
+    arandano: data.filter(r => r.cultivo?.toLowerCase().includes('arandano') || r.cultivo?.toLowerCase().includes('arándano')).length,
+    frambuesa: data.filter(r => r.cultivo?.toLowerCase().includes('frambuesa')).length,
+  };
 }
 
 // Full weekly intelligence report
 export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
   const currentWeek = getCurrentWeek();
 
-  const [forecastResult, untreatedResult, hotspots, fumigacion] = await Promise.all([
+  const [forecastResult, untreatedResult, hotspots, fumigacion, parcelas] = await Promise.all([
     generateForecast(),
     getUntreatedProblems(),
     getSectorHotspots(5),
     getSectorFumigationRisk(),
+    getParcelaCounts(),
   ]);
 
   return {
@@ -423,6 +471,8 @@ export async function getWeeklyIntelligence(): Promise<WeeklyIntelligence> {
       totalObservacionesRecientes: untreatedResult.recentTotal + (untreatedResult.problems.length > 0 ? 0 : 0),
       problemasActivos: forecastResult.forecasts.filter(f => f.obsReciente > 0).length,
       sinTratarReciente: untreatedResult.recentTotal,
+      parcelasArandano: parcelas.arandano,
+      parcelasFrambuesa: parcelas.frambuesa,
     },
     pronostico: forecastResult.forecasts,
     sinTratar: untreatedResult.problems,
