@@ -24,7 +24,10 @@ import {
   HelpCircle,
   Bug,
   Droplets,
-  Zap
+  Zap,
+  Activity,
+  Target,
+  Eye
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useTenant } from '@/contexts/TenantContext';
@@ -65,6 +68,7 @@ export default function Home() {
     alertasPendientes: 0
   });
   const [registrosRecientes, setRegistrosRecientes] = useState<RegistroReciente[]>([]);
+  const [intelligence, setIntelligence] = useState<any>(null);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -133,6 +137,12 @@ export default function Home() {
       });
 
       setRegistrosRecientes(registros || []);
+
+      // Load intelligence data (non-blocking)
+      fetch('/api/intelligence/weekly')
+        .then(r => r.json())
+        .then(data => setIntelligence(data))
+        .catch(() => {});
     } catch (error) {
       console.error('Error loading dashboard:', error);
     } finally {
@@ -380,6 +390,87 @@ export default function Home() {
                   <p className="text-gray-500 text-sm">Como usar el sistema</p>
                 </Link>
               </div>
+
+              {/* Intelligence Widgets */}
+              {intelligence && (
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-8">
+                  {/* Prediccion esta semana */}
+                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Activity className="w-5 h-5 text-cyan-400" />
+                      <h4 className="text-white font-medium">Prediccion Semana {intelligence.semanaActual}</h4>
+                    </div>
+                    {intelligence.pronostico?.slice(0, 4).map((f: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                        <span className="text-sm text-gray-300 capitalize">{f.problema}</span>
+                        <span className={`text-xs px-2 py-0.5 rounded-full ${
+                          f.riesgo === 'alto' ? 'bg-red-500/20 text-red-400' :
+                          f.riesgo === 'medio' ? 'bg-yellow-500/20 text-yellow-400' :
+                          'bg-green-500/20 text-green-400'
+                        }`}>
+                          {f.riesgo}
+                        </span>
+                      </div>
+                    ))}
+                    {(!intelligence.pronostico || intelligence.pronostico.length === 0) && (
+                      <p className="text-gray-500 text-sm">Sin datos suficientes para prediccion</p>
+                    )}
+                  </div>
+
+                  {/* Problemas sin tratar */}
+                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Target className="w-5 h-5 text-orange-400" />
+                      <h4 className="text-white font-medium">Sin Tratar</h4>
+                      {intelligence.resumen?.sinTratar > 0 && (
+                        <span className="text-xs bg-orange-500/20 text-orange-400 px-2 py-0.5 rounded-full ml-auto">
+                          {intelligence.resumen.sinTratar}
+                        </span>
+                      )}
+                    </div>
+                    {intelligence.sinTratar?.slice(0, 4).map((u: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                        <span className="text-sm text-gray-300 capitalize">{u.problema}</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">{u.sinTratar} obs</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${
+                            u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
+                            u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
+                            'bg-green-500/20 text-green-400'
+                          }`}>
+                            {u.severidadMax}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                    {(!intelligence.sinTratar || intelligence.sinTratar.length === 0) && (
+                      <p className="text-green-400 text-sm flex items-center gap-1">
+                        <CheckCircle className="w-4 h-4" /> Todo tratado
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Sectores criticos */}
+                  <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <Eye className="w-5 h-5 text-purple-400" />
+                      <h4 className="text-white font-medium">Sectores Criticos</h4>
+                    </div>
+                    {intelligence.hotspots?.slice(0, 4).map((h: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between py-1.5 border-b border-gray-800/50 last:border-0">
+                        <div>
+                          <span className="text-sm text-white">{h.sector}</span>
+                          <span className="text-xs text-gray-500 ml-2">{h.problemasDistintos} problemas</span>
+                        </div>
+                        <span className="text-xs text-gray-400">{h.totalObservaciones} obs</span>
+                      </div>
+                    ))}
+                    {(!intelligence.hotspots || intelligence.hotspots.length === 0) && (
+                      <p className="text-gray-500 text-sm">Sin sectores criticos</p>
+                    )}
+                  </div>
+                </div>
+              )}
 
               {/* Registros Recientes */}
               <div className="flex items-center justify-between mb-4">
