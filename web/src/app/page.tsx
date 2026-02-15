@@ -27,7 +27,8 @@ import {
   Zap,
   Activity,
   Target,
-  Eye
+  Eye,
+  BookOpen
 } from 'lucide-react';
 import { createClient } from '@supabase/supabase-js';
 import { useTenant } from '@/contexts/TenantContext';
@@ -182,6 +183,7 @@ export default function Home() {
     { icon: Camera, label: 'Bitacora', href: '/bitacora' },
     { icon: Zap, label: 'Diagnostico', href: '/diagnostico' },
     { icon: Beaker, label: 'Catalogos', href: '/catalogos' },
+    { icon: BookOpen, label: 'Conocimiento', href: '/conocimiento' },
     { icon: Bell, label: 'Alertas', href: '/alertas', badge: stats.alertasPendientes > 0 ? stats.alertasPendientes : undefined },
     { icon: FileText, label: 'Reportes', href: '/reportes' },
     { icon: Settings, label: 'Configuracion', href: '/configuracion' },
