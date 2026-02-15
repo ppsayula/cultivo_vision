@@ -104,12 +104,12 @@ export default function Home() {
       const { count: cultivosActivos } = await cultivosActivosQuery;
 
       // Registros de esta semana
-      let registrosSemanaQuery = supabase.from('bitacora').select('*', { count: 'exact', head: true }).eq('semana', semanaActual);
+      let registrosSemanaQuery = supabase.from('v_bitacora_campo').select('*', { count: 'exact', head: true }).eq('semana', semanaActual);
       if (tenantId) registrosSemanaQuery = registrosSemanaQuery.eq('tenant_id', tenantId);
       const { count: registrosSemana } = await registrosSemanaQuery;
 
       // Problemas criticos esta semana
-      let criticosQuery = supabase.from('bitacora').select('*', { count: 'exact', head: true }).eq('semana', semanaActual).in('severidad', ['critica', 'alta']);
+      let criticosQuery = supabase.from('v_bitacora_campo').select('*', { count: 'exact', head: true }).eq('semana', semanaActual).in('severidad', ['critica', 'alta']);
       if (tenantId) criticosQuery = criticosQuery.eq('tenant_id', tenantId);
       const { count: problemasCriticos } = await criticosQuery;
 
@@ -119,7 +119,7 @@ export default function Home() {
       const { count: alertasPendientes } = await alertasQuery;
 
       // Ultimos registros
-      let registrosQuery = supabase.from('bitacora').select('id, fecha, cultivo, sector, tipo_problema, problema, severidad').order('created_at', { ascending: false }).limit(5);
+      let registrosQuery = supabase.from('v_bitacora_campo').select('id, fecha, cultivo, sector, tipo_problema, problema, severidad').order('fecha', { ascending: false }).limit(5);
       if (tenantId) registrosQuery = registrosQuery.eq('tenant_id', tenantId);
       const { data: registros } = await registrosQuery;
 

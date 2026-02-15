@@ -117,10 +117,10 @@ export default function BitacoraPage() {
     try {
       // Cargar registros
       const { data: registrosData } = await supabase
-        .from('bitacora')
+        .from('v_bitacora_campo')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(50);
+        .order('fecha', { ascending: false })
+        .limit(200);
 
       // Cargar catálogos
       const [cultivosRes, variedadesRes, sectoresRes, plagasRes, enfermedadesRes, nutricionRes, tratamientosRes] = await Promise.all([
