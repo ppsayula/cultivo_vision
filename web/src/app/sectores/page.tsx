@@ -53,6 +53,7 @@ export default function SectoresPage() {
         s.sector.includes(q) ||
         s.cultivo.toLowerCase().includes(q) ||
         s.variedad.toLowerCase().includes(q) ||
+        s.finca.toLowerCase().includes(q) ||
         s.problemasActivos.some(p => p.nombre.includes(q)) ||
         s.responsable?.toLowerCase().includes(q)
       );
@@ -164,7 +165,7 @@ export default function SectoresPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
             <input
               type="text"
-              placeholder="Buscar sector, cultivo, variedad, plaga..."
+              placeholder="Buscar sector, cultivo, finca, plaga..."
               value={search}
               onChange={e => setSearch(e.target.value)}
               className="w-full pl-10 pr-8 py-2 bg-gray-800/50 border border-gray-700/30 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-green-500/50"
@@ -223,10 +224,11 @@ export default function SectoresPage() {
                   <div className="flex items-center gap-3 px-4 py-3">
                     <div className={`w-3 h-3 rounded-full shrink-0 ${riskDotColor(sector.riskLevel)}`} />
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-white font-medium text-sm">Sector {sector.sector}</span>
                         <span className="text-gray-500 text-xs">·</span>
-                        <span className="text-gray-400 text-xs truncate">{sector.cultivo} {sector.variedad}</span>
+                        <span className="text-gray-400 text-xs truncate">{sector.cultivo}{sector.variedad ? ` ${sector.variedad}` : ''}</span>
+                        <span className="text-gray-600 text-xs">({sector.finca})</span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className={`text-xs font-medium ${riskTextColor(sector.riskLevel)}`}>
@@ -257,7 +259,8 @@ export default function SectoresPage() {
                     <div className="px-4 pb-4 border-t border-gray-700/30 mt-1 pt-3" onClick={e => e.stopPropagation()}>
                       {/* Census */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mb-3">
-                        <CensusItem label="Cultivo" value={`${sector.cultivo} ${sector.variedad}`} />
+                        <CensusItem label="Finca" value={sector.finca} />
+                        <CensusItem label="Cultivo" value={`${sector.cultivo}${sector.variedad ? ` ${sector.variedad}` : ''}`} />
                         <CensusItem label="Plantacion" value={formatDate(sector.fecha_plantacion)} />
                         <CensusItem label="Suelo" value={sector.tipo_suelo || '-'} />
                         <CensusItem label="Riego" value={sector.sistema_riego || '-'} />
@@ -266,6 +269,9 @@ export default function SectoresPage() {
                         {sector.en_maceta && <CensusItem label="Sustrato" value={sector.sustrato || 'En maceta'} />}
                         <CensusItem label="Responsable" value={sector.responsable || '-'} />
                       </div>
+                      {!sector.tieneCultivo && (
+                        <p className="text-xs text-yellow-400/60 mb-3">Este sector no tiene cultivo asignado en el ciclo actual</p>
+                      )}
 
                       {/* Risk status */}
                       <div className={`rounded-lg p-3 mb-3 ${riskBgColor(sector.riskLevel)}`}>
