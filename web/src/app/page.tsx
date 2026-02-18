@@ -1,12 +1,10 @@
-// Cultivo Vision - Dashboard Principal con Multi-Tenancy
+// Cultivo Vision - Dashboard Principal
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  Leaf,
   Camera,
-  Sprout,
   ChevronRight,
   AlertTriangle,
   CheckCircle,
@@ -14,132 +12,43 @@ import {
   Droplets,
   Activity,
   Target,
-  MapPin
+  MapPin,
+  Shield,
+  Zap,
+  TrendingUp,
+  Clock,
+  Leaf
 } from 'lucide-react';
-import { createClient } from '@supabase/supabase-js';
-import { useTenant } from '@/contexts/TenantContext';
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-);
-
-interface Stats {
-  totalCultivos: number;
-  cultivosActivos: number;
-  registrosSemana: number;
-  problemasCriticos: number;
-  alertasPendientes: number;
-}
-
-interface RegistroReciente {
-  id: string;
-  fecha: string;
-  cultivo: string;
-  sector: string;
-  tipo_problema: string;
-  problema: string;
-  severidad: string;
+interface DashboardData {
+  intelligence: any;
+  sectorStats: {
+    total: number;
+    criticos: number;
+    altos: number;
+    medios: number;
+    bajos: number;
+    fumigacionVencida: number;
+  };
+  topSectores: any[];
+  riesgoGeneral: {
+    nivel: 'critico' | 'alto' | 'medio' | 'bajo' | 'sin-datos';
+    score: number;
+    label: string;
+  };
+  diasSinMonitoreo: number | null;
 }
 
 export default function Home() {
-  const { tenantId, isLoading: tenantLoading } = useTenant();
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState<Stats>({
-    totalCultivos: 0,
-    cultivosActivos: 0,
-    registrosSemana: 0,
-    problemasCriticos: 0,
-    alertasPendientes: 0
-  });
-  const [registrosRecientes, setRegistrosRecientes] = useState<RegistroReciente[]>([]);
-  const [intelligence, setIntelligence] = useState<any>(null);
+  const [data, setData] = useState<DashboardData | null>(null);
 
   useEffect(() => {
-    if (!tenantLoading) {
-      loadDashboardData();
-    }
-  }, [tenantId, tenantLoading]);
-
-  const loadDashboardData = async () => {
-    try {
-      const getWeekNumber = (date: Date) => {
-        const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
-        const pastDaysOfYear = (date.getTime() - firstDayOfYear.getTime()) / 86400000;
-        return Math.ceil((pastDaysOfYear + firstDayOfYear.getDay() + 1) / 7);
-      };
-      const semanaActual = getWeekNumber(new Date());
-
-      // Estadisticas de cultivos
-      let cultivosQuery = supabase.from('cultivos').select('*', { count: 'exact', head: true });
-      if (tenantId) cultivosQuery = cultivosQuery.eq('tenant_id', tenantId);
-      const { count: totalCultivos } = await cultivosQuery;
-
-      let cultivosActivosQuery = supabase.from('cultivos').select('*', { count: 'exact', head: true }).eq('activo', true);
-      if (tenantId) cultivosActivosQuery = cultivosActivosQuery.eq('tenant_id', tenantId);
-      const { count: cultivosActivos } = await cultivosActivosQuery;
-
-      // Registros de esta semana
-      let registrosSemanaQuery = supabase.from('v_bitacora_campo').select('*', { count: 'exact', head: true }).eq('semana', semanaActual);
-      if (tenantId) registrosSemanaQuery = registrosSemanaQuery.eq('tenant_id', tenantId);
-      const { count: registrosSemana } = await registrosSemanaQuery;
-
-      // Problemas criticos esta semana
-      let criticosQuery = supabase.from('v_bitacora_campo').select('*', { count: 'exact', head: true }).eq('semana', semanaActual).in('severidad', ['critica', 'alta']);
-      if (tenantId) criticosQuery = criticosQuery.eq('tenant_id', tenantId);
-      const { count: problemasCriticos } = await criticosQuery;
-
-      // Alertas pendientes
-      let alertasQuery = supabase.from('alertas_sistema').select('*', { count: 'exact', head: true }).eq('leida', false);
-      if (tenantId) alertasQuery = alertasQuery.eq('tenant_id', tenantId);
-      const { count: alertasPendientes } = await alertasQuery;
-
-      // Ultimos registros
-      let registrosQuery = supabase.from('v_bitacora_campo').select('id, fecha, cultivo, sector, tipo_problema, problema, severidad').order('fecha', { ascending: false }).limit(5);
-      if (tenantId) registrosQuery = registrosQuery.eq('tenant_id', tenantId);
-      const { data: registros } = await registrosQuery;
-
-      setStats({
-        totalCultivos: totalCultivos || 0,
-        cultivosActivos: cultivosActivos || 0,
-        registrosSemana: registrosSemana || 0,
-        problemasCriticos: problemasCriticos || 0,
-        alertasPendientes: alertasPendientes || 0
-      });
-
-      setRegistrosRecientes(registros || []);
-
-      // Load intelligence data (non-blocking)
-      fetch('/api/intelligence/weekly')
-        .then(r => r.json())
-        .then(data => setIntelligence(data))
-        .catch(() => {});
-    } catch (error) {
-      console.error('Error loading dashboard:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getTipoIcon = (tipo: string) => {
-    switch (tipo) {
-      case 'plaga': return <Bug className="w-4 h-4 text-red-400" />;
-      case 'enfermedad': return <AlertTriangle className="w-4 h-4 text-orange-400" />;
-      case 'nutricion': return <Leaf className="w-4 h-4 text-yellow-400" />;
-      case 'riego': return <Droplets className="w-4 h-4 text-blue-400" />;
-      default: return <AlertTriangle className="w-4 h-4 text-gray-400" />;
-    }
-  };
-
-  const getSeveridadColor = (sev: string) => {
-    switch (sev) {
-      case 'baja': return 'bg-green-500/20 text-green-400';
-      case 'media': return 'bg-yellow-500/20 text-yellow-400';
-      case 'alta': return 'bg-orange-500/20 text-orange-400';
-      case 'critica': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-gray-500/20 text-gray-400';
-    }
-  };
+    fetch('/api/dashboard')
+      .then(r => r.json())
+      .then(d => { setData(d); setLoading(false); })
+      .catch(() => setLoading(false));
+  }, []);
 
   if (loading) {
     return (
@@ -149,86 +58,189 @@ export default function Home() {
     );
   }
 
+  if (!data) {
+    return (
+      <div className="text-center py-20 text-gray-500">
+        Error cargando datos del dashboard
+      </div>
+    );
+  }
+
+  const { intelligence, sectorStats, topSectores, riesgoGeneral, diasSinMonitoreo } = data;
+
+  const riesgoColors: Record<string, { bg: string; text: string; ring: string; dot: string }> = {
+    critico: { bg: 'bg-red-500/10', text: 'text-red-400', ring: 'ring-red-500/30', dot: 'bg-red-500' },
+    alto: { bg: 'bg-orange-500/10', text: 'text-orange-400', ring: 'ring-orange-500/30', dot: 'bg-orange-500' },
+    medio: { bg: 'bg-yellow-500/10', text: 'text-yellow-400', ring: 'ring-yellow-500/30', dot: 'bg-yellow-500' },
+    bajo: { bg: 'bg-green-500/10', text: 'text-green-400', ring: 'ring-green-500/30', dot: 'bg-green-500' },
+    'sin-datos': { bg: 'bg-gray-500/10', text: 'text-gray-400', ring: 'ring-gray-500/30', dot: 'bg-gray-500' },
+  };
+
+  const rc = riesgoColors[riesgoGeneral.nivel];
+
   return (
     <>
-      {/* Stats compactos */}
-      <div className="flex flex-wrap gap-3 mb-6">
-        <div className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-3 py-2 border border-gray-700/30">
-          <Sprout className="w-4 h-4 text-green-400" />
-          <span className="text-white font-semibold text-sm">{stats.cultivosActivos}</span>
-          <span className="text-gray-500 text-xs">parcelas</span>
-          <span className="text-gray-600 text-xs">({intelligence?.resumen?.parcelasArandano || 0}A / {intelligence?.resumen?.parcelasFrambuesa || 0}F)</span>
-        </div>
-        <div className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-3 py-2 border border-gray-700/30">
-          <Camera className="w-4 h-4 text-blue-400" />
-          <span className="text-white font-semibold text-sm">{stats.registrosSemana}</span>
-          <span className="text-gray-500 text-xs">registros esta semana</span>
-        </div>
-        {stats.problemasCriticos > 0 && (
-          <div className="flex items-center gap-2 bg-orange-500/10 rounded-lg px-3 py-2 border border-orange-500/20">
-            <AlertTriangle className="w-4 h-4 text-orange-400" />
-            <span className="text-orange-300 font-semibold text-sm">{stats.problemasCriticos}</span>
-            <span className="text-orange-400/70 text-xs">criticos/altos</span>
+      {/* Row 1 - Command Bar */}
+      <div className="flex flex-wrap items-center gap-3 mb-6">
+        {diasSinMonitoreo !== null && diasSinMonitoreo > 7 && (
+          <div className="flex items-center gap-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg px-3 py-2">
+            <Clock className="w-4 h-4 text-yellow-400" />
+            <span className="text-yellow-300 text-sm font-medium">
+              {diasSinMonitoreo} dias sin monitoreo
+            </span>
           </div>
         )}
+        <div className="flex items-center gap-2 ml-auto">
+          <Link
+            href="/bitacora"
+            className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors"
+          >
+            <Camera className="w-4 h-4" />
+            Nuevo Monitoreo
+          </Link>
+          <Link
+            href="/diagnostico"
+            className="flex items-center gap-2 px-4 py-2 bg-gray-700/50 hover:bg-gray-700 text-white text-sm font-medium rounded-lg transition-colors border border-gray-600/30"
+          >
+            <Zap className="w-4 h-4" />
+            Diagnostico
+          </Link>
+        </div>
       </div>
 
-      {/* Intelligence Section */}
+      {/* Row 2 - Scorecard (3 cards) */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+        {/* Card 1: Riesgo General */}
+        <Link
+          href="/sectores"
+          className={`${rc.bg} border ${rc.ring} ring-1 rounded-xl p-5 hover:brightness-110 transition-all block`}
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Shield className={`w-5 h-5 ${rc.text}`} />
+              <span className="text-gray-400 text-sm">Riesgo General</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </div>
+          <div className="flex items-end gap-3">
+            <span className={`text-3xl font-bold ${rc.text} capitalize`}>
+              {riesgoGeneral.nivel === 'sin-datos' ? '—' : riesgoGeneral.nivel}
+            </span>
+          </div>
+          <p className="text-gray-500 text-xs mt-2">
+            {sectorStats.total} sectores · {riesgoGeneral.label}
+          </p>
+          {/* Mini distribution bar */}
+          {sectorStats.total > 0 && (
+            <div className="flex h-1.5 rounded-full overflow-hidden mt-3 bg-gray-800">
+              {sectorStats.criticos > 0 && (
+                <div className="bg-red-500" style={{ width: `${(sectorStats.criticos / sectorStats.total) * 100}%` }} />
+              )}
+              {sectorStats.altos > 0 && (
+                <div className="bg-orange-500" style={{ width: `${(sectorStats.altos / sectorStats.total) * 100}%` }} />
+              )}
+              {sectorStats.medios > 0 && (
+                <div className="bg-yellow-500" style={{ width: `${(sectorStats.medios / sectorStats.total) * 100}%` }} />
+              )}
+              {sectorStats.bajos > 0 && (
+                <div className="bg-green-500" style={{ width: `${(sectorStats.bajos / sectorStats.total) * 100}%` }} />
+              )}
+            </div>
+          )}
+        </Link>
+
+        {/* Card 2: Sin Tratar */}
+        <Link
+          href="/inteligencia"
+          className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:border-orange-500/30 transition-all block"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Target className="w-5 h-5 text-orange-400" />
+              <span className="text-gray-400 text-sm">Sin Tratar</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </div>
+          <div className="flex items-end gap-3">
+            <span className={`text-3xl font-bold ${
+              (intelligence?.sinTratar?.length || 0) > 3 ? 'text-orange-400' :
+              (intelligence?.sinTratar?.length || 0) > 0 ? 'text-yellow-400' : 'text-green-400'
+            }`}>
+              {intelligence?.sinTratar?.length || 0}
+            </span>
+            <span className="text-gray-500 text-sm mb-1">problemas</span>
+          </div>
+          {intelligence?.sinTratar?.length > 0 ? (
+            <div className="flex flex-wrap gap-1 mt-3">
+              {intelligence.sinTratar.slice(0, 3).map((u: any, i: number) => (
+                <span key={i} className="text-xs px-2 py-0.5 rounded bg-gray-800 text-gray-300 capitalize">
+                  {u.problema}
+                </span>
+              ))}
+            </div>
+          ) : (
+            <p className="text-green-400/60 text-xs mt-3">Todo tratado</p>
+          )}
+        </Link>
+
+        {/* Card 3: Fumigacion */}
+        <Link
+          href="/sectores"
+          className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5 hover:border-purple-500/30 transition-all block"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Droplets className="w-5 h-5 text-purple-400" />
+              <span className="text-gray-400 text-sm">Fumigacion</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-gray-600" />
+          </div>
+          <div className="flex items-end gap-3">
+            <span className={`text-3xl font-bold ${
+              sectorStats.fumigacionVencida > 5 ? 'text-red-400' :
+              sectorStats.fumigacionVencida > 0 ? 'text-yellow-400' : 'text-green-400'
+            }`}>
+              {sectorStats.fumigacionVencida}
+            </span>
+            <span className="text-gray-500 text-sm mb-1">vencidos</span>
+          </div>
+          <p className="text-gray-500 text-xs mt-3">
+            de {sectorStats.total} sectores totales
+          </p>
+          {sectorStats.fumigacionVencida > 0 && (
+            <div className="flex h-1.5 rounded-full overflow-hidden mt-2 bg-gray-800">
+              <div className="bg-red-500" style={{ width: `${(sectorStats.fumigacionVencida / sectorStats.total) * 100}%` }} />
+              <div className="bg-green-500" style={{ width: `${((sectorStats.total - sectorStats.fumigacionVencida) / sectorStats.total) * 100}%` }} />
+            </div>
+          )}
+        </Link>
+      </div>
+
+      {/* Row 3 - Two columns: Problemas + Tendencias */}
       {intelligence && (
-        <>
-          {/* Data freshness alert */}
-          {(() => {
-            const lastDataWeek = intelligence.ultimaSemanaConDatos;
-            const currentWeek = intelligence.semanaActual;
-            const weeksBehind = currentWeek - lastDataWeek;
-            if (weeksBehind >= 2) {
-              return (
-                <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-3 mb-4 flex items-center gap-3">
-                  <AlertTriangle className="w-5 h-5 text-yellow-400 shrink-0" />
-                  <p className="text-yellow-300 text-sm">
-                    Ultimo monitoreo: semana {lastDataWeek} ({weeksBehind} sem atras)
-                  </p>
-                  <Link href="/bitacora" className="ml-auto shrink-0 px-3 py-1 bg-yellow-500/20 hover:bg-yellow-500/30 text-yellow-300 text-xs rounded-lg transition-colors">
-                    Registrar
-                  </Link>
-                </div>
-              );
-            }
-            return null;
-          })()}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-6">
+          {/* Col 1: Atencion Requerida */}
+          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Target className="w-5 h-5 text-orange-400" />
+              <h3 className="text-white font-medium">Atencion Requerida</h3>
+              <Link href="/inteligencia" className="text-xs text-gray-500 ml-auto hover:text-white flex items-center gap-1">
+                Ver todo <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            {/* Widget 1: Atencion Requerida */}
-            <Link href="/inteligencia#sintratar" className="bg-gray-800/30 border border-gray-700/30 hover:border-orange-500/30 rounded-xl p-5 transition-colors block">
-              <div className="flex items-center gap-2 mb-3">
-                <Target className="w-5 h-5 text-orange-400" />
-                <h4 className="text-white font-medium">Atencion Requerida</h4>
-                <span className="text-xs text-gray-500 ml-auto">Ver detalle</span>
-                <ChevronRight className="w-4 h-4 text-gray-600" />
-              </div>
-
-              {intelligence.sinTratar?.length > 0 || intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 ? (
-                <>
-                  <p className="text-sm text-gray-300 mb-3">
-                    {intelligence.sinTratar?.length > 0 && (
-                      <span>{intelligence.sinTratar.length} problemas sin tratar</span>
-                    )}
-                    {intelligence.sinTratar?.length > 0 && intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 && (
-                      <span className="text-gray-600"> · </span>
-                    )}
-                    {intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 && (
-                      <span>{intelligence.fumigacion.filter((f: any) => f.riesgo === 'expuesto').length} sectores expuestos</span>
-                    )}
-                  </p>
-
-                  <div className="flex flex-wrap gap-2">
-                    {intelligence.sinTratar?.slice(0, 4).map((u: any, i: number) => (
-                      <div key={`u${i}`} className="flex items-center gap-1.5">
+            {(intelligence.sinTratar?.length > 0 || intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0) ? (
+              <div className="space-y-3">
+                {intelligence.sinTratar?.slice(0, 4).map((u: any, i: number) => {
+                  const receta = intelligence.recetas?.[u.problema.toLowerCase()];
+                  return (
+                    <div key={`u${i}`} className="border-b border-gray-800/50 pb-3 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-2">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${
                           u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-400' :
                           u.severidadMax === 'media' ? 'bg-yellow-400' : 'bg-gray-400'
                         }`} />
-                        <span className="text-sm text-gray-200 capitalize">{u.problema}</span>
+                        <span className="text-sm text-white capitalize font-medium">{u.problema}</span>
                         <span className={`text-xs px-1.5 py-0.5 rounded ${
                           u.severidadMax === 'alta' || u.severidadMax === 'critica' ? 'bg-red-500/20 text-red-400' :
                           u.severidadMax === 'media' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -236,31 +248,56 @@ export default function Home() {
                         }`}>
                           {u.severidadMax}
                         </span>
+                        <span className="text-xs text-gray-600 ml-auto">
+                          {u.sectoresAfectados} sect.
+                        </span>
                       </div>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <div className="text-center py-6">
-                  <CheckCircle className="w-10 h-10 text-green-500/40 mx-auto mb-2" />
-                  <p className="text-green-400 text-sm">Todo bajo control</p>
-                  <p className="text-gray-600 text-xs mt-1">Sin problemas pendientes ni sectores expuestos</p>
-                </div>
-              )}
-            </Link>
+                      {/* Inline recipe preview */}
+                      {receta && receta.products?.length > 0 && (
+                        <p className="text-xs text-cyan-400/70 ml-4 mt-1">
+                          Rx: {receta.products[0].nombre} {receta.products[0].dosis}
+                        </p>
+                      )}
+                    </div>
+                  );
+                })}
 
-            {/* Widget 2: Tendencias */}
-            <Link href="/inteligencia#tendencias" className="bg-gray-800/30 border border-gray-700/30 hover:border-cyan-500/30 rounded-xl p-5 transition-colors block">
-              <div className="flex items-center gap-2 mb-3">
-                <Activity className="w-5 h-5 text-cyan-400" />
-                <h4 className="text-white font-medium">Tendencias</h4>
-                <span className="text-xs text-gray-500 ml-auto">Toca para ver detalle</span>
-                <ChevronRight className="w-4 h-4 text-gray-600" />
+                {/* Exposed sectors */}
+                {intelligence.fumigacion?.filter((f: any) => f.riesgo === 'expuesto').length > 0 && (
+                  <div className="pt-2 border-t border-gray-800/50">
+                    <div className="flex items-center gap-2 text-purple-400">
+                      <Droplets className="w-3.5 h-3.5" />
+                      <span className="text-xs font-medium">
+                        {intelligence.fumigacion.filter((f: any) => f.riesgo === 'expuesto').length} sectores sin proteccion
+                      </span>
+                    </div>
+                  </div>
+                )}
               </div>
-              <p className="text-xs text-gray-500 mb-3">Comparado con su nivel historico normal en el rancho</p>
-              {intelligence.pronostico?.length > 0 ? (
-                intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
-                  <div key={i} className="py-1.5 border-b border-gray-800/50 last:border-0">
+            ) : (
+              <div className="text-center py-8">
+                <CheckCircle className="w-10 h-10 text-green-500/40 mx-auto mb-2" />
+                <p className="text-green-400 text-sm">Todo bajo control</p>
+                <p className="text-gray-600 text-xs mt-1">Sin problemas pendientes</p>
+              </div>
+            )}
+          </div>
+
+          {/* Col 2: Tendencias */}
+          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-5">
+            <div className="flex items-center gap-2 mb-4">
+              <Activity className="w-5 h-5 text-cyan-400" />
+              <h3 className="text-white font-medium">Tendencias</h3>
+              <Link href="/inteligencia" className="text-xs text-gray-500 ml-auto hover:text-white flex items-center gap-1">
+                Detalle <ChevronRight className="w-3 h-3" />
+              </Link>
+            </div>
+            <p className="text-xs text-gray-600 mb-3">vs nivel historico normal</p>
+
+            {intelligence.pronostico?.length > 0 ? (
+              <div className="space-y-0">
+                {intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
+                  <div key={i} className="py-2 border-b border-gray-800/50 last:border-0">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className={`w-2 h-2 rounded-full shrink-0 ${
@@ -269,78 +306,116 @@ export default function Home() {
                         }`} />
                         <span className="text-sm text-gray-200 capitalize truncate">{f.problema}</span>
                       </div>
-                      <span className={`text-xs font-medium shrink-0 ${
+                      <span className={`text-xs font-medium shrink-0 ml-2 ${
                         f.cambio > 50 ? 'text-red-400' :
                         f.cambio > 20 ? 'text-orange-400' :
                         f.cambio < -30 ? 'text-green-400' :
                         'text-gray-500'
                       }`}>
-                        {f.cambio > 50 ? 'Subiendo mucho' :
-                         f.cambio > 20 ? 'Subiendo' :
-                         f.cambio > -20 ? 'Normal' :
-                         f.cambio > -50 ? 'Bajando' :
-                         'Desaparecio'}
+                        {f.cambio > 50 ? '↑↑ Subiendo' :
+                         f.cambio > 20 ? '↑ Subiendo' :
+                         f.cambio > -20 ? '→ Normal' :
+                         f.cambio > -50 ? '↓ Bajando' :
+                         '↓↓ Bajo'}
                       </span>
                     </div>
                     {f.contexto && (
-                      <p className="text-xs text-cyan-400/60 ml-4 mt-0.5">{f.contexto}</p>
+                      <p className="text-xs text-cyan-400/50 ml-4 mt-0.5">{f.contexto}</p>
                     )}
                   </div>
-                ))
-              ) : (
-                <div className="text-center py-6">
-                  <Activity className="w-10 h-10 text-gray-700 mx-auto mb-2" />
-                  <p className="text-gray-500 text-sm">Se necesitan 3+ semanas de datos para calcular tendencias</p>
-                </div>
-              )}
-            </Link>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <Activity className="w-10 h-10 text-gray-700 mx-auto mb-2" />
+                <p className="text-gray-500 text-sm">3+ semanas de datos necesarias</p>
+              </div>
+            )}
           </div>
-        </>
+        </div>
       )}
 
-      {/* Registros Recientes */}
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-white">Ultimas Observaciones</h3>
-        <Link href="/bitacora" className="text-green-400 text-sm hover:underline flex items-center gap-1">
-          Ver bitacora completa <ChevronRight className="w-4 h-4" />
-        </Link>
-      </div>
+      {/* Row 4 - Top Sectores en Riesgo */}
+      {topSectores && topSectores.length > 0 && topSectores[0].riskScore > 0 && (
+        <div className="mb-6">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <MapPin className="w-5 h-5 text-gray-500" />
+              <h3 className="text-lg font-semibold text-white">Sectores en Riesgo</h3>
+            </div>
+            <Link href="/sectores" className="text-green-400 text-sm hover:underline flex items-center gap-1">
+              Ver todos <ChevronRight className="w-4 h-4" />
+            </Link>
+          </div>
+          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
+            <div className="divide-y divide-gray-800/50">
+              {topSectores.filter(s => s.riskScore > 0).slice(0, 5).map((sector: any) => (
+                <div key={sector.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-700/20 transition-colors">
+                  {/* Risk indicator */}
+                  <div className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
+                    sector.riskLevel === 'critico' ? 'bg-red-500/20' :
+                    sector.riskLevel === 'alto' ? 'bg-orange-500/20' :
+                    sector.riskLevel === 'medio' ? 'bg-yellow-500/20' : 'bg-green-500/20'
+                  }`}>
+                    <span className={`text-xs font-bold ${
+                      sector.riskLevel === 'critico' ? 'text-red-400' :
+                      sector.riskLevel === 'alto' ? 'text-orange-400' :
+                      sector.riskLevel === 'medio' ? 'text-yellow-400' : 'text-green-400'
+                    }`}>
+                      {sector.riskScore}
+                    </span>
+                  </div>
 
-      {registrosRecientes.length === 0 ? (
-        <div className="bg-gray-800/30 rounded-xl p-8 text-center border border-gray-700/30">
-          <Camera className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-400">Sin registros aun</p>
-          <Link
-            href="/bitacora"
-            className="inline-flex items-center gap-2 mt-4 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
-          >
-            <Camera className="w-4 h-4" />
-            Crear primer registro
-          </Link>
+                  {/* Sector info */}
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-white text-sm font-medium">Sector {sector.sector}</span>
+                      <span className="text-gray-600 text-xs">{sector.finca}</span>
+                      <span className="text-gray-600 text-xs">· {sector.cultivo}</span>
+                    </div>
+                    <p className="text-gray-500 text-xs truncate mt-0.5">{sector.razonRiesgo}</p>
+                  </div>
+
+                  {/* Fumigation badge */}
+                  {(sector.fumigacionStatus === 'vencido' || sector.fumigacionStatus === 'critico') && (
+                    <span className="text-xs px-2 py-0.5 rounded bg-purple-500/20 text-purple-400 shrink-0">
+                      {sector.diasSinFumigar}d sin fum.
+                    </span>
+                  )}
+
+                  {/* Active problems count */}
+                  {sector.problemasActivos?.length > 0 && (
+                    <span className="text-xs text-gray-500 shrink-0">
+                      {sector.problemasActivos.length} prob.
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-      ) : (
-        <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
-          <div className="divide-y divide-gray-800/50">
-            {registrosRecientes.map(registro => (
-              <div
-                key={registro.id}
-                className="flex items-center gap-3 px-4 py-3 hover:bg-gray-700/20 transition-colors"
-              >
-                {getTipoIcon(registro.tipo_problema)}
-                <span className="text-white text-sm font-medium min-w-0 truncate">{registro.problema}</span>
-                <span className={`px-2 py-0.5 rounded-full text-xs shrink-0 ${getSeveridadColor(registro.severidad)}`}>
-                  {registro.severidad}
-                </span>
-                <span className="text-gray-600 text-xs shrink-0">{registro.cultivo}</span>
-                <span className="text-gray-600 text-xs flex items-center gap-1 shrink-0">
-                  <MapPin className="w-3 h-3" />
-                  {registro.sector}
-                </span>
-                <span className="text-gray-600 text-xs ml-auto shrink-0">
-                  {new Date(registro.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
-                </span>
-              </div>
-            ))}
+      )}
+
+      {/* Row 5 - Quick Actions for empty state */}
+      {(!intelligence || (intelligence.sinTratar?.length === 0 && intelligence.pronostico?.length === 0)) && (
+        <div className="bg-gray-800/20 border border-dashed border-gray-700/50 rounded-xl p-8 text-center">
+          <Leaf className="w-12 h-12 text-green-500/30 mx-auto mb-3" />
+          <p className="text-gray-400 mb-4">Registra monitoreos de campo para activar la inteligencia</p>
+          <div className="flex justify-center gap-3">
+            <Link
+              href="/bitacora"
+              className="flex items-center gap-2 px-5 py-2.5 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors text-sm"
+            >
+              <Camera className="w-4 h-4" />
+              Crear registro
+            </Link>
+            <Link
+              href="/diagnostico"
+              className="flex items-center gap-2 px-5 py-2.5 bg-gray-700/50 hover:bg-gray-700 text-white rounded-lg transition-colors border border-gray-600/30 text-sm"
+            >
+              <Zap className="w-4 h-4" />
+              Diagnostico rapido
+            </Link>
           </div>
         </div>
       )}
