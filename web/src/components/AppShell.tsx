@@ -73,36 +73,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
-      {/* Background decorations */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      </div>
-
+    <div className="min-h-screen bg-slate-50">
       {/* Sidebar */}
-      <aside className={`fixed top-0 left-0 h-full w-64 bg-gray-900/95 backdrop-blur-xl border-r border-gray-800 z-50 transform transition-transform duration-300 ${
+      <aside className={`fixed top-0 left-0 h-full w-60 bg-white border-r border-slate-200 z-50 transform transition-transform duration-300 ${
         sidebarOpen ? 'translate-x-0' : '-translate-x-full'
       } lg:translate-x-0`}>
-        <div className="p-6">
+        <div className="p-5">
           <div className="flex items-center gap-3 mb-8">
             {tenant.logo_url ? (
-              <img src={tenant.logo_url} alt={tenant.name} className="w-10 h-10 rounded-xl object-contain" />
+              <img src={tenant.logo_url} alt={tenant.name} className="w-9 h-9 rounded-xl object-contain" />
             ) : (
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="w-9 h-9 rounded-xl flex items-center justify-center"
                 style={{ background: `linear-gradient(135deg, ${tenant.primary_color}, ${tenant.secondary_color})` }}
               >
-                <Leaf className="w-6 h-6 text-white" />
+                <Leaf className="w-5 h-5 text-white" />
               </div>
             )}
             <div>
-              <h1 className="text-lg font-bold text-white">{tenant.app_name}</h1>
-              <p className="text-xs" style={{ color: tenant.primary_color }}>{tenant.app_subtitle}</p>
+              <h1 className="text-base font-bold text-slate-900">{tenant.app_name}</h1>
+              <p className="text-xs font-medium" style={{ color: tenant.primary_color }}>{tenant.app_subtitle}</p>
             </div>
           </div>
 
-          <nav className="space-y-1">
+          <nav className="space-y-0.5">
             {menuItems.map((item) => {
               const isActive = item.href === '/' ? pathname === '/' : pathname.startsWith(item.href);
               return (
@@ -112,20 +106,20 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
                   onClick={() => setSidebarOpen(false)}
                   className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                     isActive
-                      ? 'bg-green-500/20 text-green-400 border border-green-500/30'
-                      : 'text-gray-400 hover:bg-gray-800/50 hover:text-white'
+                      ? 'bg-green-50 text-green-700 font-semibold'
+                      : 'text-slate-500 hover:bg-slate-50 hover:text-slate-900'
                   }`}
                 >
-                  <item.icon className="w-5 h-5" />
-                  <span className="font-medium text-sm">{item.label}</span>
+                  <item.icon className={`w-[18px] h-[18px] ${isActive ? 'text-green-600' : ''}`} />
+                  <span className="text-sm">{item.label}</span>
                 </Link>
               );
             })}
           </nav>
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-gray-800">
-          <p className="text-gray-600 text-xs text-center">
+        <div className="absolute bottom-0 left-0 right-0 p-4 border-t border-slate-100">
+          <p className="text-slate-300 text-xs text-center">
             {tenant.app_name} v2.0
           </p>
         </div>
@@ -134,30 +128,30 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {/* Mobile overlay */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-black/20 z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}
 
       {/* Main content */}
-      <div className="lg:ml-64">
+      <div className="lg:ml-60">
         {/* Header */}
-        <header className="sticky top-0 z-30 bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-gray-800/50">
-          <div className="px-4 sm:px-6 py-4">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/60">
+          <div className="px-4 sm:px-6 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <button
-                  className="lg:hidden p-2 text-gray-400 hover:text-white"
+                  className="lg:hidden p-2 text-slate-400 hover:text-slate-900"
                   onClick={() => setSidebarOpen(!sidebarOpen)}
                 >
                   {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
                 </button>
                 <div>
-                  <h2 className="text-lg font-bold text-white">{getPageTitle()}</h2>
-                  <p className="text-gray-500 text-sm flex items-center gap-2">
-                    <Calendar className="w-4 h-4" />
+                  <h2 className="text-lg font-bold text-slate-900">{getPageTitle()}</h2>
+                  <p className="text-slate-400 text-sm flex items-center gap-2">
+                    <Calendar className="w-3.5 h-3.5" />
                     Semana {getWeekNumber(currentTime)} •
-                    <Clock className="w-4 h-4 ml-1" />
+                    <Clock className="w-3.5 h-3.5 ml-1" />
                     {currentTime.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                 </div>
@@ -166,7 +160,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-2">
                 <Link
                   href="/alertas"
-                  className="relative p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-lg"
+                  className="relative p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
                 >
                   <Bell className="w-5 h-5" />
                   {alertCount > 0 && (
@@ -180,7 +174,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </header>
 
-        <main className="p-4 sm:p-6 relative">
+        <main className="p-4 sm:p-6">
           {children}
         </main>
       </div>
@@ -189,7 +183,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       {pathname !== '/asistente' && (
         <Link
           href="/asistente"
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/25 hover:shadow-green-500/40 hover:scale-105 transition-all group"
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-5 py-3 rounded-full bg-gradient-to-r from-green-600 to-emerald-600 text-white shadow-lg shadow-green-500/20 hover:shadow-green-500/30 hover:scale-105 transition-all group"
         >
           <Bot className="w-5 h-5" />
           <span className="font-medium text-sm">Agronomo IA</span>

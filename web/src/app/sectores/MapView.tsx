@@ -1,8 +1,8 @@
 // Leaflet Map Component for Sector Intelligence
-// Separated for dynamic import (SSR incompatible)
+// Satellite tiles with risk-colored markers
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import { MapContainer, TileLayer, CircleMarker, Tooltip, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import type { SectorInfo } from '@/lib/sector-intelligence';
@@ -15,7 +15,7 @@ interface MapViewProps {
 
 const riskColors: Record<string, string> = {
   critico: '#ef4444',
-  alto: '#f97316',
+  alto: '#f59e0b',
   medio: '#eab308',
   bajo: '#22c55e',
 };
@@ -48,12 +48,12 @@ export default function MapView({ sectores, selectedId, onMarkerClick }: MapView
     <MapContainer
       center={center}
       zoom={15}
-      style={{ height: '100%', width: '100%', background: '#0a0f1a' }}
+      style={{ height: '100%', width: '100%', background: '#e2e8f0' }}
       zoomControl={false}
     >
       <TileLayer
-        attribution='&copy; CartoDB'
-        url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+        attribution='&copy; Esri'
+        url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
       />
       <MapUpdater selectedSector={selectedSector} />
       {sectores.map(sector => {
@@ -64,12 +64,12 @@ export default function MapView({ sectores, selectedId, onMarkerClick }: MapView
           <CircleMarker
             key={sector.id}
             center={[sector.lat, sector.lng]}
-            radius={isSelected ? 10 : 7}
+            radius={isSelected ? 12 : 8}
             pathOptions={{
-              color: isSelected ? '#ffffff' : color,
+              color: '#ffffff',
               fillColor: color,
-              fillOpacity: isSelected ? 0.9 : 0.7,
-              weight: isSelected ? 3 : 1.5,
+              fillOpacity: isSelected ? 1 : 0.85,
+              weight: isSelected ? 3 : 2,
             }}
             eventHandlers={{
               click: () => onMarkerClick(sector),
@@ -80,18 +80,16 @@ export default function MapView({ sectores, selectedId, onMarkerClick }: MapView
               offset={[0, -8]}
               className="sector-tooltip"
             >
-              <div style={{ fontSize: '11px', lineHeight: '1.3' }}>
-                <strong>Sector {sector.sector}</strong>
+              <div style={{ fontSize: '11px', lineHeight: '1.4', color: '#1e293b' }}>
+                <strong>S{sector.sector}</strong> · {sector.finca}
                 <br />
                 {sector.cultivo} {sector.variedad}
-                <br />
-                <span style={{ color }}>
-                  {sector.riskLevel.toUpperCase()} ({sector.riskScore})
-                </span>
                 {sector.problemasActivos.length > 0 && (
                   <>
                     <br />
-                    {sector.problemasActivos.slice(0, 2).map(p => p.nombre).join(', ')}
+                    <span style={{ color: color }}>
+                      {sector.problemasActivos.slice(0, 2).map(p => p.nombre).join(', ')}
+                    </span>
                   </>
                 )}
               </div>
