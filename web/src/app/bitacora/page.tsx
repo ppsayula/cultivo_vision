@@ -271,7 +271,7 @@ export default function BitacoraPage() {
       case 'media': return 'bg-yellow-500/20 text-yellow-400';
       case 'alta': return 'bg-orange-500/20 text-orange-400';
       case 'critica': return 'bg-red-500/20 text-red-400';
-      default: return 'bg-gray-500/20 text-gray-400';
+      default: return 'bg-slate-400/20 text-slate-500';
     }
   };
 
@@ -281,7 +281,7 @@ export default function BitacoraPage() {
       case 'enfermedad': return <AlertTriangle className="w-4 h-4 text-orange-400" />;
       case 'nutricion': return <Leaf className="w-4 h-4 text-yellow-400" />;
       case 'riego': return <Droplets className="w-4 h-4 text-blue-400" />;
-      default: return <AlertTriangle className="w-4 h-4 text-gray-400" />;
+      default: return <AlertTriangle className="w-4 h-4 text-slate-500" />;
     }
   };
 
@@ -328,19 +328,19 @@ export default function BitacoraPage() {
         <button
           onClick={() => setShowFilters(!showFilters)}
           className={`flex items-center gap-2 px-3 py-2 rounded-lg text-sm transition-colors ${
-            activeFilterCount > 0 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-gray-800/50 text-gray-400 hover:text-white'
+            activeFilterCount > 0 ? 'bg-cyan-500/20 text-cyan-400 border border-cyan-500/30' : 'bg-slate-100 text-slate-500 hover:text-slate-900'
           }`}
         >
           <Filter className="w-4 h-4" />
           Filtros
           {activeFilterCount > 0 && (
-            <span className="bg-cyan-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center">
+            <span className="bg-cyan-500 text-slate-900 text-xs w-5 h-5 rounded-full flex items-center justify-center">
               {activeFilterCount}
             </span>
           )}
         </button>
 
-        <span className="text-gray-600 text-sm">
+        <span className="text-slate-600 text-sm">
           {registrosFiltrados.length} registros
         </span>
 
@@ -364,14 +364,14 @@ export default function BitacoraPage() {
 
       {/* Filters panel */}
       {showFilters && (
-        <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 mb-6">
+        <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4 mb-6">
           <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Semana</label>
+              <label className="block text-xs text-slate-500 mb-1">Semana</label>
               <select
                 value={filtro.semana}
                 onChange={e => setFiltro({ ...filtro, semana: parseInt(e.target.value) })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
               >
                 <option value={0}>Todas</option>
                 {[...new Set(registros.map(r => r.semana))].sort((a, b) => b - a).map(w => (
@@ -380,11 +380,11 @@ export default function BitacoraPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Tipo</label>
+              <label className="block text-xs text-slate-500 mb-1">Tipo</label>
               <select
                 value={filtro.tipo_problema}
                 onChange={e => setFiltro({ ...filtro, tipo_problema: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
               >
                 <option value="">Todos</option>
                 <option value="plaga">Plaga</option>
@@ -394,11 +394,11 @@ export default function BitacoraPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Severidad</label>
+              <label className="block text-xs text-slate-500 mb-1">Severidad</label>
               <select
                 value={filtro.severidad}
                 onChange={e => setFiltro({ ...filtro, severidad: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
               >
                 <option value="">Todas</option>
                 <option value="critica">Critica</option>
@@ -408,11 +408,11 @@ export default function BitacoraPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Sector</label>
+              <label className="block text-xs text-slate-500 mb-1">Sector</label>
               <select
                 value={filtro.sector}
                 onChange={e => setFiltro({ ...filtro, sector: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
               >
                 <option value="">Todos</option>
                 {[...new Set(registros.map(r => r.sector))].sort().map(s => (
@@ -421,11 +421,11 @@ export default function BitacoraPage() {
               </select>
             </div>
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Tratamiento</label>
+              <label className="block text-xs text-slate-500 mb-1">Tratamiento</label>
               <select
                 value={filtro.tratado}
                 onChange={e => setFiltro({ ...filtro, tratado: e.target.value })}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
               >
                 <option value="">Todos</option>
                 <option value="si">Tratado</option>
@@ -436,7 +436,7 @@ export default function BitacoraPage() {
           {activeFilterCount > 0 && (
             <button
               onClick={() => setFiltro({ semana: 0, tipo_problema: '', severidad: '', sector: '', tratado: '' })}
-              className="text-xs text-gray-500 hover:text-white mt-3 flex items-center gap-1"
+              className="text-xs text-slate-500 hover:text-slate-900 mt-3 flex items-center gap-1"
             >
               <X className="w-3 h-3" /> Limpiar filtros
             </button>
@@ -446,22 +446,22 @@ export default function BitacoraPage() {
 
       {/* Quick Entry Form (inline, not modal) */}
       {formMode === 'quick' && (
-        <div className="bg-gray-800/30 border-2 border-cyan-500/30 rounded-xl p-5 mb-6">
+        <div className="bg-slate-100/30 border-2 border-cyan-500/30 rounded-xl p-5 mb-6">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-5 h-5 text-cyan-400" />
-            <h3 className="text-white font-medium">Registro Rapido</h3>
-            <button onClick={() => setFormMode('none')} className="ml-auto p-1 text-gray-500 hover:text-white">
+            <h3 className="text-slate-900 font-medium">Registro Rapido</h3>
+            <button onClick={() => setFormMode('none')} className="ml-auto p-1 text-slate-500 hover:text-slate-900">
               <X className="w-4 h-4" />
             </button>
           </div>
           <form onSubmit={handleSubmit}>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Sector *</label>
+                <label className="block text-xs text-slate-500 mb-1">Sector *</label>
                 <select
                   value={form.sector}
                   onChange={e => setForm({ ...form, sector: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
                   required
                 >
                   <option value="">Seleccionar</option>
@@ -471,11 +471,11 @@ export default function BitacoraPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Problema *</label>
+                <label className="block text-xs text-slate-500 mb-1">Problema *</label>
                 <select
                   value={form.problema}
                   onChange={e => setForm({ ...form, problema: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
                   required
                 >
                   <option value="">Seleccionar</option>
@@ -485,7 +485,7 @@ export default function BitacoraPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Severidad</label>
+                <label className="block text-xs text-slate-500 mb-1">Severidad</label>
                 <div className="flex gap-1">
                   {['baja', 'media', 'alta', 'critica'].map(sev => (
                     <button
@@ -495,7 +495,7 @@ export default function BitacoraPage() {
                       className={`flex-1 py-2 rounded text-xs capitalize transition-all ${
                         form.severidad === sev
                           ? getSeveridadColor(sev) + ' font-medium'
-                          : 'bg-gray-800 text-gray-500 hover:text-gray-300'
+                          : 'bg-slate-100 text-slate-500 hover:text-slate-600'
                       }`}
                     >
                       {sev.charAt(0).toUpperCase()}
@@ -504,12 +504,12 @@ export default function BitacoraPage() {
                 </div>
               </div>
               <div>
-                <label className="block text-xs text-gray-500 mb-1">Foto</label>
+                <label className="block text-xs text-slate-500 mb-1">Foto</label>
                 <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 <button
                   type="button"
                   onClick={() => fileInputRef.current?.click()}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-gray-400 text-sm hover:border-gray-600 flex items-center gap-2"
+                  className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-500 text-sm hover:border-slate-300 flex items-center gap-2"
                 >
                   <Camera className="w-4 h-4" />
                   {imagePreview ? 'Foto lista' : uploading ? 'Subiendo...' : 'Agregar'}
@@ -521,7 +521,7 @@ export default function BitacoraPage() {
                 type="text"
                 value={form.comentarios}
                 onChange={e => setForm({ ...form, comentarios: e.target.value })}
-                className="flex-1 px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm"
+                className="flex-1 px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm"
                 placeholder="Nota rapida (opcional)..."
               />
               <button
@@ -546,17 +546,17 @@ export default function BitacoraPage() {
       {/* Full Form Modal */}
       {formMode === 'full' && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-50 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">Nuevo Registro de Campo</h2>
-              <button onClick={resetForm} className="p-2 hover:bg-gray-800 rounded-lg">
-                <X className="w-5 h-5 text-gray-400" />
+              <h2 className="text-xl font-bold text-slate-900">Nuevo Registro de Campo</h2>
+              <button onClick={resetForm} className="p-2 hover:bg-slate-100 rounded-lg">
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-4">
               {/* Image upload */}
-              <div className="bg-gray-800 rounded-xl p-4 border-2 border-dashed border-gray-600 hover:border-green-500 transition-colors">
+              <div className="bg-slate-100 rounded-xl p-4 border-2 border-dashed border-slate-300 hover:border-green-500 transition-colors">
                 <input type="file" ref={fileInputRef} onChange={handleImageUpload} accept="image/*" className="hidden" />
                 {imagePreview ? (
                   <div className="relative">
@@ -566,14 +566,14 @@ export default function BitacoraPage() {
                       onClick={() => { setImagePreview(null); setForm({ ...form, imagen_url: '' }); }}
                       className="absolute top-2 right-2 p-1 bg-red-500 rounded-full"
                     >
-                      <X className="w-4 h-4 text-white" />
+                      <X className="w-4 h-4 text-slate-900" />
                     </button>
                   </div>
                 ) : (
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="w-full py-8 flex flex-col items-center gap-2 text-gray-400 hover:text-green-400 transition-colors"
+                    className="w-full py-8 flex flex-col items-center gap-2 text-slate-500 hover:text-green-400 transition-colors"
                     disabled={uploading}
                   >
                     {uploading ? (
@@ -591,49 +591,49 @@ export default function BitacoraPage() {
               {/* Ciclo, Año, Semana, Fecha */}
               <div className="grid grid-cols-4 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Ciclo</label>
+                  <label className="block text-xs text-slate-500 mb-1">Ciclo</label>
                   <input type="text" value={form.ciclo} onChange={e => setForm({ ...form, ciclo: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm" required />
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm" required />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Ano</label>
+                  <label className="block text-xs text-slate-500 mb-1">Ano</label>
                   <input type="number" value={form.anio} onChange={e => setForm({ ...form, anio: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm" required />
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm" required />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Semana</label>
+                  <label className="block text-xs text-slate-500 mb-1">Semana</label>
                   <input type="number" value={form.semana} onChange={e => setForm({ ...form, semana: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm" min={1} max={52} required />
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm" min={1} max={52} required />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Fecha</label>
+                  <label className="block text-xs text-slate-500 mb-1">Fecha</label>
                   <input type="date" value={form.fecha} onChange={e => setForm({ ...form, fecha: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white text-sm" required />
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900 text-sm" required />
                 </div>
               </div>
 
               {/* Cultivo, Variedad, Sector */}
               <div className="grid grid-cols-3 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Cultivo *</label>
+                  <label className="block text-xs text-slate-500 mb-1">Cultivo *</label>
                   <select value={form.cultivo} onChange={e => setForm({ ...form, cultivo: e.target.value, variedad: '' })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" required>
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900" required>
                     <option value="">Seleccionar</option>
                     {catalogos.cultivos.map(c => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Variedad *</label>
+                  <label className="block text-xs text-slate-500 mb-1">Variedad *</label>
                   <select value={form.variedad} onChange={e => setForm({ ...form, variedad: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" required disabled={!form.cultivo}>
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900" required disabled={!form.cultivo}>
                     <option value="">Seleccionar</option>
                     {variedadesFiltradas.map(v => <option key={v.nombre} value={v.nombre}>{v.nombre}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Sector *</label>
+                  <label className="block text-xs text-slate-500 mb-1">Sector *</label>
                   <select value={form.sector} onChange={e => setForm({ ...form, sector: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" required>
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900" required>
                     <option value="">Seleccionar</option>
                     {catalogos.sectores.map(s => <option key={s} value={s}>{s}</option>)}
                   </select>
@@ -642,22 +642,22 @@ export default function BitacoraPage() {
 
               {/* Tipo de Problema */}
               <div>
-                <label className="block text-xs text-gray-400 mb-2">Tipo de problema *</label>
+                <label className="block text-xs text-slate-500 mb-2">Tipo de problema *</label>
                 <div className="grid grid-cols-5 gap-2">
                   {[
                     { id: 'plaga', label: 'Plaga', icon: Bug, color: 'text-red-400' },
                     { id: 'enfermedad', label: 'Enfermedad', icon: AlertTriangle, color: 'text-orange-400' },
                     { id: 'nutricion', label: 'Nutricion', icon: Leaf, color: 'text-yellow-400' },
                     { id: 'riego', label: 'Riego', icon: Droplets, color: 'text-blue-400' },
-                    { id: 'otro', label: 'Otro', icon: AlertTriangle, color: 'text-gray-400' }
+                    { id: 'otro', label: 'Otro', icon: AlertTriangle, color: 'text-slate-500' }
                   ].map(tipo => (
                     <button key={tipo.id} type="button"
                       onClick={() => setForm({ ...form, tipo_problema: tipo.id, problema: '' })}
                       className={`p-3 rounded-xl border-2 transition-all flex flex-col items-center gap-1 ${
-                        form.tipo_problema === tipo.id ? 'border-green-500 bg-green-500/10' : 'border-gray-700 hover:border-gray-600'
+                        form.tipo_problema === tipo.id ? 'border-green-500 bg-green-500/10' : 'border-slate-200 hover:border-slate-300'
                       }`}>
                       <tipo.icon className={`w-6 h-6 ${tipo.color}`} />
-                      <span className="text-xs text-gray-300">{tipo.label}</span>
+                      <span className="text-xs text-slate-600">{tipo.label}</span>
                     </button>
                   ))}
                 </div>
@@ -666,9 +666,9 @@ export default function BitacoraPage() {
               {/* Problema especifico */}
               {form.tipo_problema && (
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Problema *</label>
+                  <label className="block text-xs text-slate-500 mb-1">Problema *</label>
                   <select value={form.problema} onChange={e => setForm({ ...form, problema: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" required>
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900" required>
                     <option value="">Seleccionar</option>
                     {getProblemasOptions().map(p => <option key={p} value={p}>{p}</option>)}
                   </select>
@@ -677,12 +677,12 @@ export default function BitacoraPage() {
 
               {/* Severidad */}
               <div>
-                <label className="block text-xs text-gray-400 mb-2">Severidad</label>
+                <label className="block text-xs text-slate-500 mb-2">Severidad</label>
                 <div className="grid grid-cols-4 gap-2">
                   {['baja', 'media', 'alta', 'critica'].map(sev => (
                     <button key={sev} type="button" onClick={() => setForm({ ...form, severidad: sev })}
                       className={`py-2 px-3 rounded-lg border-2 transition-all capitalize ${
-                        form.severidad === sev ? getSeveridadColor(sev) + ' border-current' : 'border-gray-700 text-gray-400 hover:border-gray-600'
+                        form.severidad === sev ? getSeveridadColor(sev) + ' border-current' : 'border-slate-200 text-slate-500 hover:border-slate-300'
                       }`}>
                       {sev}
                     </button>
@@ -691,35 +691,35 @@ export default function BitacoraPage() {
               </div>
 
               {/* Tratamiento */}
-              <div className="bg-gray-800/50 rounded-xl p-4">
-                <label className="block text-sm text-gray-300 mb-3 font-medium">Tratamiento</label>
+              <div className="bg-slate-100 rounded-xl p-4">
+                <label className="block text-sm text-slate-600 mb-3 font-medium">Tratamiento</label>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Producto</label>
+                    <label className="block text-xs text-slate-500 mb-1">Producto</label>
                     <select value={form.tratamiento_producto}
                       onChange={e => {
                         const p = catalogos.tratamientos.find(t => t.nombre === e.target.value);
                         setForm({ ...form, tratamiento_producto: e.target.value, tratamiento_dosis: p?.dosis_recomendada || '' });
                       }}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white">
+                      className="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg text-slate-900">
                       <option value="">Seleccionar</option>
                       {catalogos.tratamientos.map(t => <option key={t.nombre} value={t.nombre}>{t.nombre} ({t.tipo})</option>)}
                     </select>
                   </div>
                   <div>
-                    <label className="block text-xs text-gray-400 mb-1">Dosis</label>
+                    <label className="block text-xs text-slate-500 mb-1">Dosis</label>
                     <input type="text" value={form.tratamiento_dosis} onChange={e => setForm({ ...form, tratamiento_dosis: e.target.value })}
-                      className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded-lg text-white" placeholder="Ej: 1.0 L/ha" />
+                      className="w-full px-3 py-2 bg-slate-200 border border-slate-300 rounded-lg text-slate-900" placeholder="Ej: 1.0 L/ha" />
                   </div>
                 </div>
                 <div className="flex items-center gap-4 mt-3">
-                  <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
-                    <input type="checkbox" checked={form.tratamiento_aplicado} onChange={e => setForm({ ...form, tratamiento_aplicado: e.target.checked })} className="w-4 h-4 rounded bg-gray-700" />
+                  <label className="flex items-center gap-2 text-slate-500 cursor-pointer">
+                    <input type="checkbox" checked={form.tratamiento_aplicado} onChange={e => setForm({ ...form, tratamiento_aplicado: e.target.checked })} className="w-4 h-4 rounded bg-slate-200" />
                     <span className="text-sm">Ya se aplico</span>
                   </label>
                   {form.tratamiento_aplicado && (
                     <input type="date" value={form.fecha_aplicacion} onChange={e => setForm({ ...form, fecha_aplicacion: e.target.value })}
-                      className="px-3 py-1 bg-gray-700 border border-gray-600 rounded-lg text-white text-sm" />
+                      className="px-3 py-1 bg-slate-200 border border-slate-300 rounded-lg text-slate-900 text-sm" />
                   )}
                 </div>
               </div>
@@ -727,21 +727,21 @@ export default function BitacoraPage() {
               {/* Comentarios y Registrado por */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Comentarios</label>
+                  <label className="block text-xs text-slate-500 mb-1">Comentarios</label>
                   <textarea value={form.comentarios} onChange={e => setForm({ ...form, comentarios: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" rows={2} placeholder="Observaciones..." />
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900" rows={2} placeholder="Observaciones..." />
                 </div>
                 <div>
-                  <label className="block text-xs text-gray-400 mb-1">Registrado por</label>
+                  <label className="block text-xs text-slate-500 mb-1">Registrado por</label>
                   <input type="text" value={form.registrado_por} onChange={e => setForm({ ...form, registrado_por: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white" placeholder="Tu nombre" />
+                    className="w-full px-3 py-2 bg-slate-100 border border-slate-200 rounded-lg text-slate-900" placeholder="Tu nombre" />
                 </div>
               </div>
 
               {/* Buttons */}
               <div className="flex gap-3 pt-4">
                 <button type="button" onClick={resetForm}
-                  className="flex-1 px-4 py-3 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors">
+                  className="flex-1 px-4 py-3 bg-slate-200 hover:bg-slate-200 text-slate-900 rounded-lg transition-colors">
                   Cancelar
                 </button>
                 <button type="submit" disabled={saving}
@@ -761,8 +761,8 @@ export default function BitacoraPage() {
       {/* Records grouped by week */}
       {registrosFiltrados.length === 0 ? (
         <div className="text-center py-16">
-          <Camera className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-          <p className="text-gray-400 mb-4">
+          <Camera className="w-12 h-12 text-slate-700 mx-auto mb-3" />
+          <p className="text-slate-500 mb-4">
             {activeFilterCount > 0 ? 'Sin registros con estos filtros' : 'Sin registros aun'}
           </p>
           <button onClick={() => setFormMode('quick')}
@@ -777,24 +777,24 @@ export default function BitacoraPage() {
               {/* Week header */}
               <div className="flex items-center gap-3 mb-3">
                 <span className={`text-sm font-medium px-2.5 py-1 rounded-lg ${
-                  week === currentWeek ? 'bg-green-500/20 text-green-400' : 'bg-gray-800/50 text-gray-500'
+                  week === currentWeek ? 'bg-green-500/20 text-green-400' : 'bg-slate-100 text-slate-500'
                 }`}>
                   Sem {week}
                 </span>
-                <span className="text-gray-600 text-xs">{groupedByWeek[week].length} registros</span>
-                <div className="flex-1 border-t border-gray-800/50" />
+                <span className="text-slate-600 text-xs">{groupedByWeek[week].length} registros</span>
+                <div className="flex-1 border-t border-slate-100" />
               </div>
 
               {/* Records */}
-              <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
-                <div className="divide-y divide-gray-800/50">
+              <div className="bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
+                <div className="divide-y divide-slate-200/50">
                   {groupedByWeek[week].map(registro => (
-                    <div key={registro.id} className="flex items-center gap-3 px-4 py-3 hover:bg-gray-700/20 transition-colors">
+                    <div key={registro.id} className="flex items-center gap-3 px-4 py-3 hover:bg-slate-100/20 transition-colors">
                       {/* Thumbnail */}
                       {registro.imagen_url ? (
                         <img src={registro.imagen_url} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
                       ) : (
-                        <div className="w-10 h-10 rounded-lg bg-gray-800/50 flex items-center justify-center shrink-0">
+                        <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0">
                           {getTipoIcon(registro.tipo_problema)}
                         </div>
                       )}
@@ -802,15 +802,15 @@ export default function BitacoraPage() {
                       {/* Info */}
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-white text-sm font-medium truncate">{registro.problema}</span>
+                          <span className="text-slate-900 text-sm font-medium truncate">{registro.problema}</span>
                           <span className={`px-1.5 py-0.5 rounded text-xs shrink-0 ${getSeveridadColor(registro.severidad)}`}>
                             {registro.severidad}
                           </span>
                         </div>
                         <div className="flex items-center gap-2 mt-0.5">
-                          <span className="text-gray-600 text-xs">{registro.cultivo}</span>
-                          <span className="text-gray-700">·</span>
-                          <span className="text-gray-600 text-xs flex items-center gap-0.5">
+                          <span className="text-slate-600 text-xs">{registro.cultivo}</span>
+                          <span className="text-slate-700">·</span>
+                          <span className="text-slate-600 text-xs flex items-center gap-0.5">
                             <MapPin className="w-3 h-3" />{registro.sector}
                           </span>
                         </div>
@@ -828,7 +828,7 @@ export default function BitacoraPage() {
                       )}
 
                       {/* Date */}
-                      <span className="text-gray-600 text-xs shrink-0">
+                      <span className="text-slate-600 text-xs shrink-0">
                         {new Date(registro.fecha).toLocaleDateString('es-MX', { day: 'numeric', month: 'short' })}
                       </span>
                     </div>

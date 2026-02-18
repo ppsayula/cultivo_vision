@@ -121,7 +121,7 @@ export default function InteligenciaPage() {
             <Shield className={`w-6 h-6 ${nc.text}`} />
             <div>
               <span className={`text-lg font-bold ${nc.text} capitalize`}>{nivel}</span>
-              <span className="text-gray-500 text-sm ml-2">· Semanas {Math.max(1, data.ultimaSemanaConDatos - 2)}-{data.ultimaSemanaConDatos}</span>
+              <span className="text-slate-500 text-sm ml-2">· Semanas {Math.max(1, data.ultimaSemanaConDatos - 2)}-{data.ultimaSemanaConDatos}</span>
             </div>
           </div>
 
@@ -129,17 +129,17 @@ export default function InteligenciaPage() {
           <div className="relative">
             <button
               onClick={() => setShowExport(!showExport)}
-              className="flex items-center gap-2 px-3 py-1.5 bg-gray-800/50 hover:bg-gray-800 text-gray-400 hover:text-white rounded-lg text-sm transition-colors"
+              className="flex items-center gap-2 px-3 py-1.5 bg-slate-100 hover:bg-slate-100 text-slate-500 hover:text-slate-900 rounded-lg text-sm transition-colors"
             >
               <Download className="w-4 h-4" />
               Exportar
               <ChevronDown className="w-3 h-3" />
             </button>
             {showExport && (
-              <div className="absolute right-0 mt-1 bg-gray-800 border border-gray-700 rounded-lg shadow-xl z-10 w-40">
+              <div className="absolute right-0 mt-1 bg-slate-100 border border-slate-200 rounded-lg shadow-xl z-10 w-40">
                 <button
                   onClick={exportCSV}
-                  className="w-full px-4 py-2 text-left text-sm text-gray-300 hover:bg-gray-700 hover:text-white rounded-lg transition-colors"
+                  className="w-full px-4 py-2 text-left text-sm text-slate-600 hover:bg-slate-100 hover:text-slate-900 rounded-lg transition-colors"
                 >
                   CSV (Excel)
                 </button>
@@ -152,15 +152,15 @@ export default function InteligenciaPage() {
         <div className="flex flex-wrap gap-4 text-sm">
           <div className="flex items-center gap-2">
             <Target className="w-4 h-4 text-orange-400" />
-            <span className="text-gray-400">{activos} problemas activos</span>
+            <span className="text-slate-500">{activos} problemas activos</span>
           </div>
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-4 h-4 text-yellow-400" />
-            <span className="text-gray-400">{sinTratar} obs sin tratar</span>
+            <span className="text-slate-500">{sinTratar} obs sin tratar</span>
           </div>
           <div className="flex items-center gap-2">
             <Droplets className="w-4 h-4 text-purple-400" />
-            <span className="text-gray-400">{expuestos} sectores expuestos</span>
+            <span className="text-slate-500">{expuestos} sectores expuestos</span>
           </div>
         </div>
       </div>
@@ -170,31 +170,31 @@ export default function InteligenciaPage() {
         <section id="tendencias" className="mb-8 scroll-mt-6">
           <div className="flex items-center gap-3 mb-3">
             <Activity className="w-5 h-5 text-cyan-400" />
-            <h2 className="text-lg font-bold text-white">Tendencias</h2>
-            <span className="text-xs text-gray-600">vs nivel historico</span>
+            <h2 className="text-lg font-bold text-slate-900">Tendencias</h2>
+            <span className="text-xs text-slate-600">vs nivel historico</span>
           </div>
-          <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4">
+          <div className="bg-white border border-slate-200 shadow-sm rounded-xl p-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1">
               {data.pronostico.map((f: any, i: number) => (
-                <div key={i} className="py-2 border-b border-gray-800/50 last:border-0 flex items-center justify-between">
+                <div key={i} className="py-2 border-b border-slate-100 last:border-0 flex items-center justify-between">
                   <div className="flex items-center gap-2 min-w-0">
                     <span className={`w-2 h-2 rounded-full shrink-0 ${
                       f.riesgo === 'alto' ? 'bg-red-400' : f.riesgo === 'medio' ? 'bg-yellow-400' : 'bg-green-400'
                     }`} />
-                    <span className="text-sm text-gray-200 capitalize truncate">{f.problema}</span>
+                    <span className="text-sm text-slate-800 capitalize truncate">{f.problema}</span>
                   </div>
                   <div className="flex items-center gap-2 shrink-0 ml-2">
                     <span className={`text-xs font-medium ${
                       f.cambio > 50 ? 'text-red-400' :
                       f.cambio > 20 ? 'text-orange-400' :
-                      f.cambio < -30 ? 'text-green-400' : 'text-gray-500'
+                      f.cambio < -30 ? 'text-green-400' : 'text-slate-500'
                     }`}>
                       {f.cambio > 0 ? '+' : ''}{f.cambio}%
                     </span>
                     <span className={`text-xs ${
                       f.cambio > 50 ? 'text-red-400' :
                       f.cambio > 20 ? 'text-orange-400' :
-                      f.cambio < -30 ? 'text-green-400' : 'text-gray-600'
+                      f.cambio < -30 ? 'text-green-400' : 'text-slate-600'
                     }`}>
                       {f.cambio > 50 ? '↑↑' : f.cambio > 20 ? '↑' : f.cambio > -20 ? '→' : f.cambio > -50 ? '↓' : '↓↓'}
                     </span>
@@ -210,26 +210,26 @@ export default function InteligenciaPage() {
       <section id="sintratar" className="mb-8 scroll-mt-6">
         <div className="flex items-center gap-3 mb-3">
           <Target className="w-5 h-5 text-orange-400" />
-          <h2 className="text-lg font-bold text-white">Estado por Problema</h2>
+          <h2 className="text-lg font-bold text-slate-900">Estado por Problema</h2>
         </div>
 
         {mergedProblems.length > 0 ? (
           <div className="space-y-3">
             {mergedProblems.map((p, i) => (
-              <div key={i} className={`bg-gray-800/30 border rounded-xl p-4 ${
-                p.necesitaAccion ? 'border-orange-500/30' : 'border-gray-700/30'
+              <div key={i} className={`bg-slate-100/30 border rounded-xl p-4 ${
+                p.necesitaAccion ? 'border-orange-500/30' : 'border-slate-200/30'
               }`}>
                 {/* Row 1: Name + badges */}
                 <div className="flex items-center gap-2 flex-wrap mb-2">
                   <span className={`w-2.5 h-2.5 rounded-full shrink-0 ${
                     p.riesgo === 'alto' ? 'bg-red-400' : p.riesgo === 'medio' ? 'bg-yellow-400' : 'bg-green-400'
                   }`} />
-                  <span className="text-white font-medium capitalize">{p.problema}</span>
+                  <span className="text-slate-900 font-medium capitalize">{p.problema}</span>
                   <span className={`text-xs px-2 py-0.5 rounded ${
                     p.cambio > 50 ? 'bg-red-500/20 text-red-400' :
                     p.cambio > 20 ? 'bg-orange-500/20 text-orange-400' :
                     p.cambio < -30 ? 'bg-green-500/20 text-green-400' :
-                    'bg-gray-500/20 text-gray-400'
+                    'bg-slate-400/20 text-slate-500'
                   }`}>
                     {p.cambio > 50 ? '↑↑ Subiendo' : p.cambio > 20 ? '↑ Subiendo' : p.cambio > -20 ? '→ Normal' : '↓ Bajando'}
                   </span>
@@ -250,52 +250,52 @@ export default function InteligenciaPage() {
                 {/* Row 2: Sector chips */}
                 {p.sectorDetails?.length > 0 && (
                   <div className="flex gap-1.5 flex-wrap mb-2">
-                    <span className="text-xs text-gray-600 mr-1 self-center">Sectores:</span>
+                    <span className="text-xs text-slate-600 mr-1 self-center">Sectores:</span>
                     {p.sectorDetails.slice(0, 8).map((sd: any, j: number) => (
                       <span key={j} className={`text-xs px-2 py-0.5 rounded-lg border ${
                         sd.severidadMax === 'alta' || sd.severidadMax === 'critica'
                           ? 'bg-red-500/10 text-red-400 border-red-500/20'
                           : sd.severidadMax === 'media'
                           ? 'bg-yellow-500/10 text-yellow-400 border-yellow-500/20'
-                          : 'bg-gray-500/10 text-gray-400 border-gray-500/20'
+                          : 'bg-slate-400/10 text-slate-500 border-slate-300/20'
                       }`}>
                         {sd.sector} · {sd.diasDesdeObs}d
                       </span>
                     ))}
                     {p.sectorDetails.length > 8 && (
-                      <span className="text-xs text-gray-600 self-center">+{p.sectorDetails.length - 8}</span>
+                      <span className="text-xs text-slate-600 self-center">+{p.sectorDetails.length - 8}</span>
                     )}
                   </div>
                 )}
 
                 {/* Row 3: Inline Recipe */}
                 {p.receta && (p.receta.products?.length > 0 || p.receta.fieldTreatments?.length > 0) && (
-                  <div className="bg-gray-900/60 rounded-lg p-3 mb-2 border border-gray-700/20">
+                  <div className="bg-slate-50/60 rounded-lg p-3 mb-2 border border-slate-200/20">
                     {p.receta.products?.length > 0 && (
                       <div className="flex items-start gap-2 mb-1.5">
                         <Pill className="w-3.5 h-3.5 text-green-400 mt-0.5 shrink-0" />
                         <div className="text-sm">
                           <span className="text-green-300 font-medium">{p.receta.products[0].nombre}</span>
                           {p.receta.products[0].ingrediente_activo && (
-                            <span className="text-gray-500"> ({p.receta.products[0].ingrediente_activo})</span>
+                            <span className="text-slate-500"> ({p.receta.products[0].ingrediente_activo})</span>
                           )}
-                          <span className="text-gray-400"> {p.receta.products[0].dosis}</span>
-                          {p.receta.method && <span className="text-gray-500"> · {p.receta.method}</span>}
-                          {p.receta.frequency && <span className="text-gray-500"> · {p.receta.frequency}</span>}
-                          {p.receta.carencia > 0 && <span className="text-gray-600"> · Carencia: {p.receta.carencia}d</span>}
+                          <span className="text-slate-500"> {p.receta.products[0].dosis}</span>
+                          {p.receta.method && <span className="text-slate-500"> · {p.receta.method}</span>}
+                          {p.receta.frequency && <span className="text-slate-500"> · {p.receta.frequency}</span>}
+                          {p.receta.carencia > 0 && <span className="text-slate-600"> · Carencia: {p.receta.carencia}d</span>}
                         </div>
                       </div>
                     )}
                     {p.receta.fieldTreatments?.length > 0 && (
                       <div className="flex items-start gap-2">
                         <Beaker className="w-3.5 h-3.5 text-cyan-400 mt-0.5 shrink-0" />
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-slate-500">
                           <span className="text-cyan-400/80">Campo: </span>
                           {p.receta.fieldTreatments.map((ft: any, k: number) => (
                             <span key={k}>
                               {k > 0 && ' · '}
-                              <span className="text-gray-300">{ft.producto}</span>
-                              <span className="text-gray-600"> x{ft.count}</span>
+                              <span className="text-slate-600">{ft.producto}</span>
+                              <span className="text-slate-600"> x{ft.count}</span>
                             </span>
                           ))}
                         </div>
@@ -320,7 +320,7 @@ export default function InteligenciaPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-gray-800/30 border border-green-500/20 rounded-xl p-6 text-center">
+          <div className="bg-slate-100/30 border border-green-500/20 rounded-xl p-6 text-center">
             <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
             <p className="text-green-400">Sin problemas activos</p>
           </div>
@@ -331,7 +331,7 @@ export default function InteligenciaPage() {
       <section id="sectores" className="mb-8 scroll-mt-6">
         <div className="flex items-center gap-3 mb-3">
           <MapPin className="w-5 h-5 text-blue-400" />
-          <h2 className="text-lg font-bold text-white">Estado por Sector</h2>
+          <h2 className="text-lg font-bold text-slate-900">Estado por Sector</h2>
           <Link href="/sectores" className="ml-auto text-xs text-blue-400 hover:text-blue-300">
             Ver mapa completo →
           </Link>
@@ -340,12 +340,12 @@ export default function InteligenciaPage() {
         {data.fumigacion?.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
             {data.fumigacion.map((f: any, i: number) => (
-              <div key={i} className={`bg-gray-800/30 border rounded-lg p-3 ${
+              <div key={i} className={`bg-slate-100/30 border rounded-lg p-3 ${
                 f.riesgo === 'expuesto' ? 'border-red-500/30' :
-                f.riesgo === 'parcial' ? 'border-yellow-500/30' : 'border-gray-700/30'
+                f.riesgo === 'parcial' ? 'border-yellow-500/30' : 'border-slate-200/30'
               }`}>
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="text-white font-medium text-sm">Sector {f.sector}</span>
+                  <span className="text-slate-900 font-medium text-sm">Sector {f.sector}</span>
                   <span className={`ml-auto text-xs px-1.5 py-0.5 rounded ${
                     f.riesgo === 'expuesto' ? 'bg-red-500/20 text-red-400' :
                     f.riesgo === 'parcial' ? 'bg-yellow-500/20 text-yellow-400' :
@@ -354,7 +354,7 @@ export default function InteligenciaPage() {
                     {f.riesgo === 'expuesto' ? 'EXPUESTO' : f.riesgo === 'parcial' ? 'Parcial' : 'OK'}
                   </span>
                 </div>
-                <div className="text-xs text-gray-400 space-y-0.5">
+                <div className="text-xs text-slate-500 space-y-0.5">
                   <div className="flex justify-between">
                     <span>Fumigacion:</span>
                     <span className={f.diasSinFumigar === null ? 'text-red-400' : f.diasSinFumigar > 14 ? 'text-yellow-400' : 'text-green-400'}>
@@ -363,12 +363,12 @@ export default function InteligenciaPage() {
                   </div>
                   <div className="flex justify-between">
                     <span>Obs:</span>
-                    <span className="text-gray-300">{f.observaciones} ({f.sinTratar} sin tratar)</span>
+                    <span className="text-slate-600">{f.observaciones} ({f.sinTratar} sin tratar)</span>
                   </div>
                   {f.productoUsado && (
                     <div className="flex justify-between">
                       <span>Producto:</span>
-                      <span className="text-gray-300 truncate ml-2">{f.productoUsado}</span>
+                      <span className="text-slate-600 truncate ml-2">{f.productoUsado}</span>
                     </div>
                   )}
                 </div>
@@ -378,7 +378,7 @@ export default function InteligenciaPage() {
                       <span key={j} className={`text-xs px-1.5 py-0.5 rounded ${
                         p.severidadMax === 'alta' || p.severidadMax === 'critica' ? 'bg-red-500/10 text-red-400' :
                         p.severidadMax === 'media' ? 'bg-yellow-500/10 text-yellow-400' :
-                        'bg-gray-500/10 text-gray-400'
+                        'bg-slate-400/10 text-slate-500'
                       }`}>
                         {p.nombre}({p.count})
                       </span>
@@ -389,7 +389,7 @@ export default function InteligenciaPage() {
             ))}
           </div>
         ) : (
-          <div className="bg-gray-800/30 border border-green-500/20 rounded-xl p-6 text-center">
+          <div className="bg-slate-100/30 border border-green-500/20 rounded-xl p-6 text-center">
             <CheckCircle className="w-10 h-10 text-green-500 mx-auto mb-2" />
             <p className="text-green-400">Todos los sectores protegidos</p>
           </div>

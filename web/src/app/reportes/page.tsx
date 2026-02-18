@@ -254,7 +254,7 @@ export default function ReportesPage() {
   return (
     <>
       {/* Action bar */}
-      <div className="flex items-center justify-end px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-800/50">
+      <div className="flex items-center justify-end px-4 sm:px-6 lg:px-8 py-3 border-b border-slate-100">
         <button
           onClick={() => setShowGenerateModal(true)}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl text-white font-medium transition-colors"
@@ -274,49 +274,49 @@ export default function ReportesPage() {
             {/* Stats Cards */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
               <div className="bg-gradient-to-br from-green-500/20 to-emerald-600/20 rounded-xl p-4 border border-green-500/20">
-                <p className="text-gray-400 text-sm">Total Registros</p>
-                <p className="text-2xl font-bold text-white mt-1">{stats.totalRegistros}</p>
+                <p className="text-slate-500 text-sm">Total Registros</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.totalRegistros}</p>
               </div>
               <div className="bg-gradient-to-br from-red-500/20 to-rose-600/20 rounded-xl p-4 border border-red-500/20">
                 <div className="flex items-center gap-2">
                   <Bug className="w-4 h-4 text-red-400" />
-                  <p className="text-gray-400 text-sm">Plagas</p>
+                  <p className="text-slate-500 text-sm">Plagas</p>
                 </div>
-                <p className="text-2xl font-bold text-white mt-1">{stats.plagas}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.plagas}</p>
               </div>
               <div className="bg-gradient-to-br from-orange-500/20 to-amber-600/20 rounded-xl p-4 border border-orange-500/20">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-orange-400" />
-                  <p className="text-gray-400 text-sm">Enfermedades</p>
+                  <p className="text-slate-500 text-sm">Enfermedades</p>
                 </div>
-                <p className="text-2xl font-bold text-white mt-1">{stats.enfermedades}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.enfermedades}</p>
               </div>
               <div className="bg-gradient-to-br from-blue-500/20 to-indigo-600/20 rounded-xl p-4 border border-blue-500/20">
                 <div className="flex items-center gap-2">
                   <Leaf className="w-4 h-4 text-blue-400" />
-                  <p className="text-gray-400 text-sm">Tratamientos</p>
+                  <p className="text-slate-500 text-sm">Tratamientos</p>
                 </div>
-                <p className="text-2xl font-bold text-white mt-1">{stats.tratamientos}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.tratamientos}</p>
               </div>
               <div className="bg-gradient-to-br from-purple-500/20 to-pink-600/20 rounded-xl p-4 border border-purple-500/20">
                 <div className="flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 text-purple-400" />
-                  <p className="text-gray-400 text-sm">Alertas</p>
+                  <p className="text-slate-500 text-sm">Alertas</p>
                 </div>
-                <p className="text-2xl font-bold text-white mt-1">{stats.alertas}</p>
+                <p className="text-2xl font-bold text-slate-900 mt-1">{stats.alertas}</p>
               </div>
             </div>
 
             {/* Reports List */}
-            <div className="bg-gray-800/30 rounded-2xl border border-gray-700/30 overflow-hidden">
-              <div className="p-6 border-b border-gray-700/30">
-                <h2 className="text-lg font-semibold text-white">Reportes Disponibles</h2>
+            <div className="bg-white rounded-2xl border border-slate-200 overflow-hidden">
+              <div className="p-6 border-b border-slate-200">
+                <h2 className="text-lg font-semibold text-slate-900">Reportes Disponibles</h2>
               </div>
 
-              <div className="divide-y divide-gray-700/20">
+              <div className="divide-y divide-slate-200/20">
                 {reports.length === 0 ? (
                   <div className="p-8 text-center">
-                    <p className="text-gray-400">No hay reportes generados aun</p>
+                    <p className="text-slate-500">No hay reportes generados aun</p>
                   </div>
                 ) : (
                   reports.map((report) => {
@@ -326,7 +326,7 @@ export default function ReportesPage() {
                     return (
                       <div
                         key={report.id}
-                        className="p-6 hover:bg-gray-800/30 transition-colors"
+                        className="p-6 hover:bg-white transition-colors"
                       >
                         <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                           <div className="flex items-center gap-4 flex-1">
@@ -334,22 +334,22 @@ export default function ReportesPage() {
                               <TypeIcon className="w-6 h-6" />
                             </div>
                             <div>
-                              <h3 className="text-white font-medium">{report.title}</h3>
-                              <p className="text-gray-400 text-sm">{formatDate(report.date)}</p>
+                              <h3 className="text-slate-900 font-medium">{report.title}</h3>
+                              <p className="text-slate-500 text-sm">{formatDate(report.date)}</p>
                             </div>
                           </div>
 
                           <div className="flex items-center gap-6 text-sm">
                             <div className="text-center">
-                              <p className="text-gray-500">Registros</p>
-                              <p className="text-white font-medium">{report.registros}</p>
+                              <p className="text-slate-500">Registros</p>
+                              <p className="text-slate-900 font-medium">{report.registros}</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-gray-500">Alertas</p>
-                              <p className="text-white font-medium">{report.alertas}</p>
+                              <p className="text-slate-500">Alertas</p>
+                              <p className="text-slate-900 font-medium">{report.alertas}</p>
                             </div>
                             <div className="text-center">
-                              <p className="text-gray-500">Estado</p>
+                              <p className="text-slate-500">Estado</p>
                               <p className="text-green-400 font-medium">Listo</p>
                             </div>
                           </div>
@@ -357,7 +357,7 @@ export default function ReportesPage() {
                           <div className="flex items-center gap-2">
                             <Link
                               href="/bitacora"
-                              className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-lg text-gray-300 transition-colors"
+                              className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 rounded-lg text-slate-600 transition-colors"
                             >
                               <Eye className="w-4 h-4" />
                               <span className="hidden sm:inline">Ver</span>
@@ -371,7 +371,7 @@ export default function ReportesPage() {
                             </button>
                             <button
                               onClick={() => setReports(prev => prev.filter(r => r.id !== report.id))}
-                              className="p-2 hover:bg-red-500/20 rounded-lg text-gray-400 hover:text-red-400 transition-colors"
+                              className="p-2 hover:bg-red-500/20 rounded-lg text-slate-500 hover:text-red-400 transition-colors"
                             >
                               <Trash2 className="w-4 h-4" />
                             </button>
@@ -386,51 +386,51 @@ export default function ReportesPage() {
 
             {/* Info Cards */}
             <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gray-800/30 rounded-2xl border border-gray-700/30 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <FileText className="w-5 h-5 text-green-400" />
                   Tipos de Reportes
                 </h3>
                 <div className="space-y-4">
                   <div>
-                    <h4 className="text-white font-medium">Semanal de Campo</h4>
-                    <p className="text-gray-400 text-sm">Resumen de registros, plagas, enfermedades y tratamientos de la semana. Para encargados de campo.</p>
+                    <h4 className="text-slate-900 font-medium">Semanal de Campo</h4>
+                    <p className="text-slate-500 text-sm">Resumen de registros, plagas, enfermedades y tratamientos de la semana. Para encargados de campo.</p>
                   </div>
                   <div>
-                    <h4 className="text-white font-medium">Mensual Ejecutivo</h4>
-                    <p className="text-gray-400 text-sm">Tendencias, comparativas por cultivo/sector y metricas consolidadas. Para gerentes y agronomos.</p>
+                    <h4 className="text-slate-900 font-medium">Mensual Ejecutivo</h4>
+                    <p className="text-slate-500 text-sm">Tendencias, comparativas por cultivo/sector y metricas consolidadas. Para gerentes y agronomos.</p>
                   </div>
                   <div>
-                    <h4 className="text-white font-medium">Auditoria Fitosanitaria</h4>
-                    <p className="text-gray-400 text-sm">Trazabilidad completa de monitoreo y tratamientos. Para certificaciones y auditorias.</p>
+                    <h4 className="text-slate-900 font-medium">Auditoria Fitosanitaria</h4>
+                    <p className="text-slate-500 text-sm">Trazabilidad completa de monitoreo y tratamientos. Para certificaciones y auditorias.</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-gray-800/30 rounded-2xl border border-gray-700/30 p-6">
-                <h3 className="text-lg font-semibold text-white mb-4 flex items-center gap-2">
+              <div className="bg-white rounded-2xl border border-slate-200 p-6">
+                <h3 className="text-lg font-semibold text-slate-900 mb-4 flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-green-400" />
                   Resumen General
                 </h3>
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Reportes disponibles</span>
-                    <span className="text-white font-medium">{reports.length}</span>
+                    <span className="text-slate-500">Reportes disponibles</span>
+                    <span className="text-slate-900 font-medium">{reports.length}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Registros de campo</span>
-                    <span className="text-white font-medium">{stats.totalRegistros}</span>
+                    <span className="text-slate-500">Registros de campo</span>
+                    <span className="text-slate-900 font-medium">{stats.totalRegistros}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Plagas detectadas</span>
-                    <span className="text-white font-medium">{stats.plagas}</span>
+                    <span className="text-slate-500">Plagas detectadas</span>
+                    <span className="text-slate-900 font-medium">{stats.plagas}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Tratamientos aplicados</span>
-                    <span className="text-white font-medium">{stats.tratamientos}</span>
+                    <span className="text-slate-500">Tratamientos aplicados</span>
+                    <span className="text-slate-900 font-medium">{stats.tratamientos}</span>
                   </div>
                   <div className="flex justify-between items-center">
-                    <span className="text-gray-400">Severidad alta/critica</span>
+                    <span className="text-slate-500">Severidad alta/critica</span>
                     <span className="text-orange-400 font-medium">{stats.alertas}</span>
                   </div>
                 </div>
@@ -447,16 +447,16 @@ export default function ReportesPage() {
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowGenerateModal(false)}
           />
-          <div className="relative bg-gray-900 rounded-2xl border border-gray-700 p-6 max-w-md w-full">
-            <h3 className="text-xl font-semibold text-white mb-4">Generar Nuevo Reporte</h3>
+          <div className="relative bg-slate-50 rounded-2xl border border-slate-200 p-6 max-w-md w-full">
+            <h3 className="text-xl font-semibold text-slate-900 mb-4">Generar Nuevo Reporte</h3>
 
             <div className="space-y-4">
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Tipo de Reporte</label>
+                <label className="block text-sm text-slate-500 mb-2">Tipo de Reporte</label>
                 <select
                   value={selectedType}
                   onChange={(e) => setSelectedType(e.target.value)}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-green-500/50"
                 >
                   <option value="daily">Operativo Diario</option>
                   <option value="weekly">Semanal de Campo</option>
@@ -466,22 +466,22 @@ export default function ReportesPage() {
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Fecha Inicio</label>
+                <label className="block text-sm text-slate-500 mb-2">Fecha Inicio</label>
                 <input
                   type="date"
                   value={dateRange.start}
                   onChange={(e) => setDateRange({ ...dateRange, start: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-green-500/50"
                 />
               </div>
 
               <div>
-                <label className="block text-sm text-gray-400 mb-2">Fecha Fin</label>
+                <label className="block text-sm text-slate-500 mb-2">Fecha Fin</label>
                 <input
                   type="date"
                   value={dateRange.end}
                   onChange={(e) => setDateRange({ ...dateRange, end: e.target.value })}
-                  className="w-full px-4 py-3 bg-gray-800 border border-gray-700 rounded-xl text-white focus:outline-none focus:border-green-500/50"
+                  className="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-slate-900 focus:outline-none focus:border-green-500/50"
                 />
               </div>
             </div>
@@ -490,7 +490,7 @@ export default function ReportesPage() {
               <button
                 onClick={() => setShowGenerateModal(false)}
                 disabled={generating}
-                className="flex-1 px-4 py-3 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors disabled:opacity-50"
+                className="flex-1 px-4 py-3 bg-white hover:bg-slate-100 rounded-xl text-slate-600 transition-colors disabled:opacity-50"
               >
                 Cancelar
               </button>

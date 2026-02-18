@@ -78,7 +78,7 @@ export default function TreatmentProtocolCard({
   const urg = URGENCY_STYLES[urgency];
 
   return (
-    <div className={`rounded-xl border ${sev.border} bg-gray-800/50 overflow-hidden`}>
+    <div className={`rounded-xl border ${sev.border} bg-slate-100 overflow-hidden`}>
       {/* Header */}
       <div
         className={`flex items-center justify-between px-4 py-3 ${sev.bg} cursor-pointer`}
@@ -87,9 +87,9 @@ export default function TreatmentProtocolCard({
         <div className="flex items-center gap-3">
           <AlertTriangle className={`w-5 h-5 ${sev.text}`} />
           <div>
-            <h3 className="font-semibold text-white text-sm">
+            <h3 className="font-semibold text-slate-900 text-sm">
               {protocol.problem_name}
-              <span className="text-gray-400 font-normal ml-2">en {protocol.crop_type}</span>
+              <span className="text-slate-500 font-normal ml-2">en {protocol.crop_type}</span>
             </h3>
           </div>
         </div>
@@ -102,7 +102,7 @@ export default function TreatmentProtocolCard({
           <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${sev.bg} ${sev.text}`}>
             {sev.label}
           </span>
-          {compact && (expanded ? <ChevronUp className="w-4 h-4 text-gray-400" /> : <ChevronDown className="w-4 h-4 text-gray-400" />)}
+          {compact && (expanded ? <ChevronUp className="w-4 h-4 text-slate-500" /> : <ChevronDown className="w-4 h-4 text-slate-500" />)}
         </div>
       </div>
 
@@ -116,24 +116,24 @@ export default function TreatmentProtocolCard({
                 <Pill className="w-4 h-4 text-green-400" />
                 <span className="text-sm font-medium text-green-400">Productos</span>
               </div>
-              <div className="bg-gray-900/50 rounded-lg overflow-hidden">
+              <div className="bg-slate-50 rounded-lg overflow-hidden">
                 <table className="w-full text-sm">
                   <thead>
-                    <tr className="border-b border-gray-700/50">
-                      <th className="text-left px-3 py-2 text-gray-400 font-medium">Producto</th>
-                      <th className="text-left px-3 py-2 text-gray-400 font-medium">Ingrediente Activo</th>
-                      <th className="text-left px-3 py-2 text-gray-400 font-medium">Dosis</th>
-                      <th className="text-left px-3 py-2 text-gray-400 font-medium">Tipo</th>
+                    <tr className="border-b border-slate-200">
+                      <th className="text-left px-3 py-2 text-slate-500 font-medium">Producto</th>
+                      <th className="text-left px-3 py-2 text-slate-500 font-medium">Ingrediente Activo</th>
+                      <th className="text-left px-3 py-2 text-slate-500 font-medium">Dosis</th>
+                      <th className="text-left px-3 py-2 text-slate-500 font-medium">Tipo</th>
                     </tr>
                   </thead>
                   <tbody>
                     {protocol.products.map((prod, i) => (
-                      <tr key={i} className="border-b border-gray-800/50 last:border-0">
-                        <td className="px-3 py-2 text-white font-medium">{prod.nombre}</td>
-                        <td className="px-3 py-2 text-gray-300">{prod.ingrediente_activo}</td>
+                      <tr key={i} className="border-b border-slate-100 last:border-0">
+                        <td className="px-3 py-2 text-slate-900 font-medium">{prod.nombre}</td>
+                        <td className="px-3 py-2 text-slate-600">{prod.ingrediente_activo}</td>
                         <td className="px-3 py-2 text-green-400 font-mono text-xs">{prod.dosis}</td>
                         <td className="px-3 py-2">
-                          <span className="text-xs px-1.5 py-0.5 rounded bg-gray-700/50 text-gray-300">
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-slate-100 text-slate-600">
                             {prod.tipo}
                           </span>
                         </td>
@@ -147,25 +147,25 @@ export default function TreatmentProtocolCard({
 
           {/* Application Details */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="flex items-start gap-2 bg-gray-900/30 rounded-lg px-3 py-2">
+            <div className="flex items-start gap-2 bg-slate-50 rounded-lg px-3 py-2">
               <Droplets className="w-4 h-4 text-blue-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Método</p>
-                <p className="text-sm text-white">{protocol.application_method}</p>
+                <p className="text-xs text-slate-500">Método</p>
+                <p className="text-sm text-slate-900">{protocol.application_method}</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 bg-gray-900/30 rounded-lg px-3 py-2">
+            <div className="flex items-start gap-2 bg-slate-50 rounded-lg px-3 py-2">
               <Clock className="w-4 h-4 text-yellow-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Frecuencia</p>
-                <p className="text-sm text-white">{protocol.frequency}</p>
+                <p className="text-xs text-slate-500">Frecuencia</p>
+                <p className="text-sm text-slate-900">{protocol.frequency}</p>
               </div>
             </div>
-            <div className="flex items-start gap-2 bg-gray-900/30 rounded-lg px-3 py-2">
+            <div className="flex items-start gap-2 bg-slate-50 rounded-lg px-3 py-2">
               <Shield className="w-4 h-4 text-red-400 mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs text-gray-400">Periodo de carencia</p>
-                <p className="text-sm text-white font-semibold">{protocol.waiting_period_days} días</p>
+                <p className="text-xs text-slate-500">Periodo de carencia</p>
+                <p className="text-sm text-slate-900 font-semibold">{protocol.waiting_period_days} días</p>
               </div>
             </div>
           </div>
@@ -182,7 +182,7 @@ export default function TreatmentProtocolCard({
                   </div>
                   <ul className="space-y-1 ml-6">
                     {protocol.prevention_steps.map((step, i) => (
-                      <li key={i} className="text-sm text-gray-300 list-disc">{step}</li>
+                      <li key={i} className="text-sm text-slate-600 list-disc">{step}</li>
                     ))}
                   </ul>
                 </div>
@@ -197,7 +197,7 @@ export default function TreatmentProtocolCard({
                   </div>
                   <ul className="space-y-1 ml-6">
                     {protocol.cultural_controls.map((ctrl, i) => (
-                      <li key={i} className="text-sm text-gray-300 list-disc">{ctrl}</li>
+                      <li key={i} className="text-sm text-slate-600 list-disc">{ctrl}</li>
                     ))}
                   </ul>
                 </div>
@@ -212,7 +212,7 @@ export default function TreatmentProtocolCard({
                   </div>
                   <ul className="space-y-1 ml-6">
                     {protocol.biological_controls.map((ctrl, i) => (
-                      <li key={i} className="text-sm text-gray-300 list-disc">{ctrl}</li>
+                      <li key={i} className="text-sm text-slate-600 list-disc">{ctrl}</li>
                     ))}
                   </ul>
                 </div>
@@ -231,37 +231,37 @@ export default function TreatmentProtocolCard({
 
           {/* Field Context */}
           {fieldContext && (
-            <div className="border-t border-gray-700/50 pt-3">
+            <div className="border-t border-slate-200 pt-3">
               <div className="flex items-center gap-2 mb-2">
                 <Beaker className="w-4 h-4 text-cyan-400" />
                 <span className="text-sm font-medium text-cyan-400">Datos de Campo (Lola Berries)</span>
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-                <div className="bg-gray-900/30 rounded-lg px-3 py-2 text-center">
-                  <p className="text-lg font-bold text-white">{fieldContext.totalObservaciones}</p>
-                  <p className="text-xs text-gray-400">Observaciones</p>
+                <div className="bg-slate-50 rounded-lg px-3 py-2 text-center">
+                  <p className="text-lg font-bold text-slate-900">{fieldContext.totalObservaciones}</p>
+                  <p className="text-xs text-slate-500">Observaciones</p>
                 </div>
                 {Object.entries(fieldContext.severidadDistribucion).map(([sev, count]) => {
                   const s = SEVERITY_STYLES[sev] || SEVERITY_STYLES.media;
                   return (
                     <div key={sev} className={`rounded-lg px-3 py-2 text-center ${s.bg}`}>
                       <p className={`text-lg font-bold ${s.text}`}>{count}</p>
-                      <p className="text-xs text-gray-400">{sev}</p>
+                      <p className="text-xs text-slate-500">{sev}</p>
                     </div>
                   );
                 })}
               </div>
               {fieldContext.sectoresAfectados.length > 0 && (
-                <p className="text-xs text-gray-400 mt-2">
+                <p className="text-xs text-slate-500 mt-2">
                   Sectores: {fieldContext.sectoresAfectados.join(', ')}
                 </p>
               )}
               {fieldContext.tratamientosUsados.length > 0 && (
                 <div className="mt-2">
-                  <p className="text-xs text-gray-400 mb-1">Tratamientos aplicados en campo:</p>
+                  <p className="text-xs text-slate-500 mb-1">Tratamientos aplicados en campo:</p>
                   <div className="flex flex-wrap gap-1">
                     {fieldContext.tratamientosUsados.map((t, i) => (
-                      <span key={i} className="text-xs bg-gray-700/50 text-gray-300 px-2 py-0.5 rounded-full">
+                      <span key={i} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
                         {t.producto} {t.dosis ? `(${t.dosis})` : ''} × {t.count}
                       </span>
                     ))}

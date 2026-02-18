@@ -226,7 +226,7 @@ export default function DiagnosticoPage() {
           <div className="flex justify-end mb-4">
             <button
               onClick={handleReset}
-              className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors"
+              className="flex items-center gap-1 text-sm text-slate-500 hover:text-slate-900 transition-colors"
             >
               <RotateCcw className="w-4 h-4" />
               Reiniciar
@@ -243,7 +243,7 @@ export default function DiagnosticoPage() {
                     ? 'bg-green-500/20 text-green-400 border border-green-500/30'
                     : i < step
                     ? 'bg-green-500/10 text-green-500'
-                    : 'bg-gray-800/50 text-gray-500'
+                    : 'bg-white/50 text-slate-500'
                 }`}>
                   {i < step ? (
                     <CheckCircle className="w-4 h-4" />
@@ -253,7 +253,7 @@ export default function DiagnosticoPage() {
                   <span className="hidden sm:inline">{s}</span>
                 </div>
                 {i < STEPS.length - 1 && (
-                  <ChevronRight className={`w-4 h-4 ${i < step ? 'text-green-500/50' : 'text-gray-600'}`} />
+                  <ChevronRight className={`w-4 h-4 ${i < step ? 'text-green-500/50' : 'text-slate-600'}`} />
                 )}
               </div>
             ))}
@@ -271,16 +271,16 @@ export default function DiagnosticoPage() {
             )}
             {selectedType && (
               <>
-                <ChevronRight className="w-3 h-3 text-gray-600" />
-                <span className={`px-2 py-1 rounded-md bg-gray-800/50 ${TYPE_INFO[selectedType]?.color || 'text-gray-400'}`}>
+                <ChevronRight className="w-3 h-3 text-slate-600" />
+                <span className={`px-2 py-1 rounded-md bg-white/50 ${TYPE_INFO[selectedType]?.color || 'text-slate-500'}`}>
                   {TYPE_INFO[selectedType]?.label || selectedType}
                 </span>
               </>
             )}
             {selectedProblem && (
               <>
-                <ChevronRight className="w-3 h-3 text-gray-600" />
-                <span className="px-2 py-1 rounded-md bg-gray-800/50 text-white">
+                <ChevronRight className="w-3 h-3 text-slate-600" />
+                <span className="px-2 py-1 rounded-md bg-white/50 text-slate-900">
                   {selectedProblem}
                 </span>
               </>
@@ -291,8 +291,8 @@ export default function DiagnosticoPage() {
         {/* Step 0: Select Crop */}
         {step === 0 && (
           <div className="space-y-4">
-            <h2 className="text-xl font-semibold text-white mb-2">Selecciona el cultivo</h2>
-            <p className="text-gray-400 text-sm mb-6">Elige el tipo de cultivo que presenta el problema</p>
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">Selecciona el cultivo</h2>
+            <p className="text-slate-500 text-sm mb-6">Elige el tipo de cultivo que presenta el problema</p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {crops.map(crop => {
                 const count = CATALOG.filter(c => c.crop === crop).length;
@@ -301,7 +301,7 @@ export default function DiagnosticoPage() {
                   <button
                     key={crop}
                     onClick={() => { setSelectedCrop(crop); setStep(1); }}
-                    className="group flex items-center gap-4 p-6 rounded-xl bg-gray-800/30 border border-gray-700/30 hover:border-green-500/30 hover:bg-gray-800/50 transition-all text-left"
+                    className="group flex items-center gap-4 p-6 rounded-xl bg-white/30 border border-slate-200/30 hover:border-green-500/30 hover:bg-white/50 transition-all text-left"
                   >
                     <div className={`w-14 h-14 rounded-xl flex items-center justify-center ${
                       isFrambuesa ? 'bg-red-500/20' : 'bg-blue-500/20'
@@ -309,10 +309,10 @@ export default function DiagnosticoPage() {
                       <span className="text-3xl">{isFrambuesa ? '🍓' : '🫐'}</span>
                     </div>
                     <div>
-                      <h3 className="text-lg font-semibold text-white group-hover:text-green-400 transition-colors">{crop}</h3>
-                      <p className="text-sm text-gray-400">{count} problemas catalogados</p>
+                      <h3 className="text-lg font-semibold text-slate-900 group-hover:text-green-400 transition-colors">{crop}</h3>
+                      <p className="text-sm text-slate-500">{count} problemas catalogados</p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-600 ml-auto group-hover:text-green-400 transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-slate-600 ml-auto group-hover:text-green-400 transition-colors" />
                   </button>
                 );
               })}
@@ -324,12 +324,12 @@ export default function DiagnosticoPage() {
         {step === 1 && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <button onClick={handleBack} className="p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <ChevronLeft className="w-5 h-5 text-gray-400" />
+              <button onClick={handleBack} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
+                <ChevronLeft className="w-5 h-5 text-slate-500" />
               </button>
-              <h2 className="text-xl font-semibold text-white">Tipo de problema</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Tipo de problema</h2>
             </div>
-            <p className="text-gray-400 text-sm mb-6">Que tipo de problema observas en {selectedCrop}?</p>
+            <p className="text-slate-500 text-sm mb-6">Que tipo de problema observas en {selectedCrop}?</p>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               {types.map(type => {
                 const info = TYPE_INFO[type];
@@ -339,15 +339,15 @@ export default function DiagnosticoPage() {
                   <button
                     key={type}
                     onClick={() => { setSelectedType(type); setStep(2); }}
-                    className="group flex flex-col items-center gap-3 p-6 rounded-xl bg-gray-800/30 border border-gray-700/30 hover:border-green-500/30 hover:bg-gray-800/50 transition-all"
+                    className="group flex flex-col items-center gap-3 p-6 rounded-xl bg-white/30 border border-slate-200/30 hover:border-green-500/30 hover:bg-white/50 transition-all"
                   >
-                    <div className="w-12 h-12 rounded-xl bg-gray-700/30 flex items-center justify-center group-hover:bg-gray-700/50 transition-colors">
-                      <Icon className={`w-6 h-6 ${info?.color || 'text-gray-400'}`} />
+                    <div className="w-12 h-12 rounded-xl bg-slate-100 flex items-center justify-center group-hover:bg-slate-200 transition-colors">
+                      <Icon className={`w-6 h-6 ${info?.color || 'text-slate-500'}`} />
                     </div>
                     <div className="text-center">
-                      <h3 className="font-semibold text-white group-hover:text-green-400 transition-colors">{info?.label || type}</h3>
-                      <p className="text-xs text-gray-400 mt-1">{info?.description || ''}</p>
-                      <p className="text-xs text-gray-500 mt-1">{count} problemas</p>
+                      <h3 className="font-semibold text-slate-900 group-hover:text-green-400 transition-colors">{info?.label || type}</h3>
+                      <p className="text-xs text-slate-500 mt-1">{info?.description || ''}</p>
+                      <p className="text-xs text-slate-500 mt-1">{count} problemas</p>
                     </div>
                   </button>
                 );
@@ -360,12 +360,12 @@ export default function DiagnosticoPage() {
         {step === 2 && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <button onClick={handleBack} className="p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <ChevronLeft className="w-5 h-5 text-gray-400" />
+              <button onClick={handleBack} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
+                <ChevronLeft className="w-5 h-5 text-slate-500" />
               </button>
-              <h2 className="text-xl font-semibold text-white">Selecciona el problema</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Selecciona el problema</h2>
             </div>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-slate-500 text-sm mb-6">
               {TYPE_INFO[selectedType]?.label || selectedType} detectada en {selectedCrop}
             </p>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -376,11 +376,11 @@ export default function DiagnosticoPage() {
                   <button
                     key={`${prob.name}-${prob.crop}`}
                     onClick={() => { setSelectedProblem(prob.name); setStep(3); }}
-                    className="group flex items-center gap-3 p-4 rounded-xl bg-gray-800/30 border border-gray-700/30 hover:border-green-500/30 hover:bg-gray-800/50 transition-all text-left"
+                    className="group flex items-center gap-3 p-4 rounded-xl bg-white/30 border border-slate-200/30 hover:border-green-500/30 hover:bg-white/50 transition-all text-left"
                   >
                     <span className="text-2xl">{prob.icon}</span>
                     <div className="flex-1">
-                      <h3 className="font-medium text-white group-hover:text-green-400 transition-colors">{prob.name}</h3>
+                      <h3 className="font-medium text-slate-900 group-hover:text-green-400 transition-colors">{prob.name}</h3>
                       <div className="flex items-center gap-2 mt-1">
                         {prob.severities.map(s => {
                           const si = SEV_INFO[s] || SEV_INFO.media;
@@ -392,7 +392,7 @@ export default function DiagnosticoPage() {
                         })}
                       </div>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-green-400 transition-colors" />
+                    <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-green-400 transition-colors" />
                   </button>
                 );
               })}
@@ -404,13 +404,13 @@ export default function DiagnosticoPage() {
         {step === 3 && !loading && (
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-2">
-              <button onClick={handleBack} className="p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <ChevronLeft className="w-5 h-5 text-gray-400" />
+              <button onClick={handleBack} className="p-1.5 rounded-lg hover:bg-white/50 transition-colors">
+                <ChevronLeft className="w-5 h-5 text-slate-500" />
               </button>
-              <h2 className="text-xl font-semibold text-white">Nivel de severidad</h2>
+              <h2 className="text-xl font-semibold text-slate-900">Nivel de severidad</h2>
             </div>
-            <p className="text-gray-400 text-sm mb-6">
-              Que tan grave es la presencia de <span className="text-white font-medium">{selectedProblem}</span>?
+            <p className="text-slate-500 text-sm mb-6">
+              Que tan grave es la presencia de <span className="text-slate-900 font-medium">{selectedProblem}</span>?
             </p>
             <div className="grid grid-cols-1 gap-3">
               {severities.map(sev => {
@@ -424,7 +424,7 @@ export default function DiagnosticoPage() {
                     <div className={`w-3 h-3 rounded-full ${info.bg} ring-2 ${info.border}`} />
                     <div className="flex-1">
                       <h3 className={`font-semibold text-lg ${info.color}`}>{sev.toUpperCase()}</h3>
-                      <p className="text-sm text-gray-400">{info.description}</p>
+                      <p className="text-sm text-slate-500">{info.description}</p>
                     </div>
                     <Zap className={`w-5 h-5 ${info.color} opacity-0 group-hover:opacity-100 transition-opacity`} />
                   </button>
@@ -443,8 +443,8 @@ export default function DiagnosticoPage() {
               </div>
             </div>
             <div className="text-center">
-              <p className="text-white font-medium">Buscando protocolo...</p>
-              <p className="text-gray-400 text-sm mt-1">
+              <p className="text-slate-900 font-medium">Buscando protocolo...</p>
+              <p className="text-slate-500 text-sm mt-1">
                 {selectedProblem} en {selectedCrop} - Severidad {selectedSeverity}
               </p>
             </div>
@@ -458,7 +458,7 @@ export default function DiagnosticoPage() {
               <AlertTriangle className="w-5 h-5 text-red-400" />
               <p className="text-red-400 font-medium">Error al buscar protocolo</p>
             </div>
-            <p className="text-gray-400 text-sm mt-1">{error}</p>
+            <p className="text-slate-500 text-sm mt-1">{error}</p>
             <button
               onClick={handleReset}
               className="mt-3 px-4 py-2 rounded-lg bg-red-500/20 text-red-400 hover:bg-red-500/30 transition-colors text-sm"
@@ -474,14 +474,14 @@ export default function DiagnosticoPage() {
             {/* Result Header */}
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white">Protocolo de Tratamiento</h2>
-                <p className="text-gray-400 text-sm mt-1">
+                <h2 className="text-xl font-semibold text-slate-900">Protocolo de Tratamiento</h2>
+                <p className="text-slate-500 text-sm mt-1">
                   {selectedProblem} en {selectedCrop} - Severidad {selectedSeverity}
                 </p>
               </div>
               <button
                 onClick={handleReset}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/30 hover:border-green-500/30 text-gray-300 hover:text-white transition-all text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 border border-slate-200/30 hover:border-green-500/30 text-slate-600 hover:text-slate-900 transition-all text-sm"
               >
                 <RotateCcw className="w-4 h-4" />
                 Nuevo diagnostico
@@ -492,8 +492,8 @@ export default function DiagnosticoPage() {
             {result.protocols.length === 0 && (
               <div className="bg-yellow-500/10 border border-yellow-500/30 rounded-xl p-6 text-center">
                 <AlertTriangle className="w-8 h-8 text-yellow-400 mx-auto mb-3" />
-                <h3 className="text-white font-medium mb-2">Sin protocolo especifico</h3>
-                <p className="text-gray-400 text-sm">
+                <h3 className="text-slate-900 font-medium mb-2">Sin protocolo especifico</h3>
+                <p className="text-slate-500 text-sm">
                   {result.answer || `No se encontro un protocolo para "${selectedProblem}" en ${selectedCrop} con severidad ${selectedSeverity}. Consulta al ingeniero de campo.`}
                 </p>
                 <Link
@@ -518,7 +518,7 @@ export default function DiagnosticoPage() {
                 {/* Alternative Protocols */}
                 {result.protocols.length > 1 && (
                   <div className="space-y-3">
-                    <h3 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                    <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
                       <BarChart3 className="w-4 h-4" />
                       {result.protocols.length - 1} protocolo(s) alternativo(s)
                     </h3>
@@ -546,7 +546,7 @@ export default function DiagnosticoPage() {
               </Link>
               <Link
                 href="/bitacora"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/30 text-gray-300 hover:border-green-500/30 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-white/50 border border-slate-200/30 text-slate-600 hover:border-green-500/30 hover:text-slate-900 transition-colors text-sm"
               >
                 <Leaf className="w-4 h-4" />
                 Registrar en Bitacora

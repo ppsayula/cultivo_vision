@@ -198,7 +198,7 @@ export default function ConocimientoPage() {
   }, {});
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
+    <div className="min-h-screen bg-slate-50">
       {/* Background */}
       <div className="fixed inset-0 overflow-hidden pointer-events-none">
         <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
@@ -206,26 +206,26 @@ export default function ConocimientoPage() {
       </div>
 
       {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-gray-900/80 border-b border-gray-800/50">
+      <header className="sticky top-0 z-40 backdrop-blur-xl bg-slate-50/80 border-b border-slate-100">
         <div className="max-w-5xl mx-auto px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
+            <Link href="/" className="p-2 rounded-lg hover:bg-slate-100 transition-colors">
+              <ArrowLeft className="w-5 h-5 text-slate-500" />
             </Link>
             <div className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
                 <BookOpen className="w-4 h-4 text-white" />
               </div>
               <div>
-                <h1 className="text-lg font-bold text-white">Conocimiento Agronomico</h1>
-                <p className="text-xs text-gray-400">
+                <h1 className="text-lg font-bold text-slate-900">Conocimiento Agronomico</h1>
+                <p className="text-xs text-slate-500">
                   {stats.docs} documentos • {stats.protocols} protocolos • {stats.problems} problemas
                 </p>
               </div>
             </div>
           </div>
           {viewMode !== 'categories' && (
-            <button onClick={goBack} className="text-sm text-gray-400 hover:text-white transition-colors">
+            <button onClick={goBack} className="text-sm text-slate-500 hover:text-slate-900 transition-colors">
               Volver
             </button>
           )}
@@ -236,14 +236,14 @@ export default function ConocimientoPage() {
         {/* Search */}
         <div className="mb-6">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
             <input
               type="text"
               placeholder="Buscar plaga, enfermedad, tratamiento..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              className="w-full pl-10 pr-4 py-3 bg-gray-800/50 border border-gray-700/30 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-green-500/50 transition-colors"
+              className="w-full pl-10 pr-4 py-3 bg-slate-100 border border-slate-200 rounded-xl text-slate-900 placeholder-gray-500 focus:outline-none focus:border-green-500/50 transition-colors"
             />
           </div>
         </div>
@@ -257,7 +257,7 @@ export default function ConocimientoPage() {
         {/* Categories View */}
         {viewMode === 'categories' && !loading && (
           <div className="space-y-6">
-            <h2 className="text-lg font-semibold text-white">Categorias</h2>
+            <h2 className="text-lg font-semibold text-slate-900">Categorias</h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {Object.entries(CATEGORIES).map(([key, cat]) => {
                 const Icon = cat.icon;
@@ -265,16 +265,16 @@ export default function ConocimientoPage() {
                   <button
                     key={key}
                     onClick={() => openCategory(key)}
-                    className="group flex items-start gap-4 p-5 rounded-xl bg-gray-800/30 border border-gray-700/30 hover:border-green-500/30 hover:bg-gray-800/50 transition-all text-left"
+                    className="group flex items-start gap-4 p-5 rounded-xl bg-white border border-slate-200 hover:border-green-500/30 hover:bg-slate-100 transition-all text-left"
                   >
-                    <div className="w-10 h-10 rounded-lg bg-gray-700/30 flex items-center justify-center shrink-0 group-hover:bg-gray-700/50 transition-colors">
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center shrink-0 group-hover:bg-slate-100 transition-colors">
                       <Icon className={`w-5 h-5 ${cat.color}`} />
                     </div>
                     <div className="flex-1">
-                      <h3 className="font-medium text-white group-hover:text-green-400 transition-colors">{cat.label}</h3>
-                      <p className="text-xs text-gray-400 mt-1">{cat.description}</p>
+                      <h3 className="font-medium text-slate-900 group-hover:text-green-400 transition-colors">{cat.label}</h3>
+                      <p className="text-xs text-slate-500 mt-1">{cat.description}</p>
                     </div>
-                    <ChevronRight className="w-5 h-5 text-gray-600 group-hover:text-green-400 transition-colors mt-0.5" />
+                    <ChevronRight className="w-5 h-5 text-slate-600 group-hover:text-green-400 transition-colors mt-0.5" />
                   </button>
                 );
               })}
@@ -282,7 +282,7 @@ export default function ConocimientoPage() {
 
             {/* Quick access to all protocols */}
             <div className="mt-8">
-              <h2 className="text-lg font-semibold text-white mb-4">Protocolos de Tratamiento</h2>
+              <h2 className="text-lg font-semibold text-slate-900 mb-4">Protocolos de Tratamiento</h2>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <button
                   onClick={() => { loadProtocols('plaga'); setViewMode('protocols'); setSelectedCategory('plagas'); }}
@@ -290,8 +290,8 @@ export default function ConocimientoPage() {
                 >
                   <Bug className="w-5 h-5 text-red-400" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Plagas</p>
-                    <p className="text-xs text-gray-400">26 protocolos, 12 plagas</p>
+                    <p className="text-slate-900 font-medium">Plagas</p>
+                    <p className="text-xs text-slate-500">26 protocolos, 12 plagas</p>
                   </div>
                 </button>
                 <button
@@ -300,8 +300,8 @@ export default function ConocimientoPage() {
                 >
                   <Droplets className="w-5 h-5 text-purple-400" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Enfermedades</p>
-                    <p className="text-xs text-gray-400">19 protocolos, 11 enfermedades</p>
+                    <p className="text-slate-900 font-medium">Enfermedades</p>
+                    <p className="text-xs text-slate-500">19 protocolos, 11 enfermedades</p>
                   </div>
                 </button>
                 <button
@@ -310,8 +310,8 @@ export default function ConocimientoPage() {
                 >
                   <Beaker className="w-5 h-5 text-yellow-400" />
                   <div className="text-left">
-                    <p className="text-white font-medium">Nutricion</p>
-                    <p className="text-xs text-gray-400">1 protocolo</p>
+                    <p className="text-slate-900 font-medium">Nutricion</p>
+                    <p className="text-xs text-slate-500">1 protocolo</p>
                   </div>
                 </button>
               </div>
@@ -328,7 +328,7 @@ export default function ConocimientoPage() {
               </Link>
               <Link
                 href="/asistente"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/30 text-gray-300 hover:border-green-500/30 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 hover:border-green-500/30 hover:text-slate-900 transition-colors text-sm"
               >
                 <Beaker className="w-4 h-4" />
                 Asistente IA
@@ -341,15 +341,15 @@ export default function ConocimientoPage() {
         {viewMode === 'documents' && !loading && (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-400" />
+              <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                <ArrowLeft className="w-5 h-5 text-slate-500" />
               </button>
-              <h2 className="text-lg font-semibold text-white">
+              <h2 className="text-lg font-semibold text-slate-900">
                 {selectedCategory === 'search'
                   ? `Resultados: "${searchQuery}"`
                   : CATEGORIES[selectedCategory]?.label || selectedCategory}
               </h2>
-              <span className="text-sm text-gray-500">({documents.length} docs)</span>
+              <span className="text-sm text-slate-500">({documents.length} docs)</span>
             </div>
 
             {/* Documents */}
@@ -362,17 +362,17 @@ export default function ConocimientoPage() {
                     <button
                       key={doc.id}
                       onClick={() => openDocument(doc)}
-                      className="w-full text-left p-4 rounded-xl bg-gray-800/30 border border-gray-700/30 hover:border-green-500/30 hover:bg-gray-800/50 transition-all"
+                      className="w-full text-left p-4 rounded-xl bg-white border border-slate-200 hover:border-green-500/30 hover:bg-slate-100 transition-all"
                     >
                       <div className="flex items-start gap-3">
-                        <Icon className={`w-5 h-5 ${cat?.color || 'text-gray-400'} mt-0.5 shrink-0`} />
+                        <Icon className={`w-5 h-5 ${cat?.color || 'text-slate-500'} mt-0.5 shrink-0`} />
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium text-white">{doc.title}</h3>
+                          <h3 className="font-medium text-slate-900">{doc.title}</h3>
                           {doc.summary && (
-                            <p className="text-sm text-gray-400 mt-1 line-clamp-2">{doc.summary}</p>
+                            <p className="text-sm text-slate-500 mt-1 line-clamp-2">{doc.summary}</p>
                           )}
                           <div className="flex flex-wrap gap-1.5 mt-2">
-                            <span className={`text-xs px-2 py-0.5 rounded-full bg-gray-700/50 ${cat?.color || 'text-gray-400'}`}>
+                            <span className={`text-xs px-2 py-0.5 rounded-full bg-slate-100 ${cat?.color || 'text-slate-500'}`}>
                               {cat?.label || doc.category}
                             </span>
                             {doc.crop_types?.map(ct => (
@@ -381,13 +381,13 @@ export default function ConocimientoPage() {
                               </span>
                             ))}
                             {doc.tags?.slice(0, 3).map(tag => (
-                              <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-gray-800/50 text-gray-500">
+                              <span key={tag} className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
                                 {tag}
                               </span>
                             ))}
                           </div>
                         </div>
-                        <ChevronRight className="w-4 h-4 text-gray-600 mt-1 shrink-0" />
+                        <ChevronRight className="w-4 h-4 text-slate-600 mt-1 shrink-0" />
                       </div>
                     </button>
                   );
@@ -398,7 +398,7 @@ export default function ConocimientoPage() {
             {/* Protocols found in search */}
             {protocols.length > 0 && (
               <div className="space-y-3 mt-6">
-                <h3 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                <h3 className="text-sm font-medium text-slate-500 flex items-center gap-2">
                   <Pill className="w-4 h-4" />
                   Protocolos relacionados ({protocols.length})
                 </h3>
@@ -415,8 +415,8 @@ export default function ConocimientoPage() {
 
             {documents.length === 0 && protocols.length === 0 && (
               <div className="text-center py-12">
-                <BookOpen className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-400">No se encontraron resultados</p>
+                <BookOpen className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                <p className="text-slate-500">No se encontraron resultados</p>
               </div>
             )}
           </div>
@@ -426,21 +426,21 @@ export default function ConocimientoPage() {
         {viewMode === 'protocols' && !loading && (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-400" />
+              <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                <ArrowLeft className="w-5 h-5 text-slate-500" />
               </button>
-              <h2 className="text-lg font-semibold text-white capitalize">
+              <h2 className="text-lg font-semibold text-slate-900 capitalize">
                 Protocolos: {selectedCategory}
               </h2>
-              <span className="text-sm text-gray-500">({protocols.length} protocolos)</span>
+              <span className="text-sm text-slate-500">({protocols.length} protocolos)</span>
             </div>
 
             {Object.entries(groupedProtocols).map(([problemName, protos]) => (
               <div key={problemName} className="space-y-2">
-                <h3 className="text-sm font-medium text-gray-300 flex items-center gap-2 py-1">
-                  <Bug className="w-4 h-4 text-gray-500" />
+                <h3 className="text-sm font-medium text-slate-600 flex items-center gap-2 py-1">
+                  <Bug className="w-4 h-4 text-slate-500" />
                   {problemName}
-                  <span className="text-xs text-gray-500">({protos.length} protocolos)</span>
+                  <span className="text-xs text-slate-500">({protos.length} protocolos)</span>
                 </h3>
                 {protos.map(proto => (
                   <TreatmentProtocolCard
@@ -455,8 +455,8 @@ export default function ConocimientoPage() {
 
             {protocols.length === 0 && (
               <div className="text-center py-12">
-                <Pill className="w-12 h-12 text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-400">No hay protocolos en esta categoria</p>
+                <Pill className="w-12 h-12 text-slate-500 mx-auto mb-3" />
+                <p className="text-slate-500">No hay protocolos en esta categoria</p>
               </div>
             )}
           </div>
@@ -466,10 +466,10 @@ export default function ConocimientoPage() {
         {viewMode === 'detail' && selectedDoc && !loading && (
           <div className="space-y-6">
             <div className="flex items-center gap-2">
-              <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-gray-800/50 transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-400" />
+              <button onClick={goBack} className="p-1.5 rounded-lg hover:bg-slate-100 transition-colors">
+                <ArrowLeft className="w-5 h-5 text-slate-500" />
               </button>
-              <h2 className="text-lg font-semibold text-white">{selectedDoc.title}</h2>
+              <h2 className="text-lg font-semibold text-slate-900">{selectedDoc.title}</h2>
             </div>
 
             {/* Tags */}
@@ -481,40 +481,40 @@ export default function ConocimientoPage() {
                 </span>
               ))}
               {CATEGORIES[selectedDoc.category] && (
-                <span className={`text-xs px-2 py-1 rounded-full bg-gray-700/50 ${CATEGORIES[selectedDoc.category].color}`}>
+                <span className={`text-xs px-2 py-1 rounded-full bg-slate-100 ${CATEGORIES[selectedDoc.category].color}`}>
                   {CATEGORIES[selectedDoc.category].label}
                 </span>
               )}
               {selectedDoc.tags?.map(tag => (
-                <span key={tag} className="text-xs px-2 py-1 rounded-full bg-gray-800/50 text-gray-400">
+                <span key={tag} className="text-xs px-2 py-1 rounded-full bg-slate-100 text-slate-500">
                   {tag}
                 </span>
               ))}
             </div>
 
             {/* Content */}
-            <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-6">
+            <div className="bg-white border border-slate-200 rounded-xl p-6">
               <div className="prose prose-invert prose-sm max-w-none">
                 {selectedDoc.content.split('\n').map((line, i) => {
                   if (line.startsWith('## ')) {
-                    return <h2 key={i} className="text-lg font-bold text-white mt-4 mb-2">{line.replace('## ', '')}</h2>;
+                    return <h2 key={i} className="text-lg font-bold text-slate-900 mt-4 mb-2">{line.replace('## ', '')}</h2>;
                   }
                   if (line.startsWith('### ')) {
-                    return <h3 key={i} className="text-base font-semibold text-gray-200 mt-3 mb-1">{line.replace('### ', '')}</h3>;
+                    return <h3 key={i} className="text-base font-semibold text-slate-800 mt-3 mb-1">{line.replace('### ', '')}</h3>;
                   }
                   if (line.startsWith('- ')) {
                     return (
                       <div key={i} className="flex items-start gap-2 py-0.5">
                         <span className="text-green-500 mt-1">•</span>
-                        <span className="text-gray-300 text-sm">{line.replace('- ', '')}</span>
+                        <span className="text-slate-600 text-sm">{line.replace('- ', '')}</span>
                       </div>
                     );
                   }
                   if (line.startsWith('**') && line.endsWith('**')) {
-                    return <p key={i} className="text-white font-semibold mt-2">{line.replace(/\*\*/g, '')}</p>;
+                    return <p key={i} className="text-slate-900 font-semibold mt-2">{line.replace(/\*\*/g, '')}</p>;
                   }
                   if (line.trim() === '') return <div key={i} className="h-2" />;
-                  return <p key={i} className="text-gray-300 text-sm leading-relaxed">{line}</p>;
+                  return <p key={i} className="text-slate-600 text-sm leading-relaxed">{line}</p>;
                 })}
               </div>
             </div>
@@ -530,7 +530,7 @@ export default function ConocimientoPage() {
               </Link>
               <Link
                 href="/asistente"
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-800/50 border border-gray-700/30 text-gray-300 hover:border-green-500/30 hover:text-white transition-colors text-sm"
+                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-slate-100 border border-slate-200 text-slate-600 hover:border-green-500/30 hover:text-slate-900 transition-colors text-sm"
               >
                 <Beaker className="w-4 h-4" />
                 Preguntar al Asistente

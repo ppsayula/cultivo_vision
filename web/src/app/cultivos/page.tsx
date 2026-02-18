@@ -228,13 +228,13 @@ export default function CultivosPage() {
       {/* Formulario */}
       {showForm && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-50 rounded-2xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-bold text-white">
+              <h2 className="text-xl font-bold text-slate-900">
                 {editingId ? 'Editar Cultivo' : 'Nuevo Cultivo'}
               </h2>
-              <button onClick={resetForm} className="p-2 hover:bg-gray-800 rounded-lg">
-                <X className="w-5 h-5 text-gray-400" />
+              <button onClick={resetForm} className="p-2 hover:bg-white rounded-lg">
+                <X className="w-5 h-5 text-slate-500" />
               </button>
             </div>
 
@@ -242,23 +242,23 @@ export default function CultivosPage() {
               {/* Ciclo y Año */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Ciclo *</label>
+                  <label className="block text-sm text-slate-500 mb-1">Ciclo *</label>
                   <input
                     type="text"
                     value={form.ciclo}
                     onChange={e => setForm({ ...form, ciclo: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     placeholder="2025-1"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Año *</label>
+                  <label className="block text-sm text-slate-500 mb-1">Año *</label>
                   <input
                     type="number"
                     value={form.anio}
                     onChange={e => setForm({ ...form, anio: parseInt(e.target.value) })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     required
                   />
                 </div>
@@ -267,11 +267,11 @@ export default function CultivosPage() {
               {/* Cultivo y Variedad */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Cultivo *</label>
+                  <label className="block text-sm text-slate-500 mb-1">Cultivo *</label>
                   <select
                     value={form.cultivo}
                     onChange={e => setForm({ ...form, cultivo: e.target.value, variedad: '' })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     required
                   >
                     <option value="">Seleccionar...</option>
@@ -281,11 +281,11 @@ export default function CultivosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Variedad *</label>
+                  <label className="block text-sm text-slate-500 mb-1">Variedad *</label>
                   <select
                     value={form.variedad}
                     onChange={e => setForm({ ...form, variedad: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     required
                     disabled={!form.cultivo}
                   >
@@ -300,11 +300,11 @@ export default function CultivosPage() {
               {/* Sector y Fecha Plantación */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Sector *</label>
+                  <label className="block text-sm text-slate-500 mb-1">Sector *</label>
                   <select
                     value={form.sector}
                     onChange={e => setForm({ ...form, sector: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     required
                   >
                     <option value="">Seleccionar...</option>
@@ -314,12 +314,12 @@ export default function CultivosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Fecha Plantación</label>
+                  <label className="block text-sm text-slate-500 mb-1">Fecha Plantación</label>
                   <input
                     type="date"
                     value={form.fecha_plantacion}
                     onChange={e => setForm({ ...form, fecha_plantacion: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   />
                 </div>
               </div>
@@ -327,11 +327,11 @@ export default function CultivosPage() {
               {/* Suelo y Maceta */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Tipo de Suelo</label>
+                  <label className="block text-sm text-slate-500 mb-1">Tipo de Suelo</label>
                   <select
                     value={form.tipo_suelo}
                     onChange={e => setForm({ ...form, tipo_suelo: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   >
                     <option value="">Seleccionar...</option>
                     <option value="Franco">Franco</option>
@@ -342,12 +342,12 @@ export default function CultivosPage() {
                   </select>
                 </div>
                 <div className="flex items-center gap-4">
-                  <label className="flex items-center gap-2 text-gray-400 cursor-pointer">
+                  <label className="flex items-center gap-2 text-slate-500 cursor-pointer">
                     <input
                       type="checkbox"
                       checked={form.en_maceta}
                       onChange={e => setForm({ ...form, en_maceta: e.target.checked })}
-                      className="w-5 h-5 rounded bg-gray-800 border-gray-700"
+                      className="w-5 h-5 rounded bg-white border-slate-200"
                     />
                     En maceta
                   </label>
@@ -357,22 +357,22 @@ export default function CultivosPage() {
               {/* Sustrato y Densidad */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Sustrato</label>
+                  <label className="block text-sm text-slate-500 mb-1">Sustrato</label>
                   <input
                     type="text"
                     value={form.sustrato}
                     onChange={e => setForm({ ...form, sustrato: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     placeholder="Peat moss + Perlita"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Densidad (plantas/ha)</label>
+                  <label className="block text-sm text-slate-500 mb-1">Densidad (plantas/ha)</label>
                   <input
                     type="number"
                     value={form.densidad_plantas}
                     onChange={e => setForm({ ...form, densidad_plantas: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                     placeholder="5000"
                   />
                 </div>
@@ -381,20 +381,20 @@ export default function CultivosPage() {
               {/* Poda */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Fecha Poda</label>
+                  <label className="block text-sm text-slate-500 mb-1">Fecha Poda</label>
                   <input
                     type="date"
                     value={form.fecha_poda}
                     onChange={e => setForm({ ...form, fecha_poda: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Tipo de Poda</label>
+                  <label className="block text-sm text-slate-500 mb-1">Tipo de Poda</label>
                   <select
                     value={form.tipo_poda}
                     onChange={e => setForm({ ...form, tipo_poda: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   >
                     <option value="">Seleccionar...</option>
                     <option value="Renovación">Renovación</option>
@@ -408,11 +408,11 @@ export default function CultivosPage() {
               {/* Riego y Cosecha */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Sistema de Riego</label>
+                  <label className="block text-sm text-slate-500 mb-1">Sistema de Riego</label>
                   <select
                     value={form.sistema_riego}
                     onChange={e => setForm({ ...form, sistema_riego: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   >
                     <option value="">Seleccionar...</option>
                     <option value="Goteo">Goteo</option>
@@ -422,35 +422,35 @@ export default function CultivosPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Fecha Est. Cosecha</label>
+                  <label className="block text-sm text-slate-500 mb-1">Fecha Est. Cosecha</label>
                   <input
                     type="date"
                     value={form.fecha_estimada_cosecha}
                     onChange={e => setForm({ ...form, fecha_estimada_cosecha: e.target.value })}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                    className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   />
                 </div>
               </div>
 
               {/* Responsable */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Responsable</label>
+                <label className="block text-sm text-slate-500 mb-1">Responsable</label>
                 <input
                   type="text"
                   value={form.responsable}
                   onChange={e => setForm({ ...form, responsable: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   placeholder="Nombre del ingeniero responsable"
                 />
               </div>
 
               {/* Notas */}
               <div>
-                <label className="block text-sm text-gray-400 mb-1">Notas</label>
+                <label className="block text-sm text-slate-500 mb-1">Notas</label>
                 <textarea
                   value={form.notas}
                   onChange={e => setForm({ ...form, notas: e.target.value })}
-                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
+                  className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-slate-900"
                   rows={3}
                   placeholder="Observaciones adicionales..."
                 />
@@ -461,7 +461,7 @@ export default function CultivosPage() {
                 <button
                   type="button"
                   onClick={resetForm}
-                  className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors"
+                  className="flex-1 px-4 py-2 bg-slate-200 hover:bg-slate-200 text-slate-900 rounded-lg transition-colors"
                 >
                   Cancelar
                 </button>
@@ -488,9 +488,9 @@ export default function CultivosPage() {
       {/* Lista de Cultivos */}
       {cultivos.length === 0 ? (
         <div className="text-center py-20">
-          <Leaf className="w-16 h-16 text-gray-700 mx-auto mb-4" />
-          <h3 className="text-xl text-gray-400 mb-2">No hay cultivos registrados</h3>
-          <p className="text-gray-600 mb-4">Comienza agregando tu primer cultivo</p>
+          <Leaf className="w-16 h-16 text-slate-500 mx-auto mb-4" />
+          <h3 className="text-xl text-slate-500 mb-2">No hay cultivos registrados</h3>
+          <p className="text-slate-600 mb-4">Comienza agregando tu primer cultivo</p>
           <button
             onClick={() => setShowForm(true)}
             className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"
@@ -503,11 +503,11 @@ export default function CultivosPage() {
           {cultivos.map(cultivo => (
             <div
               key={cultivo.id}
-              className="bg-gray-800/50 border border-gray-700 rounded-xl p-5 hover:border-green-500/50 transition-colors"
+              className="bg-slate-100 border border-slate-200 rounded-xl p-5 hover:border-green-500/50 transition-colors"
             >
               <div className="flex items-start justify-between mb-3">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">{cultivo.cultivo}</h3>
+                  <h3 className="text-lg font-semibold text-slate-900">{cultivo.cultivo}</h3>
                   <p className="text-green-400">{cultivo.variedad}</p>
                 </div>
                 <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded-full">
@@ -515,7 +515,7 @@ export default function CultivosPage() {
                 </span>
               </div>
 
-              <div className="space-y-2 text-sm text-gray-400">
+              <div className="space-y-2 text-sm text-slate-500">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-4 h-4" />
                   <span>Sector: {cultivo.sector}</span>
@@ -540,10 +540,10 @@ export default function CultivosPage() {
                 )}
               </div>
 
-              <div className="flex gap-2 mt-4 pt-4 border-t border-gray-700">
+              <div className="flex gap-2 mt-4 pt-4 border-t border-slate-200">
                 <button
                   onClick={() => handleEdit(cultivo)}
-                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm transition-colors"
+                  className="flex-1 flex items-center justify-center gap-1 px-3 py-2 bg-slate-200 hover:bg-slate-200 text-slate-900 rounded-lg text-sm transition-colors"
                 >
                   <Edit className="w-4 h-4" />
                   Editar

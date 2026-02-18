@@ -1,14 +1,12 @@
-// Cultivo Vision - Dashboard Principal (Light Theme)
+// Cultivo Vision - Centro de Control de Sanidad
 'use client';
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import dynamic from 'next/dynamic';
 import {
   Camera,
   ChevronRight,
   CheckCircle,
-  Activity,
   Target,
   MapPin,
   Zap,
@@ -16,12 +14,14 @@ import {
   Leaf,
   Eye,
   CircleAlert,
-  BarChart3,
+  Pill,
   Droplets,
+  TrendingUp,
+  ExternalLink,
+  FlaskConical,
+  Calendar,
 } from 'lucide-react';
 import type { SectorInfo } from '@/lib/sector-intelligence';
-
-const MapView = dynamic(() => import('./sectores/MapView'), { ssr: false });
 
 interface DashboardData {
   intelligence: any;
@@ -38,18 +38,13 @@ interface DashboardData {
   };
   allSectores: SectorInfo[];
   topSectores: any[];
-  riesgoGeneral: {
-    nivel: 'critico' | 'alto' | 'medio' | 'bajo' | 'sin-datos';
-    score: number;
-    label: string;
-  };
+  riesgoGeneral: any;
   diasSinMonitoreo: number | null;
 }
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
-  const [selectedSector, setSelectedSector] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/dashboard')
@@ -74,15 +69,38 @@ export default function Home() {
     );
   }
 
-  const { intelligence, sectorStats, allSectores, topSectores, riesgoGeneral, diasSinMonitoreo } = data;
+  const { intelligence, sectorStats, allSectores, diasSinMonitoreo } = data;
 
-  const selectedSectorData = selectedSector
-    ? allSectores.find(s => s.id === selectedSector)
-    : null;
+  // Build problems table from sinTratar + pronostico
+  const problemsTable = (intelligence?.sinTratar || []).map((u: any) => {
+    const trend = intelligence?.pronostico?.find(
+      (f: any) => f.problema.toLowerCase() === u.problema.toLowerCase()
+    );
+    const recipe = intelligence?.recetas?.[u.problema.toLowerCase()];
+    return { ...u, trend, recipe };
+  });
+
+  // Fumigation schedule: sectors sorted by urgency
+  const fumigationSchedule = allSectores
+    .filter(s => s.diasSinFumigar !== null && s.diasSinFumigar > 0)
+    .sort((a, b) => (b.diasSinFumigar || 0) - (a.diasSinFumigar || 0))
+    .slice(0, 8);
+
+  const fumSinDato = allSectores.filter(s => s.fumigacionStatus === 'sin-dato').length;
+
+  // Active recipes (unique)
+  const activeRecipes: { problema: string; recipe: any }[] = [];
+  const seenRecipes = new Set<string>();
+  problemsTable.forEach((p: any) => {
+    if (p.recipe && p.recipe.products?.length > 0 && !seenRecipes.has(p.problema)) {
+      seenRecipes.add(p.problema);
+      activeRecipes.push({ problema: p.problema, recipe: p.recipe });
+    }
+  });
 
   return (
     <>
-      {/* Row 1 - Quick Actions */}
+      {/* Row 1 - Actions */}
       <div className="flex flex-wrap items-center gap-3 mb-5">
         {diasSinMonitoreo !== null && diasSinMonitoreo > 7 && (
           <div className="flex items-center gap-1.5 text-amber-600 text-sm bg-amber-50 border border-amber-200 rounded-lg px-3 py-1.5">
@@ -105,10 +123,20 @@ export default function Home() {
             <Zap className="w-4 h-4" />
             Diagnostico
           </Link>
+          <a
+            href="https://control.lolaberries.com.mx/mapa-sectores.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-50 text-slate-700 text-sm font-medium rounded-lg transition-colors border border-slate-200 shadow-sm"
+          >
+            <MapPin className="w-4 h-4 text-green-600" />
+            Mapa GPS
+            <ExternalLink className="w-3 h-3 text-slate-400" />
+          </a>
         </div>
       </div>
 
-      {/* Row 2 - Stats cards */}
+      {/* Row 2 - Stats */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
         <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
           <div className="flex items-center gap-2 mb-1">
@@ -155,238 +183,213 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Row 3 - MAP (hero) */}
-      {allSectores.length > 0 && (
-        <div className="mb-5 relative">
-          <div className="rounded-xl overflow-hidden border border-slate-200 shadow-sm" style={{ height: '380px' }}>
-            <MapView
-              sectores={allSectores}
-              selectedId={selectedSector}
-              onMarkerClick={(sector) => setSelectedSector(
-                selectedSector === sector.id ? null : sector.id
-              )}
-            />
+      {/* Row 3 - Problemas Activos (main table) */}
+      {problemsTable.length > 0 && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-5 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
+            <div className="flex items-center gap-2">
+              <Target className="w-4 h-4 text-amber-500" />
+              <h3 className="text-slate-900 text-sm font-semibold">Problemas Activos</h3>
+              <span className="text-slate-400 text-xs">({problemsTable.length})</span>
+            </div>
+            <Link href="/inteligencia" className="text-xs text-slate-400 hover:text-green-600 flex items-center gap-1">
+              Ver detalle <ChevronRight className="w-3 h-3" />
+            </Link>
           </div>
-
-          {/* Selected sector overlay */}
-          {selectedSectorData && (
-            <div className="absolute bottom-3 left-3 right-3 bg-white/95 backdrop-blur border border-slate-200 rounded-xl p-4 shadow-lg">
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className={`w-2.5 h-2.5 rounded-full ${
-                      selectedSectorData.riskLevel === 'critico' ? 'bg-red-500' :
-                      selectedSectorData.riskLevel === 'alto' ? 'bg-amber-500' :
-                      selectedSectorData.riskLevel === 'medio' ? 'bg-yellow-500' : 'bg-green-500'
-                    }`} />
-                    <span className="text-slate-900 text-sm font-semibold">
-                      Sector {selectedSectorData.sector}
-                    </span>
-                    <span className="text-slate-400 text-xs">{selectedSectorData.finca}</span>
-                    <span className="text-slate-300">·</span>
-                    <span className="text-slate-400 text-xs">{selectedSectorData.cultivo} {selectedSectorData.variedad}</span>
-                  </div>
-                  <p className="text-slate-500 text-xs">{selectedSectorData.razonRiesgo || 'Sin observaciones recientes'}</p>
-                  {selectedSectorData.problemasActivos.length > 0 && (
-                    <div className="flex flex-wrap gap-1 mt-2">
-                      {selectedSectorData.problemasActivos.slice(0, 4).map((p, i) => (
-                        <span key={i} className={`text-xs px-2 py-0.5 rounded-full font-medium capitalize ${
-                          !p.tratado && (p.severidadMax === 'alta' || p.severidadMax === 'critica')
-                            ? 'bg-red-100 text-red-700'
-                            : p.tratado
-                            ? 'bg-green-100 text-green-700'
-                            : 'bg-slate-100 text-slate-600'
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-slate-50 text-slate-500 text-xs">
+                  <th className="text-left px-5 py-2.5 font-medium">Problema</th>
+                  <th className="text-left px-3 py-2.5 font-medium">Severidad</th>
+                  <th className="text-center px-3 py-2.5 font-medium">Sectores</th>
+                  <th className="text-center px-3 py-2.5 font-medium">Sin Tratar</th>
+                  <th className="text-center px-3 py-2.5 font-medium">Tendencia</th>
+                  <th className="text-left px-3 py-2.5 font-medium">Receta</th>
+                </tr>
+              </thead>
+              <tbody>
+                {problemsTable.map((p: any, i: number) => (
+                  <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50">
+                    <td className="px-5 py-3">
+                      <span className="font-medium text-slate-900 capitalize">{p.problema}</span>
+                    </td>
+                    <td className="px-3 py-3">
+                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                        p.severidadMax === 'alta' || p.severidadMax === 'critica'
+                          ? 'bg-red-50 text-red-600'
+                          : p.severidadMax === 'media'
+                          ? 'bg-amber-50 text-amber-600'
+                          : 'bg-slate-100 text-slate-500'
+                      }`}>
+                        {p.severidadMax}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-center text-slate-600">{p.sectoresAfectados}</td>
+                    <td className="px-3 py-3 text-center">
+                      <span className={p.sinTratar > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+                        {p.sinTratar}
+                      </span>
+                    </td>
+                    <td className="px-3 py-3 text-center">
+                      {p.trend ? (
+                        <span className={`text-xs font-medium ${
+                          p.trend.cambio > 50 ? 'text-red-500' :
+                          p.trend.cambio > 20 ? 'text-amber-500' :
+                          p.trend.cambio < -30 ? 'text-green-500' :
+                          'text-slate-400'
                         }`}>
-                          {p.nombre}{p.tratado ? ' ✓' : ''}
+                          {p.trend.cambio > 50 ? '↑↑' :
+                           p.trend.cambio > 20 ? '↑' :
+                           p.trend.cambio > -20 ? '→' :
+                           p.trend.cambio > -50 ? '↓' : '↓↓'}
                         </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-                <Link
-                  href={`/sectores?id=${selectedSectorData.id}`}
-                  className="text-xs text-green-600 hover:text-green-700 font-medium shrink-0 flex items-center gap-1"
-                >
-                  Ver detalle <ChevronRight className="w-3 h-3" />
-                </Link>
-              </div>
-            </div>
-          )}
-
-          {/* Legend */}
-          <div className="absolute top-3 right-3 bg-white/90 backdrop-blur rounded-lg px-3 py-2 flex items-center gap-3 shadow-sm border border-slate-200/50">
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-green-500" />
-              <span className="text-slate-500 text-[10px]">OK</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-              <span className="text-slate-500 text-[10px]">Medio</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-amber-500" />
-              <span className="text-slate-500 text-[10px]">Alto</span>
-            </div>
-            <div className="flex items-center gap-1.5">
-              <span className="w-2.5 h-2.5 rounded-full bg-red-500" />
-              <span className="text-slate-500 text-[10px]">Critico</span>
-            </div>
+                      ) : (
+                        <span className="text-slate-300">—</span>
+                      )}
+                    </td>
+                    <td className="px-3 py-3">
+                      {p.recipe?.products?.[0] ? (
+                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                          {p.recipe.products[0].nombre} {p.recipe.products[0].dosis}
+                        </span>
+                      ) : (
+                        <span className="text-slate-300 text-xs">—</span>
+                      )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </div>
       )}
 
-      {/* Row 4 - Two columns */}
+      {/* Row 4 - Two columns: Recetas + Fumigación */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
-        {/* Col 1: Requiere Atencion */}
+        {/* Col 1: Recetas */}
         <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <Target className="w-4 h-4 text-amber-500" />
-            <h3 className="text-slate-900 text-sm font-semibold">Requiere Atencion</h3>
-            {topSectores.length > 0 && (
-              <Link href="/inteligencia" className="text-xs text-slate-400 ml-auto hover:text-green-600 flex items-center gap-1">
-                Ver todo <ChevronRight className="w-3 h-3" />
-              </Link>
-            )}
+            <FlaskConical className="w-4 h-4 text-blue-500" />
+            <h3 className="text-slate-900 text-sm font-semibold">Recetas Recomendadas</h3>
           </div>
 
-          {topSectores.length > 0 ? (
-            <div className="space-y-2.5">
-              {topSectores.slice(0, 4).map((sector: any, i: number) => {
-                const untreated = sector.problemasActivos?.filter(
-                  (p: any) => !p.tratado && (p.severidadMax === 'alta' || p.severidadMax === 'critica')
-                ) || [];
-                return (
-                  <div key={i} className="flex items-center gap-2.5 py-2 border-b border-slate-100 last:border-0">
-                    <span className={`w-2 h-2 rounded-full shrink-0 ${
-                      sector.riskLevel === 'critico' ? 'bg-red-500' :
-                      sector.riskLevel === 'alto' ? 'bg-amber-500' : 'bg-yellow-500'
-                    }`} />
-                    <span className="text-sm font-semibold text-slate-700">S{sector.sector}</span>
-                    <div className="flex flex-wrap gap-1 min-w-0 flex-1">
-                      {untreated.map((p: any, j: number) => (
-                        <span key={j} className="text-xs px-2 py-0.5 rounded-full bg-red-50 text-red-600 font-medium capitalize">
-                          {p.nombre}
-                        </span>
-                      ))}
-                    </div>
-                    <button
-                      onClick={() => setSelectedSector(sector.id)}
-                      className="text-slate-300 hover:text-green-600 shrink-0 transition-colors"
-                    >
-                      <MapPin className="w-4 h-4" />
-                    </button>
+          {activeRecipes.length > 0 ? (
+            <div className="space-y-3">
+              {activeRecipes.slice(0, 4).map((r, i) => (
+                <div key={i} className="border border-slate-100 rounded-lg p-3">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-xs font-semibold text-slate-900 uppercase">{r.problema}</span>
                   </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="text-center py-8">
-              <CheckCircle className="w-10 h-10 text-green-200 mx-auto mb-2" />
-              <p className="text-green-600 font-medium text-sm">Todo bajo control</p>
-              <p className="text-slate-400 text-xs mt-0.5">Sin problemas urgentes</p>
-            </div>
-          )}
-
-          {/* Sin tratar summary */}
-          {intelligence?.sinTratar?.length > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-100">
-              <p className="text-xs text-slate-400 mb-2">Problemas sin tratar ({intelligence.sinTratar.length})</p>
-              <div className="flex flex-wrap gap-1.5">
-                {intelligence.sinTratar.slice(0, 5).map((u: any, i: number) => (
-                  <span key={i} className={`text-xs px-2 py-0.5 rounded-full capitalize font-medium ${
-                    u.severidadMax === 'alta' || u.severidadMax === 'critica'
-                      ? 'bg-red-50 text-red-600'
-                      : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {u.problema} · {u.sectoresAfectados}s
-                  </span>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Col 2: Tendencias */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <BarChart3 className="w-4 h-4 text-blue-500" />
-            <h3 className="text-slate-900 text-sm font-semibold">Tendencias</h3>
-            <span className="text-slate-300 text-xs">vs historico</span>
-            <Link href="/inteligencia" className="text-xs text-slate-400 ml-auto hover:text-green-600 flex items-center gap-1">
-              Detalle <ChevronRight className="w-3 h-3" />
-            </Link>
-          </div>
-
-          {intelligence?.pronostico?.length > 0 ? (
-            <div className="space-y-0">
-              {intelligence.pronostico.slice(0, 6).map((f: any, i: number) => (
-                <div key={i} className="py-2 border-b border-slate-50 last:border-0">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${
-                        f.cambio > 50 ? 'bg-red-400' :
-                        f.cambio > 20 ? 'bg-amber-400' :
-                        f.cambio < -30 ? 'bg-green-400' :
-                        'bg-slate-300'
-                      }`} />
-                      <span className="text-sm text-slate-700 capitalize truncate">{f.problema}</span>
+                  {r.recipe.products.slice(0, 2).map((prod: any, j: number) => (
+                    <div key={j} className="flex items-center gap-2 mb-1">
+                      <Pill className="w-3 h-3 text-blue-400 shrink-0" />
+                      <span className="text-sm text-slate-700">
+                        <strong>{prod.nombre}</strong> {prod.dosis}
+                      </span>
                     </div>
-                    <span className={`text-xs font-medium shrink-0 ml-2 ${
-                      f.cambio > 50 ? 'text-red-500' :
-                      f.cambio > 20 ? 'text-amber-500' :
-                      f.cambio < -30 ? 'text-green-500' :
-                      'text-slate-400'
-                    }`}>
-                      {f.cambio > 50 ? '↑↑ Subiendo' :
-                       f.cambio > 20 ? '↑ Sube' :
-                       f.cambio > -20 ? '→ Normal' :
-                       f.cambio > -50 ? '↓ Baja' :
-                       '↓↓ Bajo'}
-                    </span>
+                  ))}
+                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
+                    {r.recipe.method && (
+                      <span>Metodo: {r.recipe.method}</span>
+                    )}
+                    {r.recipe.frequency && (
+                      <span>Frecuencia: {r.recipe.frequency}</span>
+                    )}
+                    {r.recipe.carencia > 0 && (
+                      <span>Carencia: {r.recipe.carencia}d</span>
+                    )}
                   </div>
-                  {f.contexto && (
-                    <p className="text-xs text-slate-400 ml-4 mt-0.5">{f.contexto}</p>
+                  {/* Field treatments actually used */}
+                  {r.recipe.fieldTreatments?.length > 0 && (
+                    <div className="mt-2 pt-2 border-t border-slate-50">
+                      <p className="text-[10px] text-slate-400 mb-1">Aplicado en campo:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {r.recipe.fieldTreatments.slice(0, 3).map((ft: any, k: number) => (
+                          <span key={k} className="text-[11px] px-1.5 py-0.5 rounded bg-green-50 text-green-700">
+                            {ft.producto} ({ft.count}x)
+                          </span>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-8">
-              <Activity className="w-10 h-10 text-slate-200 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm">3+ semanas de datos necesarias</p>
+            <div className="text-center py-6">
+              <FlaskConical className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+              <p className="text-slate-400 text-sm">Sin recetas activas</p>
+            </div>
+          )}
+        </div>
+
+        {/* Col 2: Fumigación */}
+        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
+          <div className="flex items-center gap-2 mb-4">
+            <Droplets className="w-4 h-4 text-purple-500" />
+            <h3 className="text-slate-900 text-sm font-semibold">Estado de Fumigacion</h3>
+          </div>
+
+          {fumigationSchedule.length > 0 ? (
+            <>
+              <div className="space-y-1.5">
+                {fumigationSchedule.map((s, i) => {
+                  const urgency = s.diasSinFumigar !== null && s.diasSinFumigar > s.intervaloSeguridad;
+                  return (
+                    <div key={i} className="flex items-center gap-2 py-1.5 border-b border-slate-50 last:border-0">
+                      <span className={`w-2 h-2 rounded-full shrink-0 ${
+                        s.fumigacionStatus === 'critico' ? 'bg-red-400' :
+                        s.fumigacionStatus === 'vencido' ? 'bg-amber-400' :
+                        s.fumigacionStatus === 'por-vencer' ? 'bg-yellow-400' : 'bg-green-400'
+                      }`} />
+                      <span className="text-sm font-medium text-slate-700 w-12">S{s.sector}</span>
+                      <span className="text-xs text-slate-400 flex-1 truncate">
+                        {s.productoUsado || 'producto desc.'}
+                      </span>
+                      <span className={`text-xs font-medium ${urgency ? 'text-red-500' : 'text-slate-500'}`}>
+                        {s.diasSinFumigar}d
+                      </span>
+                      {urgency && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-500">vencido</span>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {fumSinDato > 0 && (
+                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
+                  <Eye className="w-3.5 h-3.5 text-slate-400" />
+                  <span className="text-xs text-slate-400">{fumSinDato} sectores sin registro de fumigacion</span>
+                </div>
+              )}
+            </>
+          ) : (
+            <div className="text-center py-6">
+              <Droplets className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+              <p className="text-slate-400 text-sm">Sin datos de fumigacion</p>
             </div>
           )}
 
-          {/* Distribution bar */}
-          {sectorStats.total > 0 && (
-            <div className="mt-4 pt-3 border-t border-slate-100">
-              <p className="text-xs text-slate-400 mb-2">Distribucion de riesgo</p>
-              <div className="flex h-2.5 rounded-full overflow-hidden bg-slate-100">
-                {sectorStats.criticos > 0 && (
-                  <div className="bg-red-400" style={{ width: `${(sectorStats.criticos / sectorStats.total) * 100}%` }} />
-                )}
-                {sectorStats.altos > 0 && (
-                  <div className="bg-amber-400" style={{ width: `${(sectorStats.altos / sectorStats.total) * 100}%` }} />
-                )}
-                {sectorStats.medios > 0 && (
-                  <div className="bg-yellow-300" style={{ width: `${(sectorStats.medios / sectorStats.total) * 100}%` }} />
-                )}
-                {sectorStats.bajos > 0 && (
-                  <div className="bg-green-400" style={{ width: `${(sectorStats.bajos / sectorStats.total) * 100}%` }} />
-                )}
-              </div>
-              <div className="flex justify-between mt-1.5">
-                <span className="text-[10px] text-slate-400">{sectorStats.criticos + sectorStats.altos} atencion</span>
-                <span className="text-[10px] text-slate-400">{sectorStats.medios} medio</span>
-                <span className="text-[10px] text-slate-400">{sectorStats.bajos} ok</span>
-              </div>
-            </div>
-          )}
+          {/* AGROAI link */}
+          <div className="mt-4 pt-3 border-t border-slate-100">
+            <a
+              href="https://control.lolaberries.com.mx/aplicaciones.html"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium"
+            >
+              <Calendar className="w-4 h-4" />
+              Ver aplicaciones en AGROAI
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
         </div>
       </div>
 
       {/* Empty state */}
-      {(!intelligence || (intelligence.sinTratar?.length === 0 && intelligence.pronostico?.length === 0 && allSectores.length === 0)) && (
+      {(!intelligence || problemsTable.length === 0) && activeRecipes.length === 0 && (
         <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-10 text-center">
           <Leaf className="w-12 h-12 text-green-200 mx-auto mb-3" />
           <p className="text-slate-500 mb-4">Registra monitoreos de campo para activar la inteligencia</p>

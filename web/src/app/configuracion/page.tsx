@@ -266,8 +266,8 @@ export default function ConfiguracionPage() {
       )}
 
       {/* Tabs */}
-      <div className="bg-gray-800/30 rounded-xl border border-gray-700/30 overflow-hidden">
-        <div className="border-b border-gray-700/30">
+      <div className="bg-white/30 rounded-xl border border-slate-200/30 overflow-hidden">
+        <div className="border-b border-slate-200/30">
           <nav className="flex">
             {tabs.map(tab => (
               <button
@@ -276,7 +276,7 @@ export default function ConfiguracionPage() {
                 className={`flex items-center gap-2 px-6 py-4 text-sm font-medium transition-colors ${
                   activeTab === tab.id
                     ? 'border-b-2 border-green-500 text-green-400 bg-green-500/10'
-                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                    : 'text-slate-500 hover:text-slate-900 hover:bg-white/50'
                 }`}
               >
                 <tab.icon className="w-5 h-5" />
@@ -291,7 +291,7 @@ export default function ConfiguracionPage() {
           {activeTab === 'usuarios' && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-white">Gestion de Usuarios</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Gestion de Usuarios</h2>
                 <button
                   onClick={openNewModal}
                   className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
@@ -306,7 +306,7 @@ export default function ConfiguracionPage() {
                   <RefreshCw className="w-8 h-8 text-green-400 animate-spin" />
                 </div>
               ) : users.length === 0 ? (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-slate-500">
                   <Users className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>No hay usuarios registrados</p>
                   <button
@@ -319,27 +319,27 @@ export default function ConfiguracionPage() {
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full">
-                    <thead className="bg-gray-800/50">
+                    <thead className="bg-white/50">
                       <tr>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Usuario</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Rol</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Notificaciones</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Actividad Hoy</th>
-                        <th className="px-4 py-3 text-left text-sm font-medium text-gray-400">Estado</th>
-                        <th className="px-4 py-3 text-right text-sm font-medium text-gray-400">Acciones</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Usuario</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Rol</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Notificaciones</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Actividad Hoy</th>
+                        <th className="px-4 py-3 text-left text-sm font-medium text-slate-500">Estado</th>
+                        <th className="px-4 py-3 text-right text-sm font-medium text-slate-500">Acciones</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-700/50">
+                    <tbody className="divide-y divide-slate-200/50">
                       {users.map(user => (
-                        <tr key={user.id} className="hover:bg-gray-800/50">
+                        <tr key={user.id} className="hover:bg-white/50">
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-3">
                               <div className="w-10 h-10 bg-green-500/20 rounded-full flex items-center justify-center">
                                 <User className="w-5 h-5 text-green-400" />
                               </div>
                               <div>
-                                <p className="font-medium text-white">{user.full_name}</p>
-                                <p className="text-sm text-gray-500">{user.email}</p>
+                                <p className="font-medium text-slate-900">{user.full_name}</p>
+                                <p className="text-sm text-slate-500">{user.email}</p>
                               </div>
                             </div>
                           </td>
@@ -358,12 +358,12 @@ export default function ConfiguracionPage() {
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
                               {user.notify_email && (
-                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                <span className="flex items-center gap-1 text-xs text-slate-500">
                                   <Mail className="w-4 h-4" /> Email
                                 </span>
                               )}
                               {user.notify_whatsapp && (
-                                <span className="flex items-center gap-1 text-xs text-gray-400">
+                                <span className="flex items-center gap-1 text-xs text-slate-500">
                                   <MessageSquare className="w-4 h-4" /> WhatsApp
                                 </span>
                               )}
@@ -371,9 +371,9 @@ export default function ConfiguracionPage() {
                           </td>
                           <td className="px-4 py-4">
                             <div className="flex items-center gap-2">
-                              <Activity className="w-4 h-4 text-gray-500" />
+                              <Activity className="w-4 h-4 text-slate-500" />
                               <span className={`font-medium ${
-                                (user.records_today || 0) > 0 ? 'text-green-400' : 'text-gray-500'
+                                (user.records_today || 0) > 0 ? 'text-green-400' : 'text-slate-500'
                               }`}>
                                 {user.records_today || 0} registros
                               </span>
@@ -421,13 +421,13 @@ export default function ConfiguracionPage() {
           {activeTab === 'notificaciones' && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-white">Usuarios Inactivos Hoy</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Usuarios Inactivos Hoy</h2>
                 <button
                   onClick={handleSendReminders}
                   disabled={sendingReminders || inactiveUsers.length === 0}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                     sendingReminders || inactiveUsers.length === 0
-                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                      ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
                       : 'bg-orange-600 text-white hover:bg-orange-700'
                   }`}
                 >
@@ -461,21 +461,21 @@ export default function ConfiguracionPage() {
                 <div className="text-center py-12">
                   <CheckCircle className="w-16 h-16 mx-auto mb-4 text-green-500/40" />
                   <p className="text-lg font-medium text-green-400">Todos los usuarios han subido informacion hoy</p>
-                  <p className="text-sm mt-2 text-gray-500">No hay usuarios inactivos que notificar</p>
+                  <p className="text-sm mt-2 text-slate-500">No hay usuarios inactivos que notificar</p>
                 </div>
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {inactiveUsers.map(user => (
-                    <div key={user.user_id} className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-4">
+                    <div key={user.user_id} className="bg-white/50 border border-slate-200/30 rounded-lg p-4">
                       <div className="flex items-start gap-3">
                         <div className="w-12 h-12 bg-orange-500/20 rounded-full flex items-center justify-center">
                           <User className="w-6 h-6 text-orange-400" />
                         </div>
                         <div className="flex-1">
-                          <p className="font-medium text-white">{user.full_name}</p>
-                          <p className="text-sm text-gray-500">{user.email}</p>
+                          <p className="font-medium text-slate-900">{user.full_name}</p>
+                          <p className="text-sm text-slate-500">{user.email}</p>
                           {user.phone && (
-                            <p className="text-sm text-gray-500">{user.phone}</p>
+                            <p className="text-sm text-slate-500">{user.phone}</p>
                           )}
                           <div className="flex items-center gap-2 mt-2">
                             {user.notify_email && (
@@ -502,11 +502,11 @@ export default function ConfiguracionPage() {
           {activeTab === 'reportes' && (
             <div>
               <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-semibold text-white">Reporte Diario</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Reporte Diario</h2>
                 <div className="flex gap-2">
                   <button
                     onClick={fetchTodayReport}
-                    className="flex items-center gap-2 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-800/50 transition-colors"
+                    className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-white/50 transition-colors"
                   >
                     <RefreshCw className="w-5 h-5" />
                     Actualizar
@@ -516,7 +516,7 @@ export default function ConfiguracionPage() {
                     disabled={sendingReport}
                     className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${
                       sendingReport
-                        ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                        ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
                         : 'bg-blue-600 text-white hover:bg-blue-700'
                     }`}
                   >
@@ -548,7 +548,7 @@ export default function ConfiguracionPage() {
                   <RefreshCw className="w-8 h-8 text-green-400 animate-spin" />
                 </div>
               ) : !todayReport ? (
-                <div className="text-center py-12 text-gray-500">
+                <div className="text-center py-12 text-slate-500">
                   <FileText className="w-16 h-16 mx-auto mb-4 opacity-50" />
                   <p>No hay reporte generado para hoy</p>
                   <button
@@ -560,9 +560,9 @@ export default function ConfiguracionPage() {
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-gray-700/30">
+                  <div className="flex items-center justify-between mb-6 pb-4 border-b border-slate-200/30">
                     <div>
-                      <h3 className="text-lg font-semibold text-white">
+                      <h3 className="text-lg font-semibold text-slate-900">
                         Reporte del {new Date(todayReport.report_date).toLocaleDateString('es-MX', {
                           weekday: 'long',
                           year: 'numeric',
@@ -577,35 +577,35 @@ export default function ConfiguracionPage() {
                         </p>
                       )}
                     </div>
-                    <button className="flex items-center gap-2 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-800/50">
+                    <button className="flex items-center gap-2 px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-white/50">
                       <Download className="w-5 h-5" />
                       Descargar PDF
                     </button>
                   </div>
 
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-                    <div className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-4">
-                      <div className="flex items-center gap-2 text-gray-400 mb-2">
+                    <div className="bg-white/50 border border-slate-200/30 rounded-lg p-4">
+                      <div className="flex items-center gap-2 text-slate-500 mb-2">
                         <Users className="w-5 h-5" />
                         <span className="text-sm">Total Usuarios</span>
                       </div>
-                      <p className="text-2xl font-bold text-white">{todayReport.total_users}</p>
+                      <p className="text-2xl font-bold text-slate-900">{todayReport.total_users}</p>
                     </div>
-                    <div className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-4">
+                    <div className="bg-white/50 border border-slate-200/30 rounded-lg p-4">
                       <div className="flex items-center gap-2 text-green-400 mb-2">
                         <CheckCircle className="w-5 h-5" />
                         <span className="text-sm">Activos Hoy</span>
                       </div>
                       <p className="text-2xl font-bold text-green-400">{todayReport.active_users}</p>
                     </div>
-                    <div className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-4">
+                    <div className="bg-white/50 border border-slate-200/30 rounded-lg p-4">
                       <div className="flex items-center gap-2 text-orange-400 mb-2">
                         <XCircle className="w-5 h-5" />
                         <span className="text-sm">Inactivos</span>
                       </div>
                       <p className="text-2xl font-bold text-orange-400">{todayReport.inactive_users}</p>
                     </div>
-                    <div className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-4">
+                    <div className="bg-white/50 border border-slate-200/30 rounded-lg p-4">
                       <div className="flex items-center gap-2 text-red-400 mb-2">
                         <AlertCircle className="w-5 h-5" />
                         <span className="text-sm">Alertas</span>
@@ -614,8 +614,8 @@ export default function ConfiguracionPage() {
                     </div>
                   </div>
 
-                  <div className="bg-gray-800/50 border border-gray-700/30 rounded-lg p-6">
-                    <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                  <div className="bg-white/50 border border-slate-200/30 rounded-lg p-6">
+                    <h4 className="font-semibold text-slate-900 mb-4 flex items-center gap-2">
                       <Activity className="w-5 h-5" />
                       Resumen de Actividad
                     </h4>
@@ -644,10 +644,10 @@ export default function ConfiguracionPage() {
       {/* Modal for User Form */}
       {showUserModal && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50">
-          <div className="bg-gray-900 border border-gray-700/50 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+          <div className="bg-slate-50 border border-slate-200/50 rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-xl font-semibold text-white">
+                <h3 className="text-xl font-semibold text-slate-900">
                   {editingUser ? 'Editar Usuario' : 'Nuevo Usuario'}
                 </h3>
                 <button
@@ -656,60 +656,60 @@ export default function ConfiguracionPage() {
                     setEditingUser(null);
                     resetForm();
                   }}
-                  className="p-2 hover:bg-gray-800 rounded-lg"
+                  className="p-2 hover:bg-white rounded-lg"
                 >
-                  <XCircle className="w-5 h-5 text-gray-500" />
+                  <XCircle className="w-5 h-5 text-slate-500" />
                 </button>
               </div>
 
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
                     Nombre Completo *
                   </label>
                   <input
                     type="text"
                     value={userForm.full_name}
                     onChange={e => setUserForm({ ...userForm, full_name: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Ej: Juan Perez Garcia"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
                     Email *
                   </label>
                   <input
                     type="email"
                     value={userForm.email}
                     onChange={e => setUserForm({ ...userForm, email: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Ej: juan@empresa.com"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
                     Telefono (WhatsApp)
                   </label>
                   <input
                     type="tel"
                     value={userForm.phone}
                     onChange={e => setUserForm({ ...userForm, phone: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 placeholder-gray-500 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                     placeholder="Ej: +52 1 33 1234 5678"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-300 mb-1">
+                  <label className="block text-sm font-medium text-slate-600 mb-1">
                     Rol
                   </label>
                   <select
                     value={userForm.role}
                     onChange={e => setUserForm({ ...userForm, role: e.target.value })}
-                    className="w-full px-4 py-2 bg-gray-800 border border-gray-600 rounded-lg text-white focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                    className="w-full px-4 py-2 bg-white border border-slate-300 rounded-lg text-slate-900 focus:ring-2 focus:ring-green-500 focus:border-transparent"
                   >
                     <option value="field_engineer">Ingeniero de Campo</option>
                     <option value="supervisor">Supervisor</option>
@@ -717,41 +717,41 @@ export default function ConfiguracionPage() {
                   </select>
                 </div>
 
-                <div className="pt-4 border-t border-gray-700/50">
-                  <p className="text-sm font-medium text-gray-300 mb-3">Preferencias de Notificacion</p>
+                <div className="pt-4 border-t border-slate-200/50">
+                  <p className="text-sm font-medium text-slate-600 mb-3">Preferencias de Notificacion</p>
                   <div className="space-y-2">
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={userForm.notify_email}
                         onChange={e => setUserForm({ ...userForm, notify_email: e.target.checked })}
-                        className="w-4 h-4 text-green-600 border-gray-600 rounded focus:ring-green-500 bg-gray-800"
+                        className="w-4 h-4 text-green-600 border-slate-300 rounded focus:ring-green-500 bg-white"
                       />
-                      <Mail className="w-5 h-5 text-gray-500" />
-                      <span className="text-sm text-gray-300">Notificar por Email</span>
+                      <Mail className="w-5 h-5 text-slate-500" />
+                      <span className="text-sm text-slate-600">Notificar por Email</span>
                     </label>
                     <label className="flex items-center gap-3 cursor-pointer">
                       <input
                         type="checkbox"
                         checked={userForm.notify_whatsapp}
                         onChange={e => setUserForm({ ...userForm, notify_whatsapp: e.target.checked })}
-                        className="w-4 h-4 text-green-600 border-gray-600 rounded focus:ring-green-500 bg-gray-800"
+                        className="w-4 h-4 text-green-600 border-slate-300 rounded focus:ring-green-500 bg-white"
                       />
-                      <MessageSquare className="w-5 h-5 text-gray-500" />
-                      <span className="text-sm text-gray-300">Notificar por WhatsApp</span>
+                      <MessageSquare className="w-5 h-5 text-slate-500" />
+                      <span className="text-sm text-slate-600">Notificar por WhatsApp</span>
                     </label>
                   </div>
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6 pt-4 border-t border-gray-700/50">
+              <div className="flex gap-3 mt-6 pt-4 border-t border-slate-200/50">
                 <button
                   onClick={() => {
                     setShowUserModal(false);
                     setEditingUser(null);
                     resetForm();
                   }}
-                  className="flex-1 px-4 py-2 border border-gray-600 text-gray-300 rounded-lg hover:bg-gray-800 transition-colors"
+                  className="flex-1 px-4 py-2 border border-slate-300 text-slate-600 rounded-lg hover:bg-white transition-colors"
                 >
                   Cancelar
                 </button>
@@ -760,7 +760,7 @@ export default function ConfiguracionPage() {
                   disabled={!userForm.full_name || !userForm.email}
                   className={`flex-1 px-4 py-2 rounded-lg transition-colors ${
                     !userForm.full_name || !userForm.email
-                      ? 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                      ? 'bg-slate-200 text-slate-500 cursor-not-allowed'
                       : 'bg-green-600 text-white hover:bg-green-700'
                   }`}
                 >

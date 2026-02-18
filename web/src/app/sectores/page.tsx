@@ -86,7 +86,7 @@ export default function SectoresPage() {
       <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-3" />
-          <p className="text-gray-400 text-sm">Calculando riesgo de sectores...</p>
+          <p className="text-slate-500 text-sm">Calculando riesgo de sectores...</p>
         </div>
       </div>
     );
@@ -109,10 +109,10 @@ export default function SectoresPage() {
 
         {/* Stats chips */}
         <div className="flex flex-wrap gap-2 mb-4">
-          <div className="flex items-center gap-2 bg-gray-800/40 rounded-lg px-3 py-1.5 border border-gray-700/30">
+          <div className="flex items-center gap-2 bg-slate-100/40 rounded-lg px-3 py-1.5 border border-slate-200/30">
             <Sprout className="w-4 h-4 text-green-400" />
-            <span className="text-white font-semibold text-sm">{stats.total}</span>
-            <span className="text-gray-500 text-xs">sectores</span>
+            <span className="text-slate-900 font-semibold text-sm">{stats.total}</span>
+            <span className="text-slate-500 text-xs">sectores</span>
           </div>
           {stats.criticos > 0 && (
             <div className="flex items-center gap-2 bg-red-500/10 rounded-lg px-3 py-1.5 border border-red-500/20">
@@ -145,16 +145,16 @@ export default function SectoresPage() {
         {/* Search + Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
               placeholder="Buscar sector, cultivo, finca, plaga..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full pl-10 pr-8 py-2 bg-gray-800/50 border border-gray-700/30 rounded-lg text-white text-sm placeholder-gray-500 focus:outline-none focus:border-green-500/50"
+              className="w-full pl-10 pr-8 py-2 bg-slate-100 border border-slate-200/30 rounded-lg text-slate-900 text-sm placeholder-gray-500 focus:outline-none focus:border-green-500/50"
             />
             {search && (
-              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white">
+              <button onClick={() => setSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-900">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -172,7 +172,7 @@ export default function SectoresPage() {
                 className={`px-3 py-2 rounded-lg text-xs font-medium transition-colors ${
                   filter === key
                     ? 'bg-green-600/20 text-green-400 border border-green-500/30'
-                    : 'bg-gray-800/50 text-gray-400 border border-gray-700/30 hover:text-white'
+                    : 'bg-slate-100 text-slate-500 border border-slate-200/30 hover:text-slate-900'
                 }`}
               >
                 {label}
@@ -186,20 +186,20 @@ export default function SectoresPage() {
           {/* Sector list */}
           <div className="lg:w-3/5 space-y-2 max-h-[calc(100vh-280px)] overflow-y-auto pr-1 custom-scrollbar">
             {filtered.length === 0 ? (
-              <div className="bg-gray-800/30 rounded-xl p-8 text-center border border-gray-700/30">
-                <Filter className="w-10 h-10 text-gray-700 mx-auto mb-3" />
-                <p className="text-gray-400">No se encontraron sectores</p>
-                <p className="text-gray-600 text-xs mt-1">Intenta con otro termino de busqueda</p>
+              <div className="bg-slate-100/30 rounded-xl p-8 text-center border border-slate-200/30">
+                <Filter className="w-10 h-10 text-slate-700 mx-auto mb-3" />
+                <p className="text-slate-500">No se encontraron sectores</p>
+                <p className="text-slate-600 text-xs mt-1">Intenta con otro termino de busqueda</p>
               </div>
             ) : (
               filtered.map(sector => (
                 <div
                   key={sector.id}
                   ref={el => { sectorRefs.current[sector.id] = el; }}
-                  className={`bg-gray-800/30 border rounded-xl transition-all duration-200 cursor-pointer ${
+                  className={`bg-slate-100/30 border rounded-xl transition-all duration-200 cursor-pointer ${
                     expandedId === sector.id
                       ? riskBorderFull(sector.riskLevel)
-                      : 'border-gray-700/30 hover:border-gray-600/50'
+                      : 'border-slate-200/30 hover:border-slate-300/50'
                   }`}
                   onClick={() => handleCardClick(sector)}
                 >
@@ -208,10 +208,10 @@ export default function SectoresPage() {
                     <div className={`w-3 h-3 rounded-full shrink-0 ${riskDotColor(sector.riskLevel)}`} />
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-white font-medium text-sm">Sector {sector.sector}</span>
-                        <span className="text-gray-500 text-xs">·</span>
-                        <span className="text-gray-400 text-xs truncate">{sector.cultivo}{sector.variedad ? ` ${sector.variedad}` : ''}</span>
-                        <span className="text-gray-600 text-xs">({sector.finca})</span>
+                        <span className="text-slate-900 font-medium text-sm">Sector {sector.sector}</span>
+                        <span className="text-slate-500 text-xs">·</span>
+                        <span className="text-slate-500 text-xs truncate">{sector.cultivo}{sector.variedad ? ` ${sector.variedad}` : ''}</span>
+                        <span className="text-slate-600 text-xs">({sector.finca})</span>
                       </div>
                       <div className="flex items-center gap-2 mt-0.5">
                         <span className={`text-xs font-medium ${riskTextColor(sector.riskLevel)}`}>
@@ -235,20 +235,20 @@ export default function SectoresPage() {
                           </span>
                         )}
                         {sector.fumigacionStatus === 'sin-dato' && sector.totalObservaciones > 0 && (
-                          <span className="text-xs text-gray-500">sin dato fumigacion</span>
+                          <span className="text-xs text-slate-500">sin dato fumigacion</span>
                         )}
                       </div>
                     </div>
                     {expandedId === sector.id ? (
-                      <ChevronUp className="w-4 h-4 text-gray-500 shrink-0" />
+                      <ChevronUp className="w-4 h-4 text-slate-500 shrink-0" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+                      <ChevronDown className="w-4 h-4 text-slate-500 shrink-0" />
                     )}
                   </div>
 
                   {/* Expanded detail */}
                   {expandedId === sector.id && (
-                    <div className="px-4 pb-4 border-t border-gray-700/30 mt-1 pt-3" onClick={e => e.stopPropagation()}>
+                    <div className="px-4 pb-4 border-t border-slate-200/30 mt-1 pt-3" onClick={e => e.stopPropagation()}>
                       {/* Census */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-4 gap-y-2 mb-3">
                         <CensusItem label="Finca" value={sector.finca} />
@@ -294,7 +294,7 @@ export default function SectoresPage() {
                               : `${sector.diasSinFumigar}d sin fumigar (intervalo: ${sector.intervaloSeguridad}d)`}
                           </div>
                           {sector.ultimaFumigacion && (
-                            <p className="text-xs text-gray-500 mt-1">
+                            <p className="text-xs text-slate-500 mt-1">
                               Ultima: {formatDate(sector.ultimaFumigacion)}
                               {sector.productoUsado && ` · ${sector.productoUsado}`}
                             </p>
@@ -304,9 +304,9 @@ export default function SectoresPage() {
 
                       {/* Why at risk */}
                       {sector.razonRiesgo && (
-                        <div className="bg-gray-900/50 rounded-lg p-3 mb-3 border border-gray-700/20">
-                          <p className="text-xs text-gray-500 font-medium uppercase tracking-wide mb-1">Por que</p>
-                          <p className="text-sm text-gray-300">{sector.razonRiesgo}</p>
+                        <div className="bg-slate-50/50 rounded-lg p-3 mb-3 border border-slate-200/20">
+                          <p className="text-xs text-slate-500 font-medium uppercase tracking-wide mb-1">Por que</p>
+                          <p className="text-sm text-slate-600">{sector.razonRiesgo}</p>
                         </div>
                       )}
 
@@ -345,7 +345,7 @@ export default function SectoresPage() {
           </div>
 
           {/* Map */}
-          <div className="lg:w-2/5 lg:sticky lg:top-4 h-[400px] lg:h-[calc(100vh-280px)] bg-gray-800/30 border border-gray-700/30 rounded-xl overflow-hidden">
+          <div className="lg:w-2/5 lg:sticky lg:top-4 h-[400px] lg:h-[calc(100vh-280px)] bg-white border border-slate-200 shadow-sm rounded-xl overflow-hidden">
             <MapView
               sectores={filtered}
               selectedId={expandedId}
@@ -357,7 +357,7 @@ export default function SectoresPage() {
 
       {/* Floating count */}
       {search || filter !== 'todos' ? (
-        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-gray-800/90 backdrop-blur-sm border border-gray-700/50 text-gray-300 text-sm px-4 py-2 rounded-full">
+        <div className="fixed bottom-6 left-1/2 -translate-x-1/2 bg-slate-100/90 backdrop-blur-sm border border-slate-200/50 text-slate-600 text-sm px-4 py-2 rounded-full">
           {filtered.length} de {data.sectores.length} sectores
         </div>
       ) : null}
@@ -369,8 +369,8 @@ export default function SectoresPage() {
 function CensusItem({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <p className="text-xs text-gray-600">{label}</p>
-      <p className="text-sm text-gray-300">{value}</p>
+      <p className="text-xs text-slate-600">{label}</p>
+      <p className="text-sm text-slate-600">{value}</p>
     </div>
   );
 }
@@ -427,7 +427,7 @@ function fumStatusStyle(status: string): string {
     case 'vencido': return 'bg-yellow-500/20 text-yellow-400';
     case 'por-vencer': return 'bg-yellow-500/10 text-yellow-400/70';
     case 'al-dia': return 'bg-green-500/10 text-green-400';
-    default: return 'bg-gray-500/10 text-gray-500';
+    default: return 'bg-slate-400/10 text-slate-500';
   }
 }
 
@@ -436,6 +436,6 @@ function sevBgColor(sev: string): string {
     case 'critica': return 'bg-red-500/20 text-red-400';
     case 'alta': return 'bg-orange-500/20 text-orange-400';
     case 'media': return 'bg-yellow-500/20 text-yellow-400';
-    default: return 'bg-gray-500/20 text-gray-400';
+    default: return 'bg-slate-400/20 text-slate-500';
   }
 }
