@@ -318,14 +318,25 @@ export default function SectoresPage() {
                         </div>
                       )}
 
-                      {/* Ask Agronomo IA */}
-                      <Link
-                        href={`/asistente?sector=${sector.sector}&cultivo=${encodeURIComponent(sector.cultivo)}`}
-                        className="flex items-center gap-2 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm transition-colors w-fit"
-                      >
-                        <Bot className="w-4 h-4" />
-                        Consultar al Agronomo IA sobre este sector
-                      </Link>
+                      {/* Actions */}
+                      <div className="flex flex-wrap gap-2">
+                        <Link
+                          href={`/asistente?sector=${sector.sector}&cultivo=${encodeURIComponent(sector.cultivo)}`}
+                          className="flex items-center gap-2 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm transition-colors"
+                        >
+                          <Bot className="w-4 h-4" />
+                          Consultar IA
+                        </Link>
+                        <a
+                          href={`https://control.lolaberries.com.mx/mapa`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-2 px-3 py-2 bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 rounded-lg text-sm transition-colors"
+                        >
+                          <MapPin className="w-4 h-4" />
+                          Ver en Mapa AGROAI
+                        </a>
+                      </div>
                     </div>
                   )}
                 </div>
