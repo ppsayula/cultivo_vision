@@ -6,7 +6,7 @@ import { useState, useEffect, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import {
-  ChevronLeft, MapPin, Search, AlertTriangle, CheckCircle,
+  MapPin, Search, AlertTriangle, CheckCircle,
   Sprout, Droplets, Calendar, ChevronDown, ChevronUp,
   Bot, Shield, Crosshair, Filter, X
 } from 'lucide-react';
@@ -83,7 +83,7 @@ export default function SectoresPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full mx-auto mb-3" />
           <p className="text-gray-400 text-sm">Calculando riesgo de sectores...</p>
@@ -94,7 +94,7 @@ export default function SectoresPage() {
 
   if (!data) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] p-6">
+      <div className="p-6">
         <p className="text-red-400">Error cargando datos de sectores</p>
         <Link href="/" className="text-green-400 text-sm mt-2 inline-block">Volver al dashboard</Link>
       </div>
@@ -104,25 +104,8 @@ export default function SectoresPage() {
   const { stats } = data;
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
+    <>
       <div className="max-w-[1400px] mx-auto p-4 sm:p-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
-          <Link href="/" className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-lg">
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div className="flex-1 min-w-0">
-            <h1 className="text-xl sm:text-2xl font-bold text-white">Sectores del Rancho</h1>
-            <p className="text-gray-500 text-sm">{stats.total} sectores activos · Ordenados por riesgo</p>
-          </div>
-          <Link
-            href="/asistente"
-            className="flex items-center gap-2 px-3 py-2 bg-green-600/20 hover:bg-green-600/30 text-green-400 rounded-lg text-sm transition-colors"
-          >
-            <Bot className="w-4 h-4" />
-            <span className="hidden sm:inline">Agronomo IA</span>
-          </Link>
-        </div>
 
         {/* Stats chips */}
         <div className="flex flex-wrap gap-2 mb-4">
@@ -367,7 +350,7 @@ export default function SectoresPage() {
           {filtered.length} de {data.sectores.length} sectores
         </div>
       ) : null}
-    </div>
+    </>
   );
 }
 

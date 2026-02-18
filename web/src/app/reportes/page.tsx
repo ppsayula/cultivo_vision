@@ -4,7 +4,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  ArrowLeft,
   FileText,
   Download,
   Calendar,
@@ -253,35 +252,17 @@ export default function ReportesPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-400" />
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-white">Reportes</h1>
-                <p className="text-sm text-gray-400">
-                  Genera y descarga reportes de campo
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => setShowGenerateModal(true)}
-              className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl text-white font-medium transition-colors"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Generar Reporte</span>
-            </button>
-          </div>
-        </div>
-      </header>
+    <>
+      {/* Action bar */}
+      <div className="flex items-center justify-end px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-800/50">
+        <button
+          onClick={() => setShowGenerateModal(true)}
+          className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 rounded-xl text-white font-medium transition-colors"
+        >
+          <Plus className="w-5 h-5" />
+          <span>Generar Reporte</span>
+        </button>
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
@@ -531,6 +512,6 @@ export default function ReportesPage() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

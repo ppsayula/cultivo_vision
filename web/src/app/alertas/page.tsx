@@ -2,9 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import {
-  ArrowLeft,
   Bell,
   BellOff,
   Check,
@@ -187,56 +185,29 @@ export default function AlertasPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-gray-800/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link
-                href="/"
-                className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors"
-              >
-                <ArrowLeft className="w-5 h-5 text-gray-400" />
-              </Link>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold text-white">Alertas</h1>
-                  {unreadCount > 0 && (
-                    <span className="px-2 py-1 bg-red-500 text-white text-xs font-bold rounded-full">
-                      {unreadCount}
-                    </span>
-                  )}
-                </div>
-                <p className="text-sm text-gray-400">
-                  {criticalCount > 0 ? `${criticalCount} alertas criticas pendientes` : 'Sin alertas criticas'}
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setNotificationsEnabled(!notificationsEnabled)}
-                className={`p-2 rounded-xl transition-colors ${
-                  notificationsEnabled
-                    ? 'bg-green-500/20 text-green-400'
-                    : 'bg-gray-800 text-gray-400'
-                }`}
-              >
-                {notificationsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
-              </button>
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
-                  className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors"
-                >
-                  <CheckCheck className="w-4 h-4" />
-                  <span className="hidden sm:inline">Marcar todo leido</span>
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+    <>
+      {/* Action bar */}
+      <div className="flex items-center justify-end gap-3 px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-800/50">
+        <button
+          onClick={() => setNotificationsEnabled(!notificationsEnabled)}
+          className={`p-2 rounded-xl transition-colors ${
+            notificationsEnabled
+              ? 'bg-green-500/20 text-green-400'
+              : 'bg-gray-800 text-gray-400'
+          }`}
+        >
+          {notificationsEnabled ? <Volume2 className="w-5 h-5" /> : <VolumeX className="w-5 h-5" />}
+        </button>
+        {unreadCount > 0 && (
+          <button
+            onClick={markAllAsRead}
+            className="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-xl text-gray-300 transition-colors"
+          >
+            <CheckCheck className="w-4 h-4" />
+            <span className="hidden sm:inline">Marcar todo leido</span>
+          </button>
+        )}
+      </div>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
@@ -394,6 +365,6 @@ export default function AlertasPage() {
           </>
         )}
       </main>
-    </div>
+    </>
   );
 }

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import {
   Leaf,
   Plus,
   Save,
-  ArrowLeft,
   Calendar,
   MapPin,
   Droplets,
@@ -208,28 +206,16 @@ export default function CultivosPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="animate-spin w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] p-4 md:p-8">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div className="flex items-center gap-4">
-          <Link href="/" className="p-2 bg-gray-800 rounded-lg hover:bg-gray-700 transition-colors">
-            <ArrowLeft className="w-5 h-5 text-gray-400" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-white flex items-center gap-2">
-              <Leaf className="w-7 h-7 text-green-500" />
-              Alta de Cultivos
-            </h1>
-            <p className="text-gray-500">Registro maestro de cultivos por ciclo</p>
-          </div>
-        </div>
+    <div className="p-4 md:p-8">
+      {/* Action bar */}
+      <div className="flex items-center justify-end mb-8">
         <button
           onClick={() => setShowForm(true)}
           className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg transition-colors"

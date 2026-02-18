@@ -5,7 +5,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
-  ChevronLeft, Bot, AlertTriangle, CheckCircle,
+  Bot, AlertTriangle, CheckCircle,
   Droplets, Target, MapPin, Pill, Beaker
 } from 'lucide-react';
 
@@ -22,7 +22,7 @@ export default function InteligenciaPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] flex items-center justify-center">
+      <div className="flex items-center justify-center py-20">
         <div className="animate-spin w-8 h-8 border-2 border-green-500 border-t-transparent rounded-full" />
       </div>
     );
@@ -30,7 +30,7 @@ export default function InteligenciaPage() {
 
   if (!data || data.error) {
     return (
-      <div className="min-h-screen bg-[#0a0f1a] p-6">
+      <div className="p-6">
         <p className="text-red-400">Error cargando datos de inteligencia</p>
         <Link href="/" className="text-green-400 text-sm mt-2 inline-block">Volver al dashboard</Link>
       </div>
@@ -41,28 +41,7 @@ export default function InteligenciaPage() {
   const mergedProblems = buildMergedProblems(data);
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
       <div className="max-w-5xl mx-auto p-4 sm:p-6">
-        {/* Header */}
-        <div className="flex items-center gap-4 mb-4">
-          <Link href="/" className="p-2 text-gray-400 hover:text-white bg-gray-800/50 rounded-lg">
-            <ChevronLeft className="w-5 h-5" />
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-white">Inteligencia de Campo</h1>
-            <p className="text-gray-500 text-sm">
-              Semana {data.semanaActual} · Datos hasta semana {data.ultimaSemanaConDatos}
-              {weeksBehind >= 2 && <span className="text-yellow-400 ml-2">({weeksBehind} sem atras)</span>}
-            </p>
-          </div>
-          <Link
-            href="/asistente"
-            className="ml-auto flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-lg text-sm transition-colors"
-          >
-            <Bot className="w-4 h-4" />
-            Agronomo IA
-          </Link>
-        </div>
 
         {/* Resumen compacto */}
         <div className="bg-gray-800/30 border border-gray-700/30 rounded-xl p-4 mb-6">
@@ -282,7 +261,6 @@ export default function InteligenciaPage() {
           Semanas {Math.max(1, data.ultimaSemanaConDatos - 2)}-{data.ultimaSemanaConDatos} · Cultivo Vision
         </div>
       </div>
-    </div>
   );
 }
 

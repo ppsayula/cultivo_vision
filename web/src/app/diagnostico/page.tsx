@@ -11,7 +11,6 @@ import {
   Sprout,
   ChevronRight,
   ChevronLeft,
-  ArrowLeft,
   AlertTriangle,
   Zap,
   BarChart3,
@@ -220,31 +219,11 @@ export default function DiagnosticoPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a]">
-      {/* Background */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute top-0 left-1/4 w-96 h-96 bg-green-500/5 rounded-full blur-3xl" />
-        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      </div>
-
-      {/* Header */}
-      <header className="sticky top-0 z-40 backdrop-blur-xl bg-gray-900/80 border-b border-gray-800/50">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 rounded-lg hover:bg-gray-800/50 transition-colors">
-              <ArrowLeft className="w-5 h-5 text-gray-400" />
-            </Link>
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-red-500 to-orange-500 flex items-center justify-center">
-                <Zap className="w-4 h-4 text-white" />
-              </div>
-              <div>
-                <h1 className="text-lg font-bold text-white">Diagnostico Rapido</h1>
-                <p className="text-xs text-gray-400">Protocolo de tratamiento en 30 segundos</p>
-              </div>
-            </div>
-          </div>
-          {step > 0 && step < 4 && (
+    <>
+      <main className="max-w-4xl mx-auto px-4 py-6 relative z-10">
+        {/* Reset button */}
+        {step > 0 && step < 4 && (
+          <div className="flex justify-end mb-4">
             <button
               onClick={handleReset}
               className="flex items-center gap-1 text-sm text-gray-400 hover:text-white transition-colors"
@@ -252,11 +231,8 @@ export default function DiagnosticoPage() {
               <RotateCcw className="w-4 h-4" />
               Reiniciar
             </button>
-          )}
-        </div>
-      </header>
-
-      <main className="max-w-4xl mx-auto px-4 py-6 relative z-10">
+          </div>
+        )}
         {/* Progress Steps */}
         {step < 4 && (
           <div className="flex items-center justify-center gap-2 mb-8">
@@ -579,6 +555,6 @@ export default function DiagnosticoPage() {
           </div>
         )}
       </main>
-    </div>
+    </>
   );
 }

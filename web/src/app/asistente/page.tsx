@@ -2,9 +2,7 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import Link from 'next/link';
 import {
-  ArrowLeft,
   Bot,
   Send,
   Loader2,
@@ -219,54 +217,30 @@ export default function AsistentePage() {
       ];
 
   return (
-    <div className="min-h-screen bg-[#0a0f1a] flex flex-col">
-      {/* Header */}
-      <header className="sticky top-0 z-40 bg-[#0a0f1a]/80 backdrop-blur-xl border-b border-gray-800/50">
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <Link href="/" className="p-2 rounded-xl bg-gray-800 hover:bg-gray-700 transition-colors">
-                <ArrowLeft className="w-5 h-5 text-gray-400" />
-              </Link>
-              <div className="flex items-center gap-3">
-                <div className="p-2 rounded-xl bg-gradient-to-br from-green-500/20 to-emerald-500/20 border border-green-500/30">
-                  <Bot className="w-6 h-6 text-green-400" />
-                </div>
-                <div>
-                  <h1 className="text-xl font-bold text-white">Agrónomo IA</h1>
-                  <p className="text-sm text-gray-400">
-                    Diagnóstico y tratamiento con datos reales
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Selectores */}
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <select
-                  value={selectedCrop}
-                  onChange={(e) => setSelectedCrop(e.target.value)}
-                  className="appearance-none px-3 py-2 pr-8 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-500/50 cursor-pointer"
-                >
-                  <option value="Frambuesa">Frambuesa</option>
-                  <option value="Arándano">Arándano</option>
-                </select>
-                <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
-              </div>
-              <div className="relative">
-                <input
-                  type="text"
-                  value={selectedSector}
-                  onChange={(e) => setSelectedSector(e.target.value)}
-                  placeholder="Sector"
-                  className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-500/50 placeholder-gray-500"
-                />
-              </div>
-            </div>
-          </div>
+    <div className="flex flex-col h-full">
+      {/* Selectores */}
+      <div className="flex items-center justify-end gap-2 px-4 sm:px-6 lg:px-8 py-3 border-b border-gray-800/50">
+        <div className="relative">
+          <select
+            value={selectedCrop}
+            onChange={(e) => setSelectedCrop(e.target.value)}
+            className="appearance-none px-3 py-2 pr-8 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-500/50 cursor-pointer"
+          >
+            <option value="Frambuesa">Frambuesa</option>
+            <option value="Arándano">Arándano</option>
+          </select>
+          <ChevronDown className="absolute right-2 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
         </div>
-      </header>
+        <div className="relative">
+          <input
+            type="text"
+            value={selectedSector}
+            onChange={(e) => setSelectedSector(e.target.value)}
+            placeholder="Sector"
+            className="w-20 px-3 py-2 bg-gray-800 border border-gray-700 rounded-xl text-white text-sm focus:outline-none focus:border-green-500/50 placeholder-gray-500"
+          />
+        </div>
+      </div>
 
       {/* Messages Area */}
       <main className="flex-1 overflow-y-auto">
@@ -464,7 +438,7 @@ export default function AsistentePage() {
       </main>
 
       {/* Input Area */}
-      <div className="sticky bottom-0 bg-[#0a0f1a]/80 backdrop-blur-xl border-t border-gray-800/50">
+      <div className="sticky bottom-0 backdrop-blur-xl border-t border-gray-800/50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
           {/* Image Preview */}
           {imagePreview && (
