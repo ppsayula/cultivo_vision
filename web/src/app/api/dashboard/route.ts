@@ -16,28 +16,38 @@ export async function GET() {
     let diasSinMonitoreo: number | null = null;
 
     if (intelligence.ultimaSemanaConDatos > 0) {
-      // Approximate: last week with data → that week's Friday
       const year = now.getFullYear();
       const jan1 = new Date(year, 0, 1);
       const lastWeekDate = new Date(jan1.getTime() + (intelligence.ultimaSemanaConDatos - 1) * 7 * 86400000);
       diasSinMonitoreo = Math.floor((now.getTime() - lastWeekDate.getTime()) / 86400000);
     }
 
-    // Aggregate risk scorecard
+    // Smarter aggregate risk - based on ACTIONABLE items, not raw counts
+    // "Cuando todo importa nada importa" - only flag truly urgent sectors
     const riesgoGeneral = (() => {
       const { stats } = sectorData;
       if (stats.total === 0) return { nivel: 'sin-datos' as const, score: 0, label: 'Sin datos' };
-      const pctCritico = ((stats.criticos + stats.altos) / stats.total) * 100;
-      if (pctCritico >= 30) return { nivel: 'critico' as const, score: Math.round(pctCritico), label: `${stats.criticos + stats.altos} sectores en riesgo` };
-      if (pctCritico >= 15) return { nivel: 'alto' as const, score: Math.round(pctCritico), label: `${stats.criticos + stats.altos} sectores en riesgo` };
-      if (pctCritico >= 5) return { nivel: 'medio' as const, score: Math.round(pctCritico), label: `${stats.criticos + stats.altos} con atencion` };
-      return { nivel: 'bajo' as const, score: Math.round(pctCritico), label: 'Bajo control' };
+
+      // Focus on actionable items (untreated severe problems)
+      if (stats.accionables >= 5) {
+        return { nivel: 'alto' as const, score: stats.accionables, label: `${stats.accionables} sectores requieren accion` };
+      }
+      if (stats.accionables > 0) {
+        return { nivel: 'medio' as const, score: stats.accionables, label: `${stats.accionables} ${stats.accionables === 1 ? 'sector requiere' : 'sectores requieren'} accion` };
+      }
+      if (stats.criticos > 0) {
+        return { nivel: 'medio' as const, score: stats.criticos, label: `${stats.criticos} en seguimiento` };
+      }
+      return { nivel: 'bajo' as const, score: 0, label: 'Operacion en control' };
     })();
 
     return NextResponse.json({
       intelligence,
       sectorStats: sectorData.stats,
-      topSectores: sectorData.sectores.slice(0, 5), // Top 5 riskiest
+      allSectores: sectorData.sectores, // ALL sectors for map
+      topSectores: sectorData.sectores
+        .filter(s => s.problemasActivos.some(p => !p.tratado && (p.severidadMax === 'alta' || p.severidadMax === 'critica')))
+        .slice(0, 5), // Top 5 truly actionable
       riesgoGeneral,
       diasSinMonitoreo,
     });

@@ -70,6 +70,9 @@ export interface SectorStats {
   medios: number;
   bajos: number;
   fumigacionVencida: number; // sectors past their safety interval
+  accionables: number; // sectors with untreated severe problems (truly urgent)
+  sinDatosRecientes: number; // sectors with no recent observations
+  enControl: number; // sectors monitored + treated
 }
 
 // Generate GPS coordinates based on sector number and finca
@@ -113,7 +116,7 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     .order('nombre');
 
   if (!catalogSectors || catalogSectors.length === 0) {
-    return { sectores: [], stats: { total: 0, criticos: 0, altos: 0, medios: 0, bajos: 0, fumigacionVencida: 0 } };
+    return { sectores: [], stats: { total: 0, criticos: 0, altos: 0, medios: 0, bajos: 0, fumigacionVencida: 0, accionables: 0, sinDatosRecientes: 0, enControl: 0 } };
   }
 
   // 2. Get crop details from cultivos (enrichment - some sectors have extra detail here)
@@ -240,40 +243,48 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
       .sort((a, b) => SEV_ORDER.indexOf(b.severidadMax) - SEV_ORDER.indexOf(a.severidadMax));
 
     // Risk score calculation
+    // Philosophy: high scores ONLY for confirmed active problems, NOT missing data
+    // Missing data = needs monitoring, NOT crisis
     let riskScore = 0;
     const razones: string[] = [];
 
     const untreatedSevere = problemasActivos.filter(p => !p.tratado && (p.severidadMax === 'alta' || p.severidadMax === 'critica'));
     const untreatedMedium = problemasActivos.filter(p => !p.tratado && p.severidadMax === 'media');
 
+    // Untreated problems = REAL risk (these are the primary signal)
     if (untreatedSevere.length > 0) {
-      riskScore += 30;
+      riskScore += 35;
       razones.push(`${untreatedSevere.map(p => `${p.nombre} (${p.severidadMax})`).join(', ')} sin tratar`);
     }
     if (untreatedMedium.length > 0) {
-      riskScore += 20;
+      riskScore += 15;
       razones.push(`${untreatedMedium.map(p => p.nombre).join(', ')} (media) sin tratar`);
     }
 
-    // Fumigation risk based on safety intervals
-    if (fumigacionStatus === 'critico') {
-      riskScore += 30;
-      razones.push(`${diasSinFumigar} dias sin fumigar (intervalo seguro: ${interval.alerta}d para ${actualCultivo})`);
-    } else if (fumigacionStatus === 'vencido') {
+    // Fumigation risk - only truly stale data matters, very old = data gap not crisis
+    if (fumigacionStatus === 'critico' && (diasSinFumigar || 0) <= 60) {
+      // Recent enough to be actionable (21-60 days for arandano)
       riskScore += 20;
-      razones.push(`${diasSinFumigar} dias sin fumigar (intervalo ${interval.alerta}d vencido)`);
+      razones.push(`${diasSinFumigar}d sin fumigar (intervalo ${interval.alerta}d para ${actualCultivo})`);
+    } else if (fumigacionStatus === 'critico') {
+      // Very old data (>60 days) - likely a data entry gap
+      riskScore += 5;
+      razones.push(`Sin fumigacion reciente registrada`);
+    } else if (fumigacionStatus === 'vencido') {
+      riskScore += 15;
+      razones.push(`${diasSinFumigar}d sin fumigar (intervalo ${interval.alerta}d vencido)`);
     } else if (fumigacionStatus === 'por-vencer') {
-      riskScore += 10;
-      razones.push(`${diasSinFumigar} dias sin fumigar (proximo a vencer)`);
-    } else if (fumigacionStatus === 'sin-dato' && obs.total > 0) {
-      riskScore += 25;
-      razones.push('Sin registro de fumigacion');
+      riskScore += 8;
+      razones.push(`${diasSinFumigar}d sin fumigar (proximo a vencer)`);
+    } else if (fumigacionStatus === 'sin-dato') {
+      riskScore += 5;
+      if (obs.total > 0) razones.push('Sin registro de fumigacion');
     }
 
-    // Problem diversity
+    // Problem diversity (minor signal)
     const distinctProblems = Math.min(problemasActivos.length, 3);
-    riskScore += distinctProblems * 5;
-    if (obs.total > 0) riskScore += 10;
+    riskScore += distinctProblems * 3;
+    if (obs.total > 0) riskScore += 5;
     riskScore = Math.min(riskScore, 100);
 
     let riskLevel: 'bajo' | 'medio' | 'alto' | 'critico';
@@ -365,6 +376,11 @@ export async function getAllSectorsWithRisk(): Promise<{ sectores: SectorInfo[];
     medios: sectores.filter(s => s.riskLevel === 'medio').length,
     bajos: sectores.filter(s => s.riskLevel === 'bajo').length,
     fumigacionVencida: sectores.filter(s => s.fumigacionStatus === 'vencido' || s.fumigacionStatus === 'critico').length,
+    accionables: sectores.filter(s =>
+      s.problemasActivos.some(p => !p.tratado && (p.severidadMax === 'alta' || p.severidadMax === 'critica'))
+    ).length,
+    sinDatosRecientes: sectores.filter(s => s.totalObservaciones === 0).length,
+    enControl: sectores.filter(s => s.riskLevel === 'bajo' || (s.totalObservaciones > 0 && s.sinTratar === 0)).length,
   };
 
   return { sectores, stats };
