@@ -18,6 +18,8 @@ import {
   ExternalLink,
   FlaskConical,
   Calendar,
+  AlertTriangle,
+  Thermometer,
 } from 'lucide-react';
 import type { SectorInfo } from '@/lib/sector-intelligence';
 
@@ -272,10 +274,48 @@ export default function Home() {
                           )}
                         </td>
                       </tr>
-                      {/* Expanded: last 3 field applications for this problem */}
+                      {/* Expanded: risk context + applications + protocol */}
                       {isSelected && (
                         <tr>
                           <td colSpan={6} className="bg-slate-50/80 px-5 py-3 border-t border-slate-100">
+                            {/* Risk context: WHY is this dangerous now */}
+                            {(p.trend || p.sinTratar > 0) && (
+                              <div className="mb-3 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {/* Current risk */}
+                                <div className={`flex items-start gap-2 rounded-lg px-3 py-2 border ${
+                                  p.trend?.riesgo === 'alto' ? 'bg-red-50 border-red-200' :
+                                  p.trend?.riesgo === 'medio' ? 'bg-amber-50 border-amber-200' :
+                                  'bg-slate-50 border-slate-200'
+                                }`}>
+                                  <AlertTriangle className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${
+                                    p.trend?.riesgo === 'alto' ? 'text-red-500' :
+                                    p.trend?.riesgo === 'medio' ? 'text-amber-500' :
+                                    'text-slate-400'
+                                  }`} />
+                                  <div>
+                                    <span className="text-[10px] text-slate-400 uppercase tracking-wide">Por que es riesgo ahora</span>
+                                    <p className="text-xs text-slate-700 mt-0.5">
+                                      {p.trend?.razon || `${p.sinTratar} observaciones sin tratar en ${p.sectoresAfectados} sectores`}
+                                      {p.trend?.sevGraves > 0 && !p.trend?.razon?.includes('graves') && (
+                                        <span className="text-red-600 font-medium"> ({p.trend.sevGraves} obs. graves)</span>
+                                      )}
+                                    </p>
+                                  </div>
+                                </div>
+                                {/* Seasonal / future conditions */}
+                                {p.trend?.contexto && (
+                                  <div className="flex items-start gap-2 rounded-lg px-3 py-2 bg-blue-50 border border-blue-200">
+                                    <Thermometer className="w-3.5 h-3.5 mt-0.5 shrink-0 text-blue-500" />
+                                    <div>
+                                      <span className="text-[10px] text-slate-400 uppercase tracking-wide">Condiciones estacionales</span>
+                                      <p className="text-xs text-slate-700 mt-0.5">{p.trend.contexto}</p>
+                                    </div>
+                                  </div>
+                                )}
+                              </div>
+                            )}
+
+                            {/* Last 3 field applications */}
                             <div className="flex items-center gap-2 mb-2">
                               <FlaskConical className="w-3.5 h-3.5 text-blue-500" />
                               <span className="text-xs font-semibold text-slate-700">Ultimas aplicaciones en campo</span>
