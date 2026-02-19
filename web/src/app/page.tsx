@@ -1,7 +1,7 @@
 // Cultivo Vision - Centro de Control de Sanidad
 'use client';
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import {
   Camera,
@@ -14,14 +14,24 @@ import {
   Leaf,
   Eye,
   CircleAlert,
-  Pill,
   Droplets,
-  TrendingUp,
   ExternalLink,
   FlaskConical,
   Calendar,
 } from 'lucide-react';
 import type { SectorInfo } from '@/lib/sector-intelligence';
+
+interface FieldApplication {
+  fecha: string;
+  sector: string;
+  producto: string;
+  dosis: string;
+  cultivo: string;
+}
+
+interface RecentApplication extends FieldApplication {
+  problema: string;
+}
 
 interface DashboardData {
   intelligence: any;
@@ -40,11 +50,14 @@ interface DashboardData {
   topSectores: any[];
   riesgoGeneral: any;
   diasSinMonitoreo: number | null;
+  aplicacionesPorProblema: Record<string, FieldApplication[]>;
+  ultimasAplicaciones: RecentApplication[];
 }
 
 export default function Home() {
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState<DashboardData | null>(null);
+  const [selectedProblem, setSelectedProblem] = useState<string | null>(null);
 
   useEffect(() => {
     fetch('/api/dashboard')
@@ -69,7 +82,7 @@ export default function Home() {
     );
   }
 
-  const { intelligence, sectorStats, allSectores, diasSinMonitoreo } = data;
+  const { intelligence, sectorStats, allSectores, diasSinMonitoreo, aplicacionesPorProblema, ultimasAplicaciones } = data;
 
   // Build problems table from sinTratar + pronostico
   const problemsTable = (intelligence?.sinTratar || []).map((u: any) => {
@@ -80,23 +93,12 @@ export default function Home() {
     return { ...u, trend, recipe };
   });
 
-  // Fumigation schedule: sectors sorted by urgency
-  const fumigationSchedule = allSectores
-    .filter(s => s.diasSinFumigar !== null && s.diasSinFumigar > 0)
-    .sort((a, b) => (b.diasSinFumigar || 0) - (a.diasSinFumigar || 0))
-    .slice(0, 8);
-
-  const fumSinDato = allSectores.filter(s => s.fumigacionStatus === 'sin-dato').length;
-
-  // Active recipes (unique)
-  const activeRecipes: { problema: string; recipe: any }[] = [];
-  const seenRecipes = new Set<string>();
-  problemsTable.forEach((p: any) => {
-    if (p.recipe && p.recipe.products?.length > 0 && !seenRecipes.has(p.problema)) {
-      seenRecipes.add(p.problema);
-      activeRecipes.push({ problema: p.problema, recipe: p.recipe });
-    }
-  });
+  // Format date helper
+  const fmtDate = (d: string) => {
+    if (!d) return '';
+    const date = new Date(d + 'T12:00:00');
+    return date.toLocaleDateString('es-MX', { day: 'numeric', month: 'short' });
+  };
 
   return (
     <>
@@ -183,7 +185,7 @@ export default function Home() {
         </div>
       </div>
 
-      {/* Row 3 - Problemas Activos (main table) */}
+      {/* Row 3 - Problemas Activos (clickable rows → expand last 3 applications) */}
       {problemsTable.length > 0 && (
         <div className="bg-white rounded-xl border border-slate-200 shadow-sm mb-5 overflow-hidden">
           <div className="flex items-center justify-between px-5 py-3 border-b border-slate-100">
@@ -209,187 +211,164 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {problemsTable.map((p: any, i: number) => (
-                  <tr key={i} className="border-t border-slate-50 hover:bg-slate-50/50">
-                    <td className="px-5 py-3">
-                      <span className="font-medium text-slate-900 capitalize">{p.problema}</span>
-                    </td>
-                    <td className="px-3 py-3">
-                      <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
-                        p.severidadMax === 'alta' || p.severidadMax === 'critica'
-                          ? 'bg-red-50 text-red-600'
-                          : p.severidadMax === 'media'
-                          ? 'bg-amber-50 text-amber-600'
-                          : 'bg-slate-100 text-slate-500'
-                      }`}>
-                        {p.severidadMax}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-center text-slate-600">{p.sectoresAfectados}</td>
-                    <td className="px-3 py-3 text-center">
-                      <span className={p.sinTratar > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
-                        {p.sinTratar}
-                      </span>
-                    </td>
-                    <td className="px-3 py-3 text-center">
-                      {p.trend ? (
-                        <span className={`text-xs font-medium ${
-                          p.trend.cambio > 50 ? 'text-red-500' :
-                          p.trend.cambio > 20 ? 'text-amber-500' :
-                          p.trend.cambio < -30 ? 'text-green-500' :
-                          'text-slate-400'
-                        }`}>
-                          {p.trend.cambio > 50 ? '↑↑' :
-                           p.trend.cambio > 20 ? '↑' :
-                           p.trend.cambio > -20 ? '→' :
-                           p.trend.cambio > -50 ? '↓' : '↓↓'}
-                        </span>
-                      ) : (
-                        <span className="text-slate-300">—</span>
+                {problemsTable.map((p: any, i: number) => {
+                  const isSelected = selectedProblem === p.problema;
+                  const apps = aplicacionesPorProblema?.[p.problema.toLowerCase()] || [];
+                  return (
+                    <React.Fragment key={i}>
+                      <tr
+                        className={`border-t border-slate-50 cursor-pointer transition-colors ${
+                          isSelected ? 'bg-blue-50/60' : 'hover:bg-slate-50/50'
+                        }`}
+                        onClick={() => setSelectedProblem(isSelected ? null : p.problema)}
+                      >
+                        <td className="px-5 py-3">
+                          <div className="flex items-center gap-1.5">
+                            <ChevronRight className={`w-3.5 h-3.5 text-slate-400 transition-transform ${isSelected ? 'rotate-90' : ''}`} />
+                            <span className="font-medium text-slate-900 capitalize">{p.problema}</span>
+                          </div>
+                        </td>
+                        <td className="px-3 py-3">
+                          <span className={`text-xs px-2 py-0.5 rounded-full font-medium ${
+                            p.severidadMax === 'alta' || p.severidadMax === 'critica'
+                              ? 'bg-red-50 text-red-600'
+                              : p.severidadMax === 'media'
+                              ? 'bg-amber-50 text-amber-600'
+                              : 'bg-slate-100 text-slate-500'
+                          }`}>
+                            {p.severidadMax}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center text-slate-600">{p.sectoresAfectados}</td>
+                        <td className="px-3 py-3 text-center">
+                          <span className={p.sinTratar > 0 ? 'text-red-600 font-medium' : 'text-green-600'}>
+                            {p.sinTratar}
+                          </span>
+                        </td>
+                        <td className="px-3 py-3 text-center">
+                          {p.trend ? (
+                            <span className={`text-xs font-medium ${
+                              p.trend.cambio > 50 ? 'text-red-500' :
+                              p.trend.cambio > 20 ? 'text-amber-500' :
+                              p.trend.cambio < -30 ? 'text-green-500' :
+                              'text-slate-400'
+                            }`}>
+                              {p.trend.cambio > 50 ? '↑↑' :
+                               p.trend.cambio > 20 ? '↑' :
+                               p.trend.cambio > -20 ? '→' :
+                               p.trend.cambio > -50 ? '↓' : '↓↓'}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300">—</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-3">
+                          {p.recipe?.products?.[0] ? (
+                            <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                              {p.recipe.products[0].nombre} {p.recipe.products[0].dosis}
+                            </span>
+                          ) : (
+                            <span className="text-slate-300 text-xs">—</span>
+                          )}
+                        </td>
+                      </tr>
+                      {/* Expanded: last 3 field applications for this problem */}
+                      {isSelected && (
+                        <tr>
+                          <td colSpan={6} className="bg-slate-50/80 px-5 py-3 border-t border-slate-100">
+                            <div className="flex items-center gap-2 mb-2">
+                              <FlaskConical className="w-3.5 h-3.5 text-blue-500" />
+                              <span className="text-xs font-semibold text-slate-700">Ultimas aplicaciones en campo</span>
+                            </div>
+                            {apps.length > 0 ? (
+                              <div className="grid gap-2">
+                                {apps.map((a: any, j: number) => (
+                                  <div key={j} className="flex items-center gap-3 bg-white rounded-lg px-3 py-2 border border-slate-100">
+                                    <span className="text-xs text-slate-400 font-medium w-16 shrink-0">{fmtDate(a.fecha)}</span>
+                                    <span className="text-xs font-medium text-green-700 bg-green-50 px-1.5 py-0.5 rounded">S{a.sector?.replace(/\D/g, '') || a.sector}</span>
+                                    <span className="text-sm text-slate-800 font-medium">{a.producto}</span>
+                                    {a.dosis && <span className="text-xs text-slate-400">{a.dosis}</span>}
+                                    {a.cultivo && <span className="text-[10px] text-slate-400 ml-auto">{a.cultivo}</span>}
+                                  </div>
+                                ))}
+                              </div>
+                            ) : (
+                              <p className="text-xs text-slate-400">Sin aplicaciones registradas para este problema</p>
+                            )}
+                            {/* Protocol recommendation if available */}
+                            {p.recipe?.products?.length > 0 && (
+                              <div className="mt-3 pt-2 border-t border-slate-200">
+                                <span className="text-[10px] text-slate-400 uppercase tracking-wide">Protocolo recomendado</span>
+                                <div className="flex flex-wrap gap-2 mt-1">
+                                  {p.recipe.products.slice(0, 3).map((prod: any, k: number) => (
+                                    <span key={k} className="text-xs text-blue-700 bg-blue-50 px-2 py-0.5 rounded">
+                                      {prod.nombre} {prod.dosis}
+                                    </span>
+                                  ))}
+                                  {p.recipe.frequency && (
+                                    <span className="text-[10px] text-slate-400 self-center">| {p.recipe.frequency}</span>
+                                  )}
+                                  {p.recipe.carencia > 0 && (
+                                    <span className="text-[10px] text-slate-400 self-center">| Carencia: {p.recipe.carencia}d</span>
+                                  )}
+                                </div>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    <td className="px-3 py-3">
-                      {p.recipe?.products?.[0] ? (
-                        <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                          {p.recipe.products[0].nombre} {p.recipe.products[0].dosis}
-                        </span>
-                      ) : (
-                        <span className="text-slate-300 text-xs">—</span>
-                      )}
-                    </td>
-                  </tr>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
         </div>
       )}
 
-      {/* Row 4 - Two columns: Recetas + Fumigación */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
-        {/* Col 1: Recetas */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <FlaskConical className="w-4 h-4 text-blue-500" />
-            <h3 className="text-slate-900 text-sm font-semibold">Recetas Recomendadas</h3>
+      {/* Row 4 - Últimas Aplicaciones (chronological log) */}
+      <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm mb-5">
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <Droplets className="w-4 h-4 text-green-500" />
+            <h3 className="text-slate-900 text-sm font-semibold">Ultimas Aplicaciones</h3>
           </div>
-
-          {activeRecipes.length > 0 ? (
-            <div className="space-y-3">
-              {activeRecipes.slice(0, 4).map((r, i) => (
-                <div key={i} className="border border-slate-100 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs font-semibold text-slate-900 uppercase">{r.problema}</span>
-                  </div>
-                  {r.recipe.products.slice(0, 2).map((prod: any, j: number) => (
-                    <div key={j} className="flex items-center gap-2 mb-1">
-                      <Pill className="w-3 h-3 text-blue-400 shrink-0" />
-                      <span className="text-sm text-slate-700">
-                        <strong>{prod.nombre}</strong> {prod.dosis}
-                      </span>
-                    </div>
-                  ))}
-                  <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-xs text-slate-400">
-                    {r.recipe.method && (
-                      <span>Metodo: {r.recipe.method}</span>
-                    )}
-                    {r.recipe.frequency && (
-                      <span>Frecuencia: {r.recipe.frequency}</span>
-                    )}
-                    {r.recipe.carencia > 0 && (
-                      <span>Carencia: {r.recipe.carencia}d</span>
-                    )}
-                  </div>
-                  {/* Field treatments actually used */}
-                  {r.recipe.fieldTreatments?.length > 0 && (
-                    <div className="mt-2 pt-2 border-t border-slate-50">
-                      <p className="text-[10px] text-slate-400 mb-1">Aplicado en campo:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {r.recipe.fieldTreatments.slice(0, 3).map((ft: any, k: number) => (
-                          <span key={k} className="text-[11px] px-1.5 py-0.5 rounded bg-green-50 text-green-700">
-                            {ft.producto} ({ft.count}x)
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-6">
-              <FlaskConical className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm">Sin recetas activas</p>
-            </div>
-          )}
+          <a
+            href="https://control.lolaberries.com.mx/aplicaciones.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-1.5 text-xs text-green-600 hover:text-green-700 font-medium"
+          >
+            <Calendar className="w-3.5 h-3.5" />
+            Ver en AGROAI
+            <ExternalLink className="w-3 h-3" />
+          </a>
         </div>
 
-        {/* Col 2: Fumigación */}
-        <div className="bg-white rounded-xl border border-slate-200 p-5 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
-            <Droplets className="w-4 h-4 text-purple-500" />
-            <h3 className="text-slate-900 text-sm font-semibold">Estado de Fumigacion</h3>
-          </div>
-
-          {fumigationSchedule.length > 0 ? (
-            <>
-              <div className="space-y-1.5">
-                {fumigationSchedule.map((s, i) => {
-                  const urgency = s.diasSinFumigar !== null && s.diasSinFumigar > s.intervaloSeguridad;
-                  return (
-                    <div key={i} className="flex items-center gap-2 py-1.5 border-b border-slate-50 last:border-0">
-                      <span className={`w-2 h-2 rounded-full shrink-0 ${
-                        s.fumigacionStatus === 'critico' ? 'bg-red-400' :
-                        s.fumigacionStatus === 'vencido' ? 'bg-amber-400' :
-                        s.fumigacionStatus === 'por-vencer' ? 'bg-yellow-400' : 'bg-green-400'
-                      }`} />
-                      <span className="text-sm font-medium text-slate-700 w-12">S{s.sector}</span>
-                      <span className="text-xs text-slate-400 flex-1 truncate">
-                        {s.productoUsado || 'producto desc.'}
-                      </span>
-                      <span className={`text-xs font-medium ${urgency ? 'text-red-500' : 'text-slate-500'}`}>
-                        {s.diasSinFumigar}d
-                      </span>
-                      {urgency && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded bg-red-50 text-red-500">vencido</span>
-                      )}
-                    </div>
-                  );
-                })}
+        {ultimasAplicaciones && ultimasAplicaciones.length > 0 ? (
+          <div className="grid gap-1.5">
+            {ultimasAplicaciones.map((a, i) => (
+              <div key={i} className="flex items-center gap-3 py-2 px-3 rounded-lg hover:bg-slate-50 border-b border-slate-50 last:border-0">
+                <span className="text-xs text-slate-400 font-medium w-16 shrink-0">{fmtDate(a.fecha)}</span>
+                <span className="text-xs font-medium text-green-700 bg-green-50 px-1.5 py-0.5 rounded shrink-0">
+                  S{a.sector?.replace(/\D/g, '') || a.sector}
+                </span>
+                <span className="text-sm text-slate-800 font-medium truncate">{a.producto}</span>
+                {a.dosis && <span className="text-xs text-slate-400 shrink-0">{a.dosis}</span>}
+                <span className="text-xs text-slate-400 capitalize ml-auto shrink-0">{a.problema}</span>
               </div>
-
-              {fumSinDato > 0 && (
-                <div className="mt-3 pt-3 border-t border-slate-100 flex items-center gap-2">
-                  <Eye className="w-3.5 h-3.5 text-slate-400" />
-                  <span className="text-xs text-slate-400">{fumSinDato} sectores sin registro de fumigacion</span>
-                </div>
-              )}
-            </>
-          ) : (
-            <div className="text-center py-6">
-              <Droplets className="w-8 h-8 text-slate-200 mx-auto mb-2" />
-              <p className="text-slate-400 text-sm">Sin datos de fumigacion</p>
-            </div>
-          )}
-
-          {/* AGROAI link */}
-          <div className="mt-4 pt-3 border-t border-slate-100">
-            <a
-              href="https://control.lolaberries.com.mx/aplicaciones.html"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 text-sm text-green-600 hover:text-green-700 font-medium"
-            >
-              <Calendar className="w-4 h-4" />
-              Ver aplicaciones en AGROAI
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            ))}
           </div>
-        </div>
+        ) : (
+          <div className="text-center py-6">
+            <Droplets className="w-8 h-8 text-slate-200 mx-auto mb-2" />
+            <p className="text-slate-400 text-sm">Sin aplicaciones registradas</p>
+          </div>
+        )}
       </div>
 
       {/* Empty state */}
-      {(!intelligence || problemsTable.length === 0) && activeRecipes.length === 0 && (
+      {(!intelligence || problemsTable.length === 0) && (!ultimasAplicaciones || ultimasAplicaciones.length === 0) && (
         <div className="bg-white border-2 border-dashed border-slate-200 rounded-xl p-10 text-center">
           <Leaf className="w-12 h-12 text-green-200 mx-auto mb-3" />
           <p className="text-slate-500 mb-4">Registra monitoreos de campo para activar la inteligencia</p>

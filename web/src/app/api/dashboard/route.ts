@@ -1,14 +1,65 @@
 // Cultivo Vision - Dashboard Consolidated API
 // Single endpoint that returns everything the Dashboard needs
 import { NextResponse } from 'next/server';
+import { createClient } from '@supabase/supabase-js';
 import { getWeeklyIntelligence } from '@/lib/pattern-analyzer';
 import { getAllSectorsWithRisk } from '@/lib/sector-intelligence';
 
+function getSupabase() {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+  return createClient(url, key);
+}
+
+// Fetch recent field applications (where treatment was actually applied)
+async function getRecentFieldApplications() {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('v_bitacora_campo')
+    .select('problema, sector, tratamiento_producto, tratamiento_dosis, fecha, cultivo, severidad')
+    .eq('tratamiento_aplicado', true)
+    .not('tratamiento_producto', 'is', null)
+    .not('tratamiento_producto', 'eq', '')
+    .order('fecha', { ascending: false })
+    .limit(150);
+
+  const rows = data || [];
+
+  // Per-problem: last 3 individual applications
+  const porProblema: Record<string, { fecha: string; sector: string; producto: string; dosis: string; cultivo: string }[]> = {};
+  rows.forEach(r => {
+    const key = (r.problema || '').toLowerCase();
+    if (!porProblema[key]) porProblema[key] = [];
+    if (porProblema[key].length < 3) {
+      porProblema[key].push({
+        fecha: r.fecha,
+        sector: r.sector,
+        producto: r.tratamiento_producto,
+        dosis: r.tratamiento_dosis || '',
+        cultivo: r.cultivo || '',
+      });
+    }
+  });
+
+  // Last 12 applications chronologically (for recent fumigation log)
+  const ultimas = rows.slice(0, 12).map(r => ({
+    fecha: r.fecha,
+    sector: r.sector,
+    problema: r.problema,
+    producto: r.tratamiento_producto,
+    dosis: r.tratamiento_dosis || '',
+    cultivo: r.cultivo || '',
+  }));
+
+  return { porProblema, ultimas };
+}
+
 export async function GET() {
   try {
-    const [intelligence, sectorData] = await Promise.all([
+    const [intelligence, sectorData, aplicaciones] = await Promise.all([
       getWeeklyIntelligence(),
       getAllSectorsWithRisk(),
+      getRecentFieldApplications(),
     ]);
 
     // Calculate days since last monitoring
@@ -44,12 +95,14 @@ export async function GET() {
     return NextResponse.json({
       intelligence,
       sectorStats: sectorData.stats,
-      allSectores: sectorData.sectores, // ALL sectors for map
+      allSectores: sectorData.sectores,
       topSectores: sectorData.sectores
         .filter(s => s.problemasActivos.some(p => !p.tratado && (p.severidadMax === 'alta' || p.severidadMax === 'critica')))
-        .slice(0, 5), // Top 5 truly actionable
+        .slice(0, 5),
       riesgoGeneral,
       diasSinMonitoreo,
+      aplicacionesPorProblema: aplicaciones.porProblema,
+      ultimasAplicaciones: aplicaciones.ultimas,
     });
   } catch (error) {
     console.error('Dashboard API Error:', error);
