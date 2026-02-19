@@ -198,8 +198,53 @@ export default function AsistentePage() {
     }
   };
 
-  const handleSuggestedQuestion = (question: string) => {
-    setInput(question);
+  const handleSuggestedQuestion = async (question: string) => {
+    if (isLoading) return;
+
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: question,
+      timestamp: new Date(),
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setInput('');
+    setIsLoading(true);
+
+    try {
+      const response = await fetch('/api/assistant', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'query',
+          question,
+          cropType: selectedCrop,
+          sector: selectedSector || undefined,
+        }),
+      });
+      const data = await response.json();
+
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: data.answer || data.error || 'No pude procesar tu consulta.',
+        sources: data.sources,
+        protocols: data.protocols,
+        fieldContext: data.fieldContext,
+        timestamp: new Date(),
+      }]);
+    } catch (error) {
+      console.error('Error:', error);
+      setMessages(prev => [...prev, {
+        id: (Date.now() + 1).toString(),
+        role: 'assistant',
+        content: 'Error al procesar tu consulta. Verifica la conexión e intenta de nuevo.',
+        timestamp: new Date(),
+      }]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Preguntas sugeridas dinámicas basadas en alertas reales
@@ -445,7 +490,7 @@ export default function AsistentePage() {
             <div className="mb-3 relative inline-block">
               <img src={imagePreview} alt="Vista previa" className="h-20 rounded-lg object-cover border border-slate-200" />
               <button type="button" onClick={clearImage} className="absolute -top-2 -right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition-colors">
-                <X className="w-3 h-3 text-slate-900" />
+                <X className="w-3 h-3 text-white" />
               </button>
             </div>
           )}
@@ -475,9 +520,9 @@ export default function AsistentePage() {
               className="px-4 py-3 bg-green-600 hover:bg-green-700 disabled:bg-green-600/50 disabled:cursor-not-allowed rounded-xl transition-colors"
             >
               {isLoading ? (
-                <Loader2 className="w-5 h-5 text-slate-900 animate-spin" />
+                <Loader2 className="w-5 h-5 text-white animate-spin" />
               ) : (
-                <Send className="w-5 h-5 text-slate-900" />
+                <Send className="w-5 h-5 text-white" />
               )}
             </button>
           </form>
